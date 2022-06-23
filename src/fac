@@ -147,7 +147,7 @@ def fa_to_ast(fa: str, file: str = "") -> Generator[Token, None, None]:
             while not word.endswith('"'):
                 ip += 1
                 try:
-                    word = words[ip]
+                    word = words[ip].strip()
                 except IndexError:
                     error(
                         f"Unclosed string at IP {ip} at file {file!r} \
