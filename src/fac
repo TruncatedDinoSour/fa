@@ -98,10 +98,10 @@ def parse_string(string: str, program_ip: int) -> Generator[int, None, None]:
                 yield 9
             elif char == "b":
                 yield 8
-            elif char == "r":
-                yield 13
             elif char == "f":
                 yield 12
+            elif char == "r":
+                yield 13
             elif char == "{":
                 _code: str = ""
 
