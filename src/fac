@@ -16,6 +16,7 @@ class TokenType(Enum):
     MUTABILITY = auto()
     SYS = auto()
     DROP = auto()
+    SWAP = auto()
 
 
 class Mutability(Enum):
@@ -170,6 +171,8 @@ def fa_to_ast(fa: str, file: str = "") -> Generator[Token, None, None]:
             yield Token(TokenType.SYS, None, (file, ip))
         elif word == "drop":
             yield Token(TokenType.DROP, None, (file, ip))
+        elif word == "swap":
+            yield Token(TokenType.SWAP, None, (file, ip))
         else:
             error(
                 f"Unexpected word {word!r} at IP {ip} at file {file!r} while generating AST"
@@ -265,6 +268,20 @@ outside of word context"
                 )
             )
             tmp_stack.pop()
+        elif token.ttype == TokenType.SWAP:
+            start_lb.extend(
+                (
+                    ("pop rax", token),
+                    ("pop rdi", token),
+                    ("push rax", token),
+                    ("push rdi", token),
+                )
+            )
+
+            a = tmp_stack.pop()
+            b = tmp_stack.pop()
+
+            tmp_stack.extend((b, a))
         else:
             error(f"Unexpected {token}")
 

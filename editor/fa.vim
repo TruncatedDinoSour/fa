@@ -19,7 +19,7 @@ syntax keyword faTodo TODO XXX FIXME NOTE
 
 
 " Language keywords
-syntax keyword faKeyword sys drop
+syntax keyword faKeyword sys drop swap
 
 
 " Escapes
