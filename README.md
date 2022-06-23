@@ -1,4 +1,4 @@
-# [ף (Pe/fa)](https://en.wikipedia.org/wiki/Fa_(letter)) programming language
+# [Fa](https://en.wikipedia.org/wiki/Fa_(letter)) programming language
 
 > A rys-like stack based, reverse polish notation low-level programming
 > language that transpiles down to assembly
