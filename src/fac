@@ -1,0 +1,322 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""Fa programming language"""
+
+import os
+import sys
+from dataclasses import dataclass
+from enum import Enum, auto
+from typing import Any, Generator, Iterable, Optional
+from warnings import filterwarnings as filter_warnings
+
+
+class TokenType(Enum):
+    PUSH_INT = auto()
+    PUSH_STR = auto()
+    MUTABILITY = auto()
+    SYS = auto()
+    DROP = auto()
+
+
+class Mutability(Enum):
+    RW = auto()
+    RO = auto()
+
+
+@dataclass
+class Token:
+    ttype: Optional[TokenType]
+    tvalue: Any
+    tpos: tuple[str, int]  # file, ip
+
+    def __str__(self) -> str:
+        if self.ttype is None:
+            return self.__repr__()
+
+        return f"Token at IP {self.tpos[1]!r} \
+{self.ttype.name!r} with value {self.tvalue!r} at source file {self.tpos[0]!r}"
+
+
+EXIT_OK: int = 0
+EXIT_ER: int = 1
+NULL_TOKEN: Token = Token(None, None, ("", 0))
+ANOTATION_CONF: dict[str, bool] = {"enabled": True}
+
+ASM_SNIPPETS: dict[str, dict[str, tuple[str, ...]]] = {
+    "nasm-x86_64-linux": {
+        "registers": (
+            "rax",
+            "rdi",
+            "rsi",
+            "rdx",
+            "r8",
+            "r9",
+            "r10",
+            "r11",
+            "r12",
+            "r13",
+            "r14",
+            "r15",
+        )
+    }
+}
+
+
+def error(msg: str) -> None:
+    print(f"ERROR: {msg}", file=sys.stderr)
+    sys.exit(EXIT_ER)
+
+
+def make_usable_asm(asm: Iterable[str]) -> Generator[tuple[str, Token], None, None]:
+    yield from ((line, NULL_TOKEN) for line in asm)
+
+
+def anotate_assembly(
+    assembly: Generator[tuple[str, Token], None, None], comment_char: str
+) -> Generator[str, None, None]:
+    for asm in assembly:
+        if asm[1] == NULL_TOKEN or not ANOTATION_CONF["enabled"]:
+            yield asm[0]
+            continue
+
+        yield f"    {asm[0]}  {comment_char} {asm[1]}"
+
+
+def parse_string(string: str, program_ip: int) -> Generator[int, None, None]:
+    ip: int = 0
+
+    while ip < len(string):
+        char: str = string[ip]
+
+        if char == "\\":
+            ip += 1
+            char = string[ip]
+
+            if char == "n":
+                yield 10
+            elif char == "t":
+                yield 9
+            elif char == "b":
+                yield 8
+            elif char == "r":
+                yield 13
+            elif char == "f":
+                yield 12
+            elif char == "{":
+                _code: str = ""
+
+                ip += 1
+                char = string[ip]
+
+                while char != "}":
+                    _code += char
+                    ip += 1
+                    char = string[ip]
+
+                if not _code:
+                    error(f"Empty escape code at IP {program_ip}")
+
+                yield int(_code)
+            else:
+                yield ord(char)
+        else:
+            yield ord(char)
+
+        ip += 1
+
+
+def fa_to_ast(fa: str, file: str = "") -> Generator[Token, None, None]:
+    words: list[str] = fa.split(" ")
+    ip: int = 0
+
+    while ip < len(words):
+        word: str = words[ip].strip()
+        old_ip: int = ip
+
+        if not word:
+            ip += 1
+            continue
+
+        if word.startswith("--"):
+            break
+
+        if word.startswith('"'):
+            _tmp_str: list[str] = [word]
+
+            while not word.endswith('"'):
+                ip += 1
+                try:
+                    word = words[ip]
+                except IndexError:
+                    error(
+                        f"Unclosed string at IP {ip} at file {file!r} \
+(starting at IP {old_ip})"
+                    )
+
+                _tmp_str.append(word)
+
+            yield Token(
+                TokenType.PUSH_STR,
+                " ".join(_tmp_str)[1:-1],
+                (file, ip),
+            )
+        elif word.isnumeric():
+            yield Token(TokenType.PUSH_INT, int(word), (file, ip))
+        elif word == "rw":
+            yield Token(TokenType.MUTABILITY, Mutability.RW, (file, ip))
+        elif word == "ro":
+            yield Token(TokenType.MUTABILITY, Mutability.RO, (file, ip))
+        elif word == "sys":
+            yield Token(TokenType.SYS, None, (file, ip))
+        elif word == "drop":
+            yield Token(TokenType.DROP, None, (file, ip))
+        else:
+            error(
+                f"Unexpected word {word!r} at IP {ip} at file {file!r} while generating AST"
+            )
+
+        ip += 1
+
+
+def generate_assembly_linux_x86_64_nasm(
+    ast: tuple[Token, ...],
+) -> Generator[tuple[str, Token], None, None]:
+    ip: int = 0
+
+    yield from make_usable_asm(("BITS 64", "global _start"))
+
+    start_lb: list[tuple[str, Token]] = []
+    data_lb: list[tuple[str, Token]] = []
+    rodata_lb: list[tuple[str, Token]] = []
+
+    tmp_stack: list[Any] = []
+
+    while ip < len(ast):
+        token: Token = ast[ip]
+        old_ip: int = ip
+
+        if token.ttype is None:
+            error("Null token detected")
+            break  # Because some linters are assholes
+
+        tname: str = f"fa_{token.ttype.name}_{ip}_{len(start_lb) + len(data_lb) + len(rodata_lb)}"
+
+        if token.ttype == TokenType.PUSH_INT:
+            start_lb.append((f"push {token.tvalue}", token))
+            tmp_stack.append(token.tvalue)
+        elif token.ttype == TokenType.PUSH_STR:
+            parsed_string_codes: tuple[int, ...] = tuple(
+                parse_string(token.tvalue, token.tpos[1])
+            )
+
+            ip += 1
+            token = ast[ip]
+
+            str_data_lb: list[tuple[str, Token]]
+
+            if token.tvalue == Mutability.RW:
+                str_data_lb = data_lb
+            elif token.tvalue == Mutability.RO:
+                str_data_lb = rodata_lb
+            else:
+                error(f"Unknown mutability context for string: {token}")
+
+            str_data_lb.extend(
+                (
+                    (
+                        f"str_{tname}: db {','.join(map(str, parsed_string_codes))}",
+                        ast[old_ip],
+                    ),
+                    (f"strlen_{tname}: equ $-str_{tname}", ast[old_ip]),
+                )
+            )
+
+            start_lb.extend(
+                (
+                    (f"push strlen_{tname}", ast[old_ip]),
+                    (f"push str_{tname}", ast[old_ip]),
+                )
+            )
+
+            _tmp_str: str = "".join(chr(charcode) for charcode in parsed_string_codes)
+            tmp_stack.extend((len(_tmp_str), _tmp_str))
+        elif token.ttype == TokenType.MUTABILITY:
+            error(
+                f"{token}: Mutability must not be parsed \
+outside of word context"
+            )
+        elif token.ttype == TokenType.SYS:
+            start_lb.pop()
+
+            start_lb.extend(
+                (f"pop {ASM_SNIPPETS['nasm-x86_64-linux']['registers'][reg]}", token)
+                for reg in range(tmp_stack.pop())
+            )
+            start_lb.extend((("syscall", token), ("push rax", token)))
+
+            # Syscall always returns
+            tmp_stack.append(0)
+        elif token.ttype == TokenType.DROP:
+            start_lb.pop()
+
+            start_lb.append((f"add rsp, {8 * tmp_stack.pop()}", token))
+            tmp_stack.pop()
+        else:
+            error(f"Unexpected {token}")
+
+        ip += 1
+
+    yield from make_usable_asm(("segment .text", "_start:"))
+    yield from start_lb
+
+    if data_lb:
+        yield "segment .data", NULL_TOKEN
+        yield from data_lb
+
+    if rodata_lb:
+        yield "segment .rodata", NULL_TOKEN
+        yield from rodata_lb
+
+
+def file_to_ast(file: str) -> Generator[Token, None, None]:
+    with open(file, "r") as fa_code:
+        for line in fa_code:
+            if not line:
+                continue
+
+            yield from fa_to_ast(line, file)
+
+
+def main() -> int:
+    """Entry/main function"""
+
+    if len(sys.argv) != 2:
+        error(f"Usage: {sys.argv[0]} <input.fa>")
+
+    bin_name: str = os.path.basename(os.path.splitext(sys.argv[1])[0])
+    asm_name: str = f"{bin_name}.asm"
+    obj_name: str = f"{bin_name}.o"
+
+    with open(asm_name, "w") as asm_file:
+        asm_file.write(
+            "\n".join(
+                anotate_assembly(
+                    generate_assembly_linux_x86_64_nasm(
+                        tuple(file_to_ast(sys.argv[1]))
+                    ),
+                    ";",
+                )
+            )
+        )
+
+    os.system(f"nasm -felf64 -o {obj_name!r} {asm_name!r}")
+    os.system(f"ld -o {bin_name!r} {obj_name!r}")
+
+    return EXIT_OK
+
+
+if __name__ == "__main__":
+    assert main.__annotations__.get("return") is int, "main() should return an integer"
+
+    filter_warnings("error", category=Warning)
+    sys.exit(main())
