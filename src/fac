@@ -278,10 +278,7 @@ outside of word context"
                 )
             )
 
-            a = tmp_stack.pop()
-            b = tmp_stack.pop()
-
-            tmp_stack.extend((b, a))
+            tmp_stack.extend((tmp_stack.pop(), tmp_stack.pop()))
         else:
             error(f"Unexpected {token}")
 
