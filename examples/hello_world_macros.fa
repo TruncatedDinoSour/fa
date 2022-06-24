@@ -1,0 +1,10 @@
+macro print
+    1 1 4 sys 1 drop
+end
+
+"hello world\n" ro  -- Read only string
+%print
+
+0                   -- Set exit code to 0
+60 2 sys            -- Call SYS_exit
+1 drop              -- Drop return value

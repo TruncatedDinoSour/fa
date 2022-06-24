@@ -1,5 +1,7 @@
 # Fa documentation index
 - [Drop keyword in fa](/doc/md/DROP.md)
+- [End keyword in fa](/doc/md/END.md)
+- [Fa macros](/doc/md/MACROS.md)
 - [Fa mutability](/doc/md/MUTABILITY.md)
 - [Fa strings](/doc/md/STRINGS.md)
 - [Swap keyword in fa](/doc/md/SWAP.md)

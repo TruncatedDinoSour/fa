@@ -17,6 +17,9 @@ class TokenType(Enum):
     SYS = auto()
     DROP = auto()
     SWAP = auto()
+    MACRO = auto()
+    END = auto()
+    EXPAND_MACRO = auto()
 
 
 class Mutability(Enum):
@@ -61,6 +64,8 @@ ASM_SNIPPETS: dict[str, dict[str, tuple[str, ...]]] = {
         )
     }
 }
+
+MACROS: dict[str, list[Token]] = {}
 
 
 def error(msg: str, token: Token = NULL_TOKEN) -> None:
@@ -166,6 +171,8 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             )
         elif word.isnumeric():
             yield make_token(TokenType.PUSH_INT, int(word))
+        elif word.startswith("%"):
+            yield make_token(TokenType.EXPAND_MACRO, word[1:])
         elif word == "rw":
             yield make_token(TokenType.MUTABILITY, Mutability.RW)
         elif word == "ro":
@@ -176,6 +183,13 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.DROP, None)
         elif word == "swap":
             yield make_token(TokenType.SWAP, None)
+        elif word == "macro":
+            ip += 1
+            word = words[ip].strip()
+
+            yield make_token(TokenType.MACRO, word)
+        elif word == "end":
+            yield make_token(TokenType.END, None)
         else:
             error(
                 f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
@@ -395,6 +409,34 @@ def run_command_log(cmd: str) -> None:
         error("Command failed")
 
 
+def preprocess_ast(ast: tuple[Token, ...]) -> Generator[Token, None, None]:
+    ip: int = 0
+
+    while ip < len(ast):
+        token: Token = ast[ip]
+
+        if token.ttype == TokenType.MACRO:
+            macro_body = []
+            macro_name = token.tvalue
+
+            while token.ttype != TokenType.END:
+                ip += 1
+                token = ast[ip]
+                macro_body.append(token)
+
+            macro_body.pop()  # Removes 'end'
+            MACROS[macro_name] = macro_body
+        elif token.ttype == TokenType.EXPAND_MACRO:
+            if token.tvalue not in MACROS:
+                error(f"Cannot expand undefined macro {token.tvalue!r}")
+
+            yield from MACROS[token.tvalue]
+        else:
+            yield token
+
+        ip += 1
+
+
 def main() -> int:
     """Entry/main function"""
 
@@ -419,10 +461,13 @@ def main() -> int:
         log(f"Generating ast for {sys.argv[1]!r}")
         file_ast: tuple[Token, ...] = tuple(file_to_ast(sys.argv[1]))
 
+        log("Preprocessing AST")
+        preprocessed_ast: tuple[Token, ...] = tuple(preprocess_ast(file_ast))
+
         log("Making generator for Linux x86_64 nasm assembly from AST")
         nasm_assembly: Generator[
             tuple[str, Token], None, None
-        ] = generate_assembly_linux_x86_64_nasm(file_ast)
+        ] = generate_assembly_linux_x86_64_nasm(preprocessed_ast)
 
         log("Anotating assembly")
         anotated_nasm_assembly: Generator[str, None, None] = anotate_assembly(

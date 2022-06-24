@@ -43,6 +43,11 @@ syntax region faString start=/\v"/ skip=/\v\\./ end=/\v"/ contains=faEscape
 syntax keyword faMutability ro rw
 
 
+" Macros
+syntax keyword faMacros macro end
+syntax match faMacros "%\S*"
+
+
 " Set highlights
 highlight default link faTodo Todo
 highlight default link faKeyword Keyword
@@ -51,6 +56,7 @@ highlight default link faString String
 highlight default link faEscape Special
 highlight default link faNumber Number
 highlight default link faMutability define
+highlight default link faMacros define
 
 
 " Set syntax
