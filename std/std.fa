@@ -1,0 +1,11 @@
+macro fputs  -- Print a string to a specified file descriptor
+    1 4 sys 1 drop
+end
+
+macro puts  -- Print a string and then a newline
+    1 %fputs "\n" ro 1 %fputs
+end
+
+macro exit  -- Exit with a specified exit code
+    60 2 sys
+end

@@ -20,6 +20,7 @@ class TokenType(Enum):
     MACRO = auto()
     END = auto()
     EXPAND_MACRO = auto()
+    INCLUDE = auto()
 
 
 class Mutability(Enum):
@@ -80,6 +81,8 @@ def make_usable_asm(asm: Iterable[str]) -> Generator[Tuple[str, Token], None, No
 def anotate_assembly(
     assembly: Generator[Tuple[str, Token], None, None], comment_char: str
 ) -> Generator[str, None, None]:
+    log("Anotating assembly")
+
     for asm in assembly:
         if asm[1] == NULL_TOKEN or not ANOTATION_CONF["enabled"]:
             yield asm[0]
@@ -190,6 +193,23 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.MACRO, word)
         elif word == "end":
             yield make_token(TokenType.END, None)
+        elif word == "include":
+            _include_file: List[str] = []
+
+            ip += 1
+            word = words[ip].strip()
+
+            if not word.startswith("'"):
+                error("Include must start with '")
+
+            _include_file.append(word[1:])
+
+            while not word.endswith("'"):
+                ip += 1
+                word = words[ip].strip()
+                _include_file.append(word)
+
+            yield make_token(TokenType.INCLUDE, " ".join(_include_file)[:-1])
         else:
             error(
                 f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
@@ -201,6 +221,8 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
 def generate_assembly_linux_x86_64_nasm(
     ast: Tuple[Token, ...],
 ) -> Generator[Tuple[str, Token], None, None]:
+    log("Making generator for Linux x86_64 nasm assembly from AST")
+
     ip: int = 0
 
     yield from make_usable_asm(("BITS 64", "global _start"))
@@ -315,6 +337,8 @@ outside of word context",
 
 
 def file_to_ast(file: str) -> Generator[Token, None, None]:
+    log(f"Generating ast for {file!r}")
+
     with open(file, "r") as fa_code:
         for line_num, line in enumerate(fa_code):
             if not line:
@@ -410,6 +434,8 @@ def run_command_log(cmd: str) -> None:
 
 
 def preprocess_ast(ast: Tuple[Token, ...]) -> Generator[Token, None, None]:
+    log("Preprocessing AST")
+
     ip: int = 0
 
     while ip < len(ast):
@@ -431,6 +457,8 @@ def preprocess_ast(ast: Tuple[Token, ...]) -> Generator[Token, None, None]:
                 error(f"Cannot expand undefined macro {token.tvalue!r}")
 
             yield from preprocess_ast(tuple(MACROS[token.tvalue]))
+        elif token.ttype == TokenType.INCLUDE:
+            yield from preprocess_ast(tuple(file_to_ast(token.tvalue)))
         else:
             yield token
 
@@ -458,18 +486,14 @@ def main() -> int:
     obj_name: str = f"{bin_name}.o"
 
     with open(asm_name, "w") as asm_file:
-        log(f"Generating ast for {sys.argv[1]!r}")
         file_ast: Tuple[Token, ...] = tuple(file_to_ast(sys.argv[1]))
 
-        log("Preprocessing AST")
         preprocessed_ast: Tuple[Token, ...] = tuple(preprocess_ast(file_ast))
 
-        log("Making generator for Linux x86_64 nasm assembly from AST")
         nasm_assembly: Generator[
             Tuple[str, Token], None, None
         ] = generate_assembly_linux_x86_64_nasm(preprocessed_ast)
 
-        log("Anotating assembly")
         anotated_nasm_assembly: Generator[str, None, None] = anotate_assembly(
             nasm_assembly, ";"
         )

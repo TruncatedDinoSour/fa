@@ -48,6 +48,11 @@ syntax keyword faMacros macro end
 syntax match faMacros "%\S*"
 
 
+" Includes
+syntax keyword faInclude include
+syntax region faString start=/\v'/ skip=/\v\\./ end=/\v'/
+
+
 " Set highlights
 highlight default link faTodo Todo
 highlight default link faKeyword Keyword
@@ -57,6 +62,7 @@ highlight default link faEscape Special
 highlight default link faNumber Number
 highlight default link faMutability define
 highlight default link faMacros define
+highlight default link faInclude function
 
 
 " Set syntax
