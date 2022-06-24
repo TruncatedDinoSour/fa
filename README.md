@@ -17,9 +17,9 @@ some time
 
 # System requirements
 
-- Ld linker
-- Nasm compiler
-- Python3 (for now)
+- Binutils/`ld` linker
+- `Nasm` compiler
+- `Python3` (for now)
 
 # Installation for developing
 
