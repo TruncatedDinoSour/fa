@@ -6,7 +6,7 @@ import os
 import sys
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Any, Generator, Iterable, Optional
+from typing import Any, Dict, Generator, Iterable, List, Optional, Tuple
 from warnings import filterwarnings as filter_warnings
 
 
@@ -31,7 +31,7 @@ class Mutability(Enum):
 class Token:
     ttype: Optional[TokenType]
     tvalue: Any
-    tpos: tuple[str, int, int]  # file, line, ip
+    tpos: Tuple[str, int, int]  # file, line, ip
 
     def __str__(self) -> str:
         if self.ttype is None:
@@ -44,9 +44,9 @@ class Token:
 EXIT_OK: int = 0
 EXIT_ER: int = 1
 NULL_TOKEN: Token = Token(None, None, ("", 0, 0))
-ANOTATION_CONF: dict[str, bool] = {"enabled": True}
+ANOTATION_CONF: Dict[str, bool] = {"enabled": True}
 
-ASM_SNIPPETS: dict[str, dict[str, tuple[str, ...]]] = {
+ASM_SNIPPETS: Dict[str, Dict[str, Tuple[str, ...]]] = {
     "nasm-x86_64-linux": {
         "registers": (
             "rax",
@@ -65,7 +65,7 @@ ASM_SNIPPETS: dict[str, dict[str, tuple[str, ...]]] = {
     }
 }
 
-MACROS: dict[str, list[Token]] = {}
+MACROS: Dict[str, List[Token]] = {}
 
 
 def error(msg: str, token: Token = NULL_TOKEN) -> None:
@@ -73,12 +73,12 @@ def error(msg: str, token: Token = NULL_TOKEN) -> None:
     sys.exit(EXIT_ER)
 
 
-def make_usable_asm(asm: Iterable[str]) -> Generator[tuple[str, Token], None, None]:
+def make_usable_asm(asm: Iterable[str]) -> Generator[Tuple[str, Token], None, None]:
     yield from ((line, NULL_TOKEN) for line in asm)
 
 
 def anotate_assembly(
-    assembly: Generator[tuple[str, Token], None, None], comment_char: str
+    assembly: Generator[Tuple[str, Token], None, None], comment_char: str
 ) -> Generator[str, None, None]:
     for asm in assembly:
         if asm[1] == NULL_TOKEN or not ANOTATION_CONF["enabled"]:
@@ -132,7 +132,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
 
 
 def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None]:
-    words: list[str] = fa.split(" ")
+    words: List[str] = fa.split(" ")
     ip: int = 0
 
     def make_token(ttype: TokenType, tvalue: Any) -> Token:
@@ -151,7 +151,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             break
 
         if word.startswith('"'):
-            _tmp_str: list[str] = [word]
+            _tmp_str: List[str] = [word]
 
             while not word.endswith('"'):
                 ip += 1
@@ -199,17 +199,17 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
 
 
 def generate_assembly_linux_x86_64_nasm(
-    ast: tuple[Token, ...],
-) -> Generator[tuple[str, Token], None, None]:
+    ast: Tuple[Token, ...],
+) -> Generator[Tuple[str, Token], None, None]:
     ip: int = 0
 
     yield from make_usable_asm(("BITS 64", "global _start"))
 
-    start_lb: list[tuple[str, Token]] = []
-    data_lb: list[tuple[str, Token]] = []
-    rodata_lb: list[tuple[str, Token]] = []
+    start_lb: List[Tuple[str, Token]] = []
+    data_lb: List[Tuple[str, Token]] = []
+    rodata_lb: List[Tuple[str, Token]] = []
 
-    tmp_stack: list[Any] = []
+    tmp_stack: List[Any] = []
 
     while ip < len(ast):
         token: Token = ast[ip]
@@ -225,14 +225,14 @@ def generate_assembly_linux_x86_64_nasm(
             start_lb.append((f"push {token.tvalue}", token))
             tmp_stack.append(token.tvalue)
         elif token.ttype == TokenType.PUSH_STR:
-            parsed_string_codes: tuple[int, ...] = tuple(
+            parsed_string_codes: Tuple[int, ...] = tuple(
                 parse_string(token.tvalue, token)
             )
 
             ip += 1
             token = ast[ip]
 
-            str_data_lb: list[tuple[str, Token]]
+            str_data_lb: List[Tuple[str, Token]]
 
             if token.tvalue == Mutability.RW:
                 str_data_lb = data_lb
@@ -327,7 +327,7 @@ def print_help() -> int:
     def ep(msg: str) -> None:
         sys.stderr.write(f" :: {msg}\n")
 
-    help_page: tuple[str, ...] = (
+    help_page: Tuple[str, ...] = (
         "Usage:",
         f"   {sys.argv[0]} <file|-help> [flags...]",
         "Flags:",
@@ -343,10 +343,10 @@ def print_help() -> int:
     return EXIT_ER
 
 
-def parse_flags(flags: list[str]) -> dict[str, Any]:
+def parse_flags(flags: List[str]) -> Dict[str, Any]:
     ip: int = 0
 
-    flagd: dict[str, Any] = {
+    flagd: Dict[str, Any] = {
         "anotate": True,
         "asm-flags": "",
         "ld-flags": "",
@@ -409,7 +409,7 @@ def run_command_log(cmd: str) -> None:
         error("Command failed")
 
 
-def preprocess_ast(ast: tuple[Token, ...]) -> Generator[Token, None, None]:
+def preprocess_ast(ast: Tuple[Token, ...]) -> Generator[Token, None, None]:
     ip: int = 0
 
     while ip < len(ast):
@@ -448,7 +448,7 @@ def main() -> int:
     elif not os.path.isfile(sys.argv[1]):
         error(f"{sys.argv[1]!r}: No such file")
 
-    flags: dict[str, Any] = parse_flags(sys.argv[2:])
+    flags: Dict[str, Any] = parse_flags(sys.argv[2:])
 
     if not flags["anotate"]:
         ANOTATION_CONF["enabled"] = False
@@ -459,14 +459,14 @@ def main() -> int:
 
     with open(asm_name, "w") as asm_file:
         log(f"Generating ast for {sys.argv[1]!r}")
-        file_ast: tuple[Token, ...] = tuple(file_to_ast(sys.argv[1]))
+        file_ast: Tuple[Token, ...] = tuple(file_to_ast(sys.argv[1]))
 
         log("Preprocessing AST")
-        preprocessed_ast: tuple[Token, ...] = tuple(preprocess_ast(file_ast))
+        preprocessed_ast: Tuple[Token, ...] = tuple(preprocess_ast(file_ast))
 
         log("Making generator for Linux x86_64 nasm assembly from AST")
         nasm_assembly: Generator[
-            tuple[str, Token], None, None
+            Tuple[str, Token], None, None
         ] = generate_assembly_linux_x86_64_nasm(preprocessed_ast)
 
         log("Anotating assembly")
