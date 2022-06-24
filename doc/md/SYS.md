@@ -3,20 +3,21 @@
 `Sys` keyword will call a `syscall` with arguments
 on the stack
 
-`Sys` takes two arguments of the stack:
+`Sys` takes at least two arguments of the stack:
 
-- Register width
+- Register usage
 - Syscall number
 
 The arguments:
 
-- Argument `Register width` means how many registers should the syscall use (how many arguments)
+- Argument `Register usage` means how many registers should the syscall use (how many arguments)
 - Argument `Syscall number` means the [syscall number](https://blog.rchapman.org/posts/Linux_System_Call_Table_for_x86_64/)
 
 Example of the `sys` keyword:
 
 ```fa
-1 60 2 sys  -- Exists the program with code 1
+1 60 sys 2  -- Exists the program with code 1
+            -- Will use 2 registers: rax (60) and rdi (1)
 1 drop      -- Drop the result
 ```
 

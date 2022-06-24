@@ -181,7 +181,10 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
         elif word == "ro":
             yield make_token(TokenType.MUTABILITY, Mutability.RO)
         elif word == "sys":
-            yield make_token(TokenType.SYS, None)
+            ip += 1
+            word = words[ip]
+
+            yield make_token(TokenType.SYS, int(word))
         elif word == "drop":
             yield make_token(TokenType.DROP, None)
         elif word == "swap":
@@ -289,11 +292,9 @@ outside of word context",
                 token,
             )
         elif token.ttype == TokenType.SYS:
-            start_lb.pop()
-
             start_lb.extend(
                 (f"pop {ASM_SNIPPETS['nasm-x86_64-linux']['registers'][reg]}", token)
-                for reg in range(tmp_stack.pop())
+                for reg in range(token.tvalue)
             )
             start_lb.extend((("syscall", token), ("push rax", token)))
 

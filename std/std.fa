@@ -2,7 +2,7 @@ macro SYS_write 1 end
 macro SYS_exit  60 end
 
 macro fputs  -- Print a string to a specified file descriptor
-    %SYS_write 4 sys 1 drop
+    %SYS_write sys 4 1 drop
 end
 
 macro puts  -- Print a string and then a newline
@@ -10,5 +10,5 @@ macro puts  -- Print a string and then a newline
 end
 
 macro exit  -- Exit with a specified exit code
-    %SYS_exit 2 sys
+    %SYS_exit sys 2
 end

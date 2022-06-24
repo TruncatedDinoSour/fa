@@ -1,2 +1,1 @@
 - [x] Use return value in `drop`
-- [ ] Use return value in `sys`
