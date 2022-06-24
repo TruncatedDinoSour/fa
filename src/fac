@@ -134,6 +134,10 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
         ip += 1
 
 
+assert len(TokenType) == 10, "Unhandled token types in AST generation"
+assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
+
+
 def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None]:
     words: List[str] = fa.split(" ")
     ip: int = 0
@@ -219,6 +223,14 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             )
 
         ip += 1
+
+
+assert (
+    len(TokenType) == 10
+), "Unhandled token types in Linux x86_64 nasm assembly generation"
+assert (
+    len(Mutability) == 2
+), "Unhandled mutability contexts in Linux x86_64 nasm assembly generation generation"
 
 
 def generate_assembly_linux_x86_64_nasm(
@@ -434,7 +446,13 @@ def run_command_log(cmd: str) -> None:
         error("Command failed")
 
 
-def preprocess_ast(ast: Tuple[Token, ...], logging: bool = False) -> Generator[Token, None, None]:
+assert len(TokenType) == 10, "Unhandled token types in processing"
+assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
+
+
+def preprocess_ast(
+    ast: Tuple[Token, ...], logging: bool = False
+) -> Generator[Token, None, None]:
     if logging:
         log("Preprocessing AST")
 

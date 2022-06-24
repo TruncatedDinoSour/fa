@@ -1,1 +1,2 @@
 - [x] Use return value in `drop`
+- [ ] Type checking
