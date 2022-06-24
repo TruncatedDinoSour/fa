@@ -252,7 +252,7 @@ def generate_assembly_linux_x86_64_nasm(
         elif token.ttype == TokenType.PUSH_STR:
             parsed_string_codes: Tuple[int, ...] = tuple(
                 parse_string(token.tvalue, token)
-            )
+            ) or (0,)
 
             ip += 1
             token = ast[ip]

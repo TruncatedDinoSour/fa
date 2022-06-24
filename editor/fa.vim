@@ -60,9 +60,9 @@ highlight default link faCommentLine Comment
 highlight default link faString String
 highlight default link faEscape Special
 highlight default link faNumber Number
-highlight default link faMutability define
-highlight default link faMacros define
-highlight default link faInclude function
+highlight default link faMutability Define
+highlight default link faMacros Define
+highlight default link faInclude Function
 
 
 " Set syntax
