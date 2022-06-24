@@ -425,12 +425,12 @@ def preprocess_ast(ast: Tuple[Token, ...]) -> Generator[Token, None, None]:
                 macro_body.append(token)
 
             macro_body.pop()  # Removes 'end'
-            MACROS[macro_name] = macro_body
+            MACROS[macro_name] = list(preprocess_ast(tuple(macro_body)))
         elif token.ttype == TokenType.EXPAND_MACRO:
             if token.tvalue not in MACROS:
                 error(f"Cannot expand undefined macro {token.tvalue!r}")
 
-            yield from MACROS[token.tvalue]
+            yield from preprocess_ast(tuple(MACROS[token.tvalue]))
         else:
             yield token
 
