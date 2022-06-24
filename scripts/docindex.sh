@@ -3,6 +3,8 @@
 set -e
 
 main() {
+    printf '%s... ' 'Generating documentation index'
+
     rm -f -- doc/README.md
 
     {
@@ -12,6 +14,8 @@ main() {
             echo "- [$(head -n 1 "$file" | sed 's/^# //')](/$file)"
         done
     } >doc/README.md
+
+    echo 'done'
 }
 
 main "$@"

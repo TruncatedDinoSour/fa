@@ -28,19 +28,19 @@ class Mutability(Enum):
 class Token:
     ttype: Optional[TokenType]
     tvalue: Any
-    tpos: tuple[str, int]  # file, ip
+    tpos: tuple[str, int, int]  # file, line, ip
 
     def __str__(self) -> str:
         if self.ttype is None:
             return self.__repr__()
 
-        return f"Token at IP {self.tpos[1]!r} \
-{self.ttype.name!r} with value {self.tvalue!r} at source file {self.tpos[0]!r}"
+        return f"Token at position {':'.join(map(str, self.tpos))!r} \
+{self.ttype.name!r} with value {self.tvalue!r}"
 
 
 EXIT_OK: int = 0
 EXIT_ER: int = 1
-NULL_TOKEN: Token = Token(None, None, ("", 0))
+NULL_TOKEN: Token = Token(None, None, ("", 0, 0))
 ANOTATION_CONF: dict[str, bool] = {"enabled": True}
 
 ASM_SNIPPETS: dict[str, dict[str, tuple[str, ...]]] = {
@@ -63,8 +63,8 @@ ASM_SNIPPETS: dict[str, dict[str, tuple[str, ...]]] = {
 }
 
 
-def error(msg: str) -> None:
-    print(f"ERROR: {msg}", file=sys.stderr)
+def error(msg: str, token: Token = NULL_TOKEN) -> None:
+    print(f"ERROR: {':'.join(map(str, token.tpos))}: {msg}", file=sys.stderr)
     sys.exit(EXIT_ER)
 
 
@@ -83,7 +83,7 @@ def anotate_assembly(
         yield f"    {asm[0]}  {comment_char} {asm[1]}"
 
 
-def parse_string(string: str, program_ip: int) -> Generator[int, None, None]:
+def parse_string(string: str, token: Token) -> Generator[int, None, None]:
     ip: int = 0
 
     while ip < len(string):
@@ -115,7 +115,7 @@ def parse_string(string: str, program_ip: int) -> Generator[int, None, None]:
                     char = string[ip]
 
                 if not _code:
-                    error(f"Empty escape code at IP {program_ip}")
+                    error("Empty escape code", token)
 
                 yield int(_code)
             else:
@@ -126,13 +126,17 @@ def parse_string(string: str, program_ip: int) -> Generator[int, None, None]:
         ip += 1
 
 
-def fa_to_ast(fa: str, file: str = "") -> Generator[Token, None, None]:
+def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None]:
     words: list[str] = fa.split(" ")
     ip: int = 0
+
+    def make_token(ttype: TokenType, tvalue: Any) -> Token:
+        return Token(ttype, tvalue, (file, line, ip))
 
     while ip < len(words):
         word: str = words[ip].strip()
         old_ip: int = ip
+        _position: str = ":".join(map(str, (file, line, ip)))
 
         if not word:
             ip += 1
@@ -150,32 +154,31 @@ def fa_to_ast(fa: str, file: str = "") -> Generator[Token, None, None]:
                     word = words[ip].strip()
                 except IndexError:
                     error(
-                        f"Unclosed string at IP {ip} at file {file!r} \
-(starting at IP {old_ip})"
+                        f"Unclosed string at position {_position} at file {file!r} \
+(starting at IP {old_ip})",
                     )
 
                 _tmp_str.append(word)
 
-            yield Token(
+            yield make_token(
                 TokenType.PUSH_STR,
                 " ".join(_tmp_str)[1:-1],
-                (file, ip),
             )
         elif word.isnumeric():
-            yield Token(TokenType.PUSH_INT, int(word), (file, ip))
+            yield make_token(TokenType.PUSH_INT, int(word))
         elif word == "rw":
-            yield Token(TokenType.MUTABILITY, Mutability.RW, (file, ip))
+            yield make_token(TokenType.MUTABILITY, Mutability.RW)
         elif word == "ro":
-            yield Token(TokenType.MUTABILITY, Mutability.RO, (file, ip))
+            yield make_token(TokenType.MUTABILITY, Mutability.RO)
         elif word == "sys":
-            yield Token(TokenType.SYS, None, (file, ip))
+            yield make_token(TokenType.SYS, None)
         elif word == "drop":
-            yield Token(TokenType.DROP, None, (file, ip))
+            yield make_token(TokenType.DROP, None)
         elif word == "swap":
-            yield Token(TokenType.SWAP, None, (file, ip))
+            yield make_token(TokenType.SWAP, None)
         else:
             error(
-                f"Unexpected word {word!r} at IP {ip} at file {file!r} while generating AST"
+                f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
             )
 
         ip += 1
@@ -199,7 +202,7 @@ def generate_assembly_linux_x86_64_nasm(
         old_ip: int = ip
 
         if token.ttype is None:
-            error("Null token detected")
+            error("Null token detected", token)
             break  # Because some linters are assholes
 
         tname: str = f"fa_{token.ttype.name}_{ip}_{len(start_lb) + len(data_lb) + len(rodata_lb)}"
@@ -209,7 +212,7 @@ def generate_assembly_linux_x86_64_nasm(
             tmp_stack.append(token.tvalue)
         elif token.ttype == TokenType.PUSH_STR:
             parsed_string_codes: tuple[int, ...] = tuple(
-                parse_string(token.tvalue, token.tpos[1])
+                parse_string(token.tvalue, token)
             )
 
             ip += 1
@@ -222,7 +225,7 @@ def generate_assembly_linux_x86_64_nasm(
             elif token.tvalue == Mutability.RO:
                 str_data_lb = rodata_lb
             else:
-                error(f"Unknown mutability context for string: {token}")
+                error("Unknown mutability context for string", token)
 
             str_data_lb.extend(
                 (
@@ -245,8 +248,9 @@ def generate_assembly_linux_x86_64_nasm(
             tmp_stack.extend((len(_tmp_str), _tmp_str))
         elif token.ttype == TokenType.MUTABILITY:
             error(
-                f"{token}: Mutability must not be parsed \
-outside of word context"
+                "Mutability must not be parsed \
+outside of word context",
+                token,
             )
         elif token.ttype == TokenType.SYS:
             start_lb.pop()
@@ -280,7 +284,7 @@ outside of word context"
 
             tmp_stack.extend((tmp_stack.pop(), tmp_stack.pop()))
         else:
-            error(f"Unexpected {token}")
+            error(f"Unexpected {token}", token)
 
         ip += 1
 
@@ -298,37 +302,140 @@ outside of word context"
 
 def file_to_ast(file: str) -> Generator[Token, None, None]:
     with open(file, "r") as fa_code:
-        for line in fa_code:
+        for line_num, line in enumerate(fa_code):
             if not line:
                 continue
 
-            yield from fa_to_ast(line, file)
+            yield from fa_to_ast(line, line_num, file)
+
+
+def print_help() -> int:
+    def ep(msg: str) -> None:
+        sys.stderr.write(f" :: {msg}\n")
+
+    help_page: tuple[str, ...] = (
+        "Usage:",
+        f"   {sys.argv[0]} <file|-help> [flags...]",
+        "Flags:",
+        "   -no-anotate                                 Doesn't anotate assembly",
+        "   -asm-flags <flag,flag,flag,...>             Sets assembly flags",
+        "   -ld-flags <flag,flag,flag,...>              Sets linker flags",
+        "   -help                                       Prints help",
+        "",
+    )
+
+    sys.stderr.write("\n".join(help_page))
+
+    return EXIT_ER
+
+
+def parse_flags(flags: list[str]) -> dict[str, Any]:
+    ip: int = 0
+
+    flagd: dict[str, Any] = {
+        "anotate": True,
+        "asm-flags": "",
+        "ld-flags": "",
+        "output": os.path.basename(os.path.splitext(sys.argv[1])[0]),
+    }
+
+    if not flags:
+        return flagd
+
+    while ip < len(flags):
+        flag: str = flags[ip]
+
+        if flag == "-no-anotate":
+            flagd["anotate"] = False
+        elif flag == "-asm-flags":
+            ip += 1
+
+            if ip >= len(flags):
+                error("Missing comma-seperated flags to -asm-flags")
+
+            flag = flags[ip]
+
+            flagd["asm-flags"] = flag.split(",")
+        elif flag == "-ld-flags":
+            ip += 1
+
+            if ip >= len(flags):
+                error("Missing comma-seperated flags to -ld-flags")
+
+            flag = flags[ip]
+
+            flagd["ld-flags"] = flag.split(",")
+        elif flag == "-help":
+            sys.exit(print_help())
+        elif flag == "-o":
+            ip += 1
+
+            if ip >= len(flags):
+                error("Missing output file to -o")
+
+            flag = flags[ip]
+
+            flagd["output"] = flag
+        else:
+            error(f"Unknown flag {flag!r}")
+
+        ip += 1
+
+    return flagd
+
+
+def log(msg: str) -> None:
+    print(f" :: {msg}")
+
+
+def run_command_log(cmd: str) -> None:
+    log(f"Running: {cmd}")
+
+    if os.system(cmd):
+        error("Command failed")
 
 
 def main() -> int:
     """Entry/main function"""
 
-    if len(sys.argv) != 2:
-        error(f"Usage: {sys.argv[0]} <input.fa>")
+    if len(sys.argv) < 2:
+        return print_help()
+    elif sys.argv[1] == "-help":
+        print_help()
+        return 0
+    elif not os.path.isfile(sys.argv[1]):
+        error(f"{sys.argv[1]!r}: No such file")
 
-    bin_name: str = os.path.basename(os.path.splitext(sys.argv[1])[0])
+    flags: dict[str, Any] = parse_flags(sys.argv[2:])
+
+    if not flags["anotate"]:
+        ANOTATION_CONF["enabled"] = False
+
+    bin_name: str = flags["output"]
     asm_name: str = f"{bin_name}.asm"
     obj_name: str = f"{bin_name}.o"
 
     with open(asm_name, "w") as asm_file:
-        asm_file.write(
-            "\n".join(
-                anotate_assembly(
-                    generate_assembly_linux_x86_64_nasm(
-                        tuple(file_to_ast(sys.argv[1]))
-                    ),
-                    ";",
-                )
-            )
+        log(f"Generating ast for {sys.argv[1]!r}")
+        file_ast: tuple[Token, ...] = tuple(file_to_ast(sys.argv[1]))
+
+        log("Making generator for Linux x86_64 nasm assembly from AST")
+        nasm_assembly: Generator[
+            tuple[str, Token], None, None
+        ] = generate_assembly_linux_x86_64_nasm(file_ast)
+
+        log("Anotating assembly")
+        anotated_nasm_assembly: Generator[str, None, None] = anotate_assembly(
+            nasm_assembly, ";"
         )
 
-    os.system(f"nasm -felf64 -o {obj_name!r} {asm_name!r}")
-    os.system(f"ld -o {bin_name!r} {obj_name!r}")
+        log(f"Writting assembly to {asm_file.name!r}")
+        asm_file.write("\n".join(anotated_nasm_assembly))
+
+    run_command_log(
+        f"nasm -felf64 -o {obj_name!r} {asm_name!r} {' '.join(flags['asm-flags'])}"
+    )
+    run_command_log(f"ld -o {bin_name!r} {obj_name!r} {' '.join(flags['ld-flags'])}")
 
     return EXIT_OK
 
