@@ -433,8 +433,9 @@ def run_command_log(cmd: str) -> None:
         error("Command failed")
 
 
-def preprocess_ast(ast: Tuple[Token, ...]) -> Generator[Token, None, None]:
-    log("Preprocessing AST")
+def preprocess_ast(ast: Tuple[Token, ...], logging: bool = False) -> Generator[Token, None, None]:
+    if logging:
+        log("Preprocessing AST")
 
     ip: int = 0
 
@@ -488,7 +489,7 @@ def main() -> int:
     with open(asm_name, "w") as asm_file:
         file_ast: Tuple[Token, ...] = tuple(file_to_ast(sys.argv[1]))
 
-        preprocessed_ast: Tuple[Token, ...] = tuple(preprocess_ast(file_ast))
+        preprocessed_ast: Tuple[Token, ...] = tuple(preprocess_ast(file_ast, True))
 
         nasm_assembly: Generator[
             Tuple[str, Token], None, None
