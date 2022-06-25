@@ -340,9 +340,3 @@ macro todo
 
     %EXIT_FAILURE %exit
 end
-
-macro alloc   -- Allocate x ammount of bytes
-    1 drop
-    "Implement custom memory allocator" ro %todo
-    -- SYS_brk or SYS_mmap
-end

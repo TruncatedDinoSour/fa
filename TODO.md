@@ -1,3 +1,2 @@
 - [x] Use return value in `drop`
 - [ ] Type checking
-- [ ] `alloc` allocator implementation
