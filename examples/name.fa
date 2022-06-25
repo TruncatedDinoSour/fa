@@ -9,7 +9,7 @@ macro main
     %NAME_LEN           #name   %STDIN   %read   -- read(stdin, *name, NAME_LEN)
 
     "Your name is " ro  %STDOUT %fputs           -- fputs("...", stdout)
-    1                   #name   -                -- name = name - 1
+    1                   #name   sub              -- name = name - 1
 
     -- We take away 1 from the buffer because it
     -- will include the <enter> key (a newline (\n))

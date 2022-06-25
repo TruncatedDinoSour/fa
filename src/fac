@@ -33,9 +33,9 @@ class Mutability(Enum):
 
 
 class Operator(Enum):
-    PLUS = auto()
-    MINUS = auto()
-    MULTIPLY = auto()
+    ADD = auto()
+    SUB = auto()
+    MUL = auto()
 
 
 @dataclass
@@ -250,12 +250,12 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
                 _include_file.append(word)
 
             yield make_token(TokenType.INCLUDE, " ".join(_include_file)[:-1])
-        elif word == "+":
-            yield make_token(TokenType.OPERATOR, Operator.PLUS)
-        elif word == "-":
-            yield make_token(TokenType.OPERATOR, Operator.MINUS)
-        elif word == "*":
-            yield make_token(TokenType.OPERATOR, Operator.MULTIPLY)
+        elif word == "add":
+            yield make_token(TokenType.OPERATOR, Operator.ADD)
+        elif word == "sub":
+            yield make_token(TokenType.OPERATOR, Operator.SUB)
+        elif word == "mul":
+            yield make_token(TokenType.OPERATOR, Operator.MUL)
         elif word == "copy":
             yield make_token(TokenType.COPY, None)
         elif word == "buffer":
@@ -371,7 +371,7 @@ outside of word context",
             start_lb.extend(
                 (
                     ("pop rax", token),
-                    ("imul rax, 8", token),
+                    ("mul rax, 8", token),
                     ("add rsp, rax", token),
                 )
             )
@@ -388,7 +388,7 @@ outside of word context",
 
             tmp_stack.extend((tmp_stack.pop(), tmp_stack.pop()))
         elif token.ttype == TokenType.OPERATOR:
-            if token.tvalue == Operator.PLUS:
+            if token.tvalue == Operator.ADD:
                 start_lb.extend(
                     (
                         ("pop rax", token),
@@ -399,7 +399,7 @@ outside of word context",
                 )
 
                 tmp_stack.append(tmp_stack.pop() + tmp_stack.pop())
-            elif token.tvalue == Operator.MINUS:
+            elif token.tvalue == Operator.SUB:
                 start_lb.extend(
                     (
                         ("pop rax", token),
@@ -410,12 +410,12 @@ outside of word context",
                 )
 
                 tmp_stack.append(tmp_stack.pop() - tmp_stack.pop())
-            elif token.tvalue == Operator.MULTIPLY:
+            elif token.tvalue == Operator.MUL:
                 start_lb.extend(
                     (
                         ("pop rax", token),
                         ("pop rdi", token),
-                        ("imul rax, rdi", token),
+                        ("mul rax, rdi", token),
                         ("push rax", token),
                     )
                 )

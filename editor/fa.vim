@@ -57,6 +57,10 @@ syntax keyword faInclude include
 syntax region faString start=/\v'/ skip=/\v\\./ end=/\v'/
 
 
+" Operators
+syntax keyword faOperator add sub mul
+
+
 " Set highlights
 highlight default link faTodo Todo
 highlight default link faKeyword Keyword
@@ -68,6 +72,7 @@ highlight default link faMutability Define
 highlight default link faMacro Define
 highlight default link faInclude Function
 highlight default link faBuffer Function
+highlight default link faOperator Operator
 
 
 " Set syntax

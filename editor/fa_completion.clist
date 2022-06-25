@@ -6,9 +6,9 @@ macro
 end
 %
 include
--
-+
-*
+sub
+add
+mul
 copy
 buffer
 #
