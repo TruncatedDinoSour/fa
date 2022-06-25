@@ -1,3 +1,3 @@
 - [x] Use return value in `drop`
-- [ ] Type checking
+- [x] Type checking
 - [ ] Dynamic buffer allocation

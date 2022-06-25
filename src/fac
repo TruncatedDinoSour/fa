@@ -404,7 +404,10 @@ outside of word context",
                 )
             )
 
-            tmp_stack.extend((tmp_stack.pop(), tmp_stack.pop()))
+            a = tmp_stack.pop()
+            b = tmp_stack.pop()
+
+            tmp_stack.extend((a, b))
         elif token.ttype == TokenType.OPERATOR:
             if token.tvalue == Operator.ADD:
                 start_lb.extend(
@@ -633,7 +636,7 @@ assert len(Operator) == 6, "Unhandled operators in processing"
 
 
 def preprocess_ast(
-    ast: Tuple[Token, ...], logging: bool = False
+    ast: Tuple[Token, ...], assembly_flavour: str, logging: bool = False
 ) -> Generator[Token, None, None]:
     if logging:
         log("Preprocessing AST")
@@ -653,12 +656,14 @@ def preprocess_ast(
                 macro_body.append(token)
 
             macro_body.pop()  # Removes 'end'
-            MACROS[macro_name] = list(preprocess_ast(tuple(macro_body)))
+            MACROS[macro_name] = list(
+                preprocess_ast(tuple(macro_body), assembly_flavour)
+            )
         elif token.ttype == TokenType.EXPAND_MACRO:
             if token.tvalue not in MACROS:
                 error(f"Cannot expand undefined macro {token.tvalue!r}", token)
 
-            yield from preprocess_ast(tuple(MACROS[token.tvalue]))
+            yield from preprocess_ast(tuple(MACROS[token.tvalue]), assembly_flavour)
         elif token.ttype == TokenType.INCLUDE:
             file: str = token.tvalue
 
@@ -669,7 +674,10 @@ def preprocess_ast(
                         file = include_file
                         break
 
-            yield from preprocess_ast(tuple(file_to_ast(file)))
+            yield from type_check_ast(
+                tuple(preprocess_ast(tuple(file_to_ast(file)), assembly_flavour)),
+                assembly_flavour,
+            )
         elif token.ttype == TokenType.BUFFER:
             buffer_name: str = token.tvalue
 
@@ -680,9 +688,9 @@ def preprocess_ast(
             if token.ttype == TokenType.PUSH_INT:
                 buffer_size = token.tvalue
             elif token.ttype == TokenType.EXPAND_MACRO:
-                buffer_size = tuple(preprocess_ast(tuple(MACROS[token.tvalue])))[
-                    0
-                ].tvalue
+                buffer_size = tuple(
+                    preprocess_ast(tuple(MACROS[token.tvalue]), assembly_flavour)
+                )[0].tvalue
             else:
                 error(f"Unsuported buffer size: {token}", token)
 
@@ -691,6 +699,231 @@ def preprocess_ast(
             yield token
 
         ip += 1
+
+
+assert len(TokenType) == 14, "Unhandled token types in type checking"
+assert len(Mutability) == 2, "Unhandled mutability contexts in type checking"
+assert len(Operator) == 6, "Unhandled operators in type checking"
+
+
+def type_check_ast(
+    ast: Tuple[Token, ...], assembly_flavour: str
+) -> Generator[Token, None, None]:
+    log("Type checking AST")
+
+    ip: int = 0
+    type_stack: List[Tuple[TokenType, Any]] = []
+
+    def ei(msg: str, token: Token) -> None:
+        if ip > len(ast):
+            error(f"Exceeding IP: {msg}", token)
+
+    while ip < len(ast):
+        token: Token = ast[ip]
+
+        if token.ttype == TokenType.PUSH_INT:
+            type_stack.append((token.ttype, token.tvalue))
+        elif token.ttype == TokenType.PUSH_STR:
+            ip += 1
+            ei("Missing mutability while trying to push string", token)
+
+            old_token = token
+            token = ast[ip]
+
+            if token.ttype == TokenType.MUTABILITY:
+                if token.tvalue not in (Mutability.RO, Mutability.RW):
+                    error(f"Unknown mutability context: {token}", old_token)
+            else:
+                error("Unspecified mutability while tring to push a string", old_token)
+
+            tmp_str: str = "".join(
+                chr(charcode) for charcode in parse_string(old_token.tvalue, old_token)
+            )
+            type_stack.extend(
+                ((TokenType.PUSH_INT, len(tmp_str)), (TokenType.PUSH_STR, tmp_str))
+            )
+        elif token.ttype == TokenType.SYS:
+            asm_registers_len: int = len(ASM_SNIPPETS[assembly_flavour]["registers"])
+
+            if token.tvalue > asm_registers_len:
+                error(
+                    f"Cannot use {token.tvalue} registers when there's only {asm_registers_len} available"
+                )
+
+            type_stack.append((TokenType.PUSH_INT, 0))
+        elif token.ttype == TokenType.DROP:
+            if not len(type_stack):
+                error("No items to drop off the stack", token)
+
+            type_stack.pop()
+        elif token.ttype == TokenType.SWAP:
+            if len(type_stack) < 2:
+                error("No items to swap", token)
+
+            a = type_stack.pop()
+            b = type_stack.pop()
+
+            type_stack.extend((a, b))
+        elif token.ttype == TokenType.MACRO:
+            error("Macro should not be parsed outside processing", token)
+        elif token.ttype == TokenType.END:
+            error("End should not be parsed outside processing", token)
+        elif token.ttype == TokenType.EXPAND_MACRO:
+            error("Macro expansion should not be parsed outside processing", token)
+        elif token.ttype == TokenType.INCLUDE:
+            error("Include should not be parsed outside processing", token)
+        elif token.ttype == TokenType.OPERATOR:
+            if token.tvalue == Operator.ADD:
+                if len(type_stack) < 2:
+                    error(
+                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack",
+                        token,
+                    )
+
+                add_a: Tuple[TokenType, Any] = type_stack.pop()
+                add_b: Tuple[TokenType, Any] = type_stack.pop()
+
+                if add_a[0] != TokenType.PUSH_INT:
+                    error(
+                        f"First argument of operator {token.tvalue.name!r} should be an integer"
+                    )
+
+                if add_b[0] != TokenType.PUSH_INT:
+                    error(
+                        f"Second argument of operator {token.tvalue.name!r} should be an integer"
+                    )
+
+                type_stack.append(add_a[1] + add_b[1])
+            elif token.tvalue == Operator.SUB:
+                if len(type_stack) < 2:
+                    error(
+                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack",
+                        token,
+                    )
+
+                sub_a: Tuple[TokenType, Any] = type_stack.pop()
+                sub_b: Tuple[TokenType, Any] = type_stack.pop()
+
+                if sub_a[0] != TokenType.PUSH_INT:
+                    error(
+                        f"First argument of operator {token.tvalue.name!r} should be an integer"
+                    )
+
+                if sub_b[0] != TokenType.PUSH_INT:
+                    error(
+                        f"Second argument of operator {token.tvalue.name!r} should be an integer"
+                    )
+
+                type_stack.append(sub_a[1] - sub_b[1])
+            elif token.tvalue == Operator.MUL:
+                if len(type_stack) < 2:
+                    error(
+                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack",
+                        token,
+                    )
+
+                mul_a: Tuple[TokenType, Any] = type_stack.pop()
+                mul_b: Tuple[TokenType, Any] = type_stack.pop()
+
+                if mul_a[0] != TokenType.PUSH_INT:
+                    error(
+                        f"First argument of operator {token.tvalue.name!r} should be an integer"
+                    )
+
+                if mul_b[0] != TokenType.PUSH_INT:
+                    error(
+                        f"Second argument of operator {token.tvalue.name!r} should be an integer"
+                    )
+
+                type_stack.append(mul_a[1] * mul_b[1])
+            elif token.tvalue == Operator.BOR:
+                if len(type_stack) < 2:
+                    error(
+                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack",
+                        token,
+                    )
+
+                bor_a: Tuple[TokenType, Any] = type_stack.pop()
+                bor_b: Tuple[TokenType, Any] = type_stack.pop()
+
+                if bor_a[0] != TokenType.PUSH_INT:
+                    error(
+                        f"First argument of operator {token.tvalue.name!r} should be an integer"
+                    )
+
+                if bor_b[0] != TokenType.PUSH_INT:
+                    error(
+                        f"Second argument of operator {token.tvalue.name!r} should be an integer"
+                    )
+
+                type_stack.append(bor_a[1] | bor_b[1])
+            elif token.tvalue == Operator.BAND:
+                if len(type_stack) < 2:
+                    error(
+                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack",
+                        token,
+                    )
+
+                band_a: Tuple[TokenType, Any] = type_stack.pop()
+                band_b: Tuple[TokenType, Any] = type_stack.pop()
+
+                if band_a[0] != TokenType.PUSH_INT:
+                    error(
+                        f"First argument of operator {token.tvalue.name!r} should be an integer"
+                    )
+
+                if band_b[0] != TokenType.PUSH_INT:
+                    error(
+                        f"Second argument of operator {token.tvalue.name!r} should be an integer"
+                    )
+
+                type_stack.append(band_a[1] & band_b[1])
+            elif token.tvalue == Operator.XOR:
+                if len(type_stack) < 2:
+                    error(
+                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack",
+                        token,
+                    )
+
+                xor_a: Tuple[TokenType, Any] = type_stack.pop()
+                xor_b: Tuple[TokenType, Any] = type_stack.pop()
+
+                if xor_a[0] != TokenType.PUSH_INT:
+                    error(
+                        f"First argument of operator {token.tvalue.name!r} should be an integer"
+                    )
+
+                if xor_b[0] != TokenType.PUSH_INT:
+                    error(
+                        f"Second argument of operator {token.tvalue.name!r} should be an integer"
+                    )
+
+                type_stack.append(xor_a[1] ^ xor_b[1])
+            else:
+                error(
+                    f"Unknown operator while type checking: {token.tvalue.name!r}",
+                    token,
+                )
+        elif token.ttype == TokenType.COPY:
+            if len(type_stack) < 2:
+                error(
+                    "Cannot copy any elements from an empty stack",
+                    token,
+                )
+
+            copy_element: Tuple[TokenType, Any] = type_stack.pop()
+            type_stack.extend((copy_element, copy_element))
+        elif token.ttype == TokenType.BUFFER:
+            error("Buffer should not be parsed outside processing", token)
+        elif token.ttype == TokenType.PUSH_BUFFER:
+            if token.tvalue not in BUFFERS:
+                error(f"Buffer {token.tvalue!r} does not exist")
+        else:
+            error(f"Unknown token while type checking: {token}", token)
+
+        ip += 1
+
+    yield from ast
 
 
 def main() -> int:
@@ -713,20 +946,26 @@ def main() -> int:
     asm_name: str = f"{bin_name}.asm"
     obj_name: str = f"{bin_name}.o"
 
-    file_ast: Tuple[Token, ...] = tuple(file_to_ast(sys.argv[1]))
-
-    preprocessed_ast: Tuple[Token, ...] = tuple(preprocess_ast(file_ast, True))
-
-    yasm_assembly: Generator[
-        Tuple[str, Token], None, None
-    ] = generate_assembly_linux_x86_64_yasm(preprocessed_ast)
-
-    anotated_yasm_assembly: Generator[str, None, None] = anotate_assembly(
-        yasm_assembly, ";"
+    log("Generating assembly")
+    asm_content: str = "\n".join(
+        anotate_assembly(
+            generate_assembly_linux_x86_64_yasm(
+                tuple(
+                    type_check_ast(
+                        tuple(
+                            preprocess_ast(
+                                tuple(file_to_ast(sys.argv[1])),
+                                "yasm-x86_64-linux",
+                                True,
+                            )
+                        ),
+                        "yasm-x86_64-linux",
+                    )
+                )
+            ),
+            ";",
+        )
     )
-
-    log("Generating assembly content")
-    asm_content: str = "\n".join(anotated_yasm_assembly)
 
     if flags["stdout"]:
         log("Printing generated assembly to STDOUT")
