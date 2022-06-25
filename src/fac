@@ -190,6 +190,9 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
                 " ".join(_tmp_str)[1:-1],
             )
         elif word.isnumeric():
+            if word.startswith("0"):
+                error(f"Word at position {_position}: numbers cannot start with 0")
+
             yield make_token(TokenType.PUSH_INT, int(word))
         elif word.startswith("%"):
             yield make_token(TokenType.EXPAND_MACRO, word[1:])
@@ -291,7 +294,6 @@ def generate_assembly_linux_x86_64_yasm(
         tname: str = f"fa_{token.ttype.name}_{ip}_{len(start_lb) + len(data_lb) + len(rodata_lb)}"
 
         if token.ttype == TokenType.PUSH_INT:
-            # start_lb.append((f"push {token.tvalue}", token))
             start_lb.extend(
                 (
                     (f"mov rax, {token.tvalue}", token),
@@ -588,7 +590,7 @@ def preprocess_ast(
             MACROS[macro_name] = list(preprocess_ast(tuple(macro_body)))
         elif token.ttype == TokenType.EXPAND_MACRO:
             if token.tvalue not in MACROS:
-                error(f"Cannot expand undefined macro {token.tvalue!r}")
+                error(f"Cannot expand undefined macro {token.tvalue!r}", token)
 
             yield from preprocess_ast(tuple(MACROS[token.tvalue]))
         elif token.ttype == TokenType.INCLUDE:
