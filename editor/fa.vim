@@ -19,7 +19,7 @@ syntax keyword faTodo TODO XXX FIXME NOTE
 
 
 " Language keywords
-syntax keyword faKeyword sys drop swap copy
+syntax keyword faKeyword sys drop swap copy buffer
 
 
 " Escapes
@@ -44,8 +44,12 @@ syntax keyword faMutability ro rw
 
 
 " Macros
-syntax keyword faMacros macro end
-syntax match faMacros "%\S*"
+syntax keyword faMacro macro end
+syntax match faMacro "%\S*"
+
+
+" Buffers
+syntax match faBuffer "#\S*"
 
 
 " Includes
@@ -61,8 +65,9 @@ highlight default link faString String
 highlight default link faEscape Special
 highlight default link faNumber Number
 highlight default link faMutability Define
-highlight default link faMacros Define
+highlight default link faMacro Define
 highlight default link faInclude Function
+highlight default link faBuffer Function
 
 
 " Set syntax

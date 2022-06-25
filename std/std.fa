@@ -333,10 +333,15 @@ macro exit  -- Exit with a specified exit code
     %SYS_exit sys 2
 end
 
-macro todo
+macro todo  -- Print a todo messag
+            -- and exit with EXIT_FAILURE
     "TODO: " ro 2 %fputs
     2 %fputs
     "\n"     ro 2 %fputs
 
     %EXIT_FAILURE %exit
+end
+
+macro read  -- 'Wrapper' for SYS_read
+    %SYS_read sys 4
 end

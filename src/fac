@@ -6,7 +6,7 @@ import os
 import sys
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Any, Dict, Generator, Iterable, List, Optional, Tuple
+from typing import Any, Dict, Generator, Iterable, List, Optional, Set, Tuple
 from warnings import filterwarnings as filter_warnings
 
 
@@ -23,6 +23,8 @@ class TokenType(Enum):
     INCLUDE = auto()
     OPERATOR = auto()
     COPY = auto()
+    BUFFER = auto()
+    PUSH_BUFFER = auto()
 
 
 class Mutability(Enum):
@@ -75,6 +77,8 @@ ASM_SNIPPETS: Dict[str, Dict[str, Tuple[str, ...]]] = {
 }
 
 MACROS: Dict[str, List[Token]] = {}
+MEMORIES: Dict[str, int] = {}
+CTX: Set[str] = set()
 
 
 def error(msg: str, token: Token = NULL_TOKEN) -> None:
@@ -142,7 +146,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
         ip += 1
 
 
-assert len(TokenType) == 12, "Unhandled token types in AST generation"
+assert len(TokenType) == 14, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
 assert len(Operator) == 3, "Unhandled operators in AST generation"
 
@@ -189,6 +193,8 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.PUSH_INT, int(word))
         elif word.startswith("%"):
             yield make_token(TokenType.EXPAND_MACRO, word[1:])
+        elif word.startswith("#"):
+            yield make_token(TokenType.PUSH_BUFFER, word[1:])
         elif word == "rw":
             yield make_token(TokenType.MUTABILITY, Mutability.RW)
         elif word == "ro":
@@ -234,6 +240,11 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.OPERATOR, Operator.MULTIPLY)
         elif word == "copy":
             yield make_token(TokenType.COPY, None)
+        elif word == "buffer":
+            ip += 1
+            word = words[ip]
+
+            yield make_token(TokenType.BUFFER, word)
         else:
             error(
                 f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
@@ -243,7 +254,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
 
 
 assert (
-    len(TokenType) == 12
+    len(TokenType) == 14
 ), "Unhandled token types in Linux x86_64 yasm assembly generation"
 assert (
     len(Mutability) == 2
@@ -265,6 +276,7 @@ def generate_assembly_linux_x86_64_yasm(
     start_lb: List[Tuple[str, Token]] = []
     data_lb: List[Tuple[str, Token]] = []
     rodata_lb: List[Tuple[str, Token]] = []
+    bss_lb: List[Tuple[str, Token]] = []
 
     tmp_stack: List[Any] = []
 
@@ -405,6 +417,21 @@ outside of word context",
 
             item: Any = tmp_stack.pop()
             tmp_stack.extend((item, item))
+        elif token.ttype == TokenType.PUSH_BUFFER:
+            mem_name: str = f"mem_{token.tvalue}"
+
+            if mem_name not in CTX:
+                bss_lb.append((f"{mem_name}: resb {MEMORIES[token.tvalue]}", token))
+                CTX.add(f"mem_{token.tvalue}")
+
+            start_lb.extend(
+                (
+                    (f"mov rax, {mem_name}", token),
+                    ("push rax", token),
+                )
+            )
+
+            tmp_stack.append(0)
         else:
             error(f"Unexpected {token}", token)
 
@@ -420,6 +447,10 @@ outside of word context",
     if rodata_lb:
         yield "segment .rodata", NULL_TOKEN
         yield from rodata_lb
+
+    if bss_lb:
+        yield "segment .bss", NULL_TOKEN
+        yield from bss_lb
 
 
 def file_to_ast(file: str) -> Generator[Token, None, None]:
@@ -519,7 +550,7 @@ def run_command_log(cmd: str) -> None:
         error("Command failed")
 
 
-assert len(TokenType) == 12, "Unhandled token types in processing"
+assert len(TokenType) == 14, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
 assert len(Operator) == 3, "Unhandled operators in processing"
 
@@ -553,6 +584,20 @@ def preprocess_ast(
             yield from preprocess_ast(tuple(MACROS[token.tvalue]))
         elif token.ttype == TokenType.INCLUDE:
             yield from preprocess_ast(tuple(file_to_ast(token.tvalue)))
+        elif token.ttype == TokenType.BUFFER:
+            mem_name: str = token.tvalue
+
+            ip += 1
+            token = ast[ip]
+
+            if token.ttype == TokenType.PUSH_INT:
+                MEMORIES[mem_name] = token.tvalue
+            elif token.ttype == TokenType.EXPAND_MACRO:
+                MEMORIES[mem_name] = tuple(preprocess_ast(tuple(MACROS[token.tvalue])))[
+                    0
+                ].tvalue
+            else:
+                error(f"Unsuported memory size: {token}", token)
         else:
             yield token
 

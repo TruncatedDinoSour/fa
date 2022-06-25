@@ -18,9 +18,10 @@ lln() {
 main() {
     echo 'Installing vim syntax'
 
-    mkdir -p -- "$VIMDIR/syntax" "$VIMDIR/ftdetect"
+    mkdir -p -- "$VIMDIR/syntax" "$VIMDIR/ftdetect" "$VIMDIR/completion"
     lln "$P/editor/fa.vim" "$VIMDIR/syntax"
     lln "$P/editor/fa.ftp.vim" "$VIMDIR/ftdetect"
+    lln "$P/editor/fa_completion.clist" "$VIMDIR/complete"
 
     echo 'Installing fac to local binaries'
     mkdir -p "$HOME/.local/bin"
