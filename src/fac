@@ -190,7 +190,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
                 " ".join(_tmp_str)[1:-1],
             )
         elif word.isnumeric():
-            if word.startswith("0"):
+            if word.startswith("0") and len(word) != 1:
                 error(f"Word at position {_position}: numbers cannot start with 0")
 
             yield make_token(TokenType.PUSH_INT, int(word))
