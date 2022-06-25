@@ -58,7 +58,7 @@ syntax region faString start=/\v'/ skip=/\v\\./ end=/\v'/
 
 
 " Operators
-syntax keyword faOperator add sub mul
+syntax keyword faOperator add sub mul bor band xor
 
 
 " Set highlights

@@ -36,6 +36,9 @@ class Operator(Enum):
     ADD = auto()
     SUB = auto()
     MUL = auto()
+    BOR = auto()
+    BAND = auto()
+    XOR = auto()
 
 
 @dataclass
@@ -148,7 +151,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
 
 assert len(TokenType) == 14, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
-assert len(Operator) == 3, "Unhandled operators in AST generation"
+assert len(Operator) == 6, "Unhandled operators in AST generation"
 
 
 def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None]:
@@ -263,6 +266,12 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             word = words[ip]
 
             yield make_token(TokenType.BUFFER, word)
+        elif word == "bor":
+            yield make_token(TokenType.OPERATOR, Operator.BOR)
+        elif word == "band":
+            yield make_token(TokenType.OPERATOR, Operator.BAND)
+        elif word == "xor":
+            yield make_token(TokenType.OPERATOR, Operator.XOR)
         else:
             error(
                 f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
@@ -278,7 +287,7 @@ assert (
     len(Mutability) == 2
 ), "Unhandled mutability contexts in Linux x86_64 yasm assembly generation generation"
 assert (
-    len(Operator) == 3
+    len(Operator) == 6
 ), "Unhandled operators in Linux x86_64 yasm assembly generation generation"
 
 
@@ -421,6 +430,39 @@ outside of word context",
                 )
 
                 tmp_stack.append(tmp_stack.pop() * tmp_stack.pop())
+            elif token.tvalue == Operator.BOR:
+                start_lb.extend(
+                    (
+                        ("pop rax", token),
+                        ("pop rdi", token),
+                        ("or rax, rdi", token),
+                        ("push rax", token),
+                    )
+                )
+
+                tmp_stack.append(tmp_stack.pop() | tmp_stack.pop())
+            elif token.tvalue == Operator.BAND:
+                start_lb.extend(
+                    (
+                        ("pop rax", token),
+                        ("pop rdi", token),
+                        ("and rax, rdi", token),
+                        ("push rax", token),
+                    )
+                )
+
+                tmp_stack.append(tmp_stack.pop() & tmp_stack.pop())
+            elif token.tvalue == Operator.XOR:
+                start_lb.extend(
+                    (
+                        ("pop rax", token),
+                        ("pop rdi", token),
+                        ("xor rax, rdi", token),
+                        ("push rax", token),
+                    )
+                )
+
+                tmp_stack.append(tmp_stack.pop() ^ tmp_stack.pop())
             else:
                 error(f"Unknown operator {token}", token)
         elif token.ttype == TokenType.COPY:
@@ -578,7 +620,7 @@ def run_command_log(cmd: str) -> None:
 
 assert len(TokenType) == 14, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
-assert len(Operator) == 3, "Unhandled operators in processing"
+assert len(Operator) == 6, "Unhandled operators in processing"
 
 
 def preprocess_ast(

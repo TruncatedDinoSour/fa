@@ -12,3 +12,6 @@ mul
 copy
 buffer
 #
+bor
+band
+xor
