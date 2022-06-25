@@ -82,6 +82,15 @@ ASM_SNIPPETS: Dict[str, Dict[str, Tuple[str, ...]]] = {
 MACROS: Dict[str, List[Token]] = {}
 BUFFERS: Dict[str, int] = {}
 CTX: Set[str] = set()
+INCLUDE_RESOLVE_ORDER: Tuple[str, ...] = (
+    ".",
+    "/usr/include/fa",
+    "/usr/lib/fa",
+    "/usr/local/include/fa",
+    "/usr/local/lib/fa",
+    os.path.expanduser("~/.local/include/fa"),
+    os.path.expanduser("~/.local/lib/fa"),
+)
 
 
 def error(msg: str, token: Token = NULL_TOKEN) -> None:
@@ -651,7 +660,15 @@ def preprocess_ast(
 
             yield from preprocess_ast(tuple(MACROS[token.tvalue]))
         elif token.ttype == TokenType.INCLUDE:
-            yield from preprocess_ast(tuple(file_to_ast(token.tvalue)))
+            file: str = token.tvalue
+
+            for include in INCLUDE_RESOLVE_ORDER:
+                include_file: str = os.path.join(include, file)
+                if os.path.isfile(include_file) or os.path.islink(include_file):
+                    file = include_file
+                    break
+
+            yield from preprocess_ast(tuple(file_to_ast(file)))
         elif token.ttype == TokenType.BUFFER:
             buffer_name: str = token.tvalue
 

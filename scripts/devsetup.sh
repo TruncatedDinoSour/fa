@@ -4,12 +4,13 @@ set -e
 
 VIMDIR="${VIMDIR:-"$HOME/.vim"}"
 BASHCOMP_DIR="${BASHCOMP_DIR:-"$HOME/.local/share/bash-completion/completions"}"
+LOCALLIB_DIR="${LOCALLIB_DIR:-"$HOME/.local/include/fa"}"
 P="$(pwd)"
 
 lln() {
     lnp="$2/$(basename -- "$1")"
     if [ -h "$lnp" ]; then
-        echo " ** $lnp is a symlink, unlinking"
+        echo " ** $lnp is a symlink, relinking"
         unlink "$lnp"
     fi
 
@@ -33,6 +34,11 @@ main() {
 
     mkdir -p "$HOME/.local/bin"
     lln "$P/src/fac" "$HOME/.local/bin"
+
+    echo 'Installing fa stdlib locally'
+
+    mkdir -p -- "$LOCALLIB_DIR"
+    lln "$P/std/std.fa" "$LOCALLIB_DIR"
 
     echo 'Done'
 }
