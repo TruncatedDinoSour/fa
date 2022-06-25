@@ -179,18 +179,18 @@ macro SYS_sethostname            170 end
 macro SYS_setdomainname          171 end
 macro STUb_iopl                  172 end
 macro SYS_ioperm                 173 end
-macro not                        174 end
+-- macro not                        174 end
 macro SYS_init_module            175 end
 macro SYS_delete_module          176 end
-macro not                        177 end
-macro not                        178 end
+-- macro not                        177 end
+-- macro not                        178 end
 macro SYS_quotactl               179 end
-macro not                        180 end
-macro not                        181 end
-macro not                        182 end
-macro not                        183 end
-macro not                        184 end
-macro not                        185 end
+-- macro not                        180 end
+-- macro not                        181 end
+-- macro not                        182 end
+-- macro not                        183 end
+-- macro not                        184 end
+-- macro not                        185 end
 macro SYS_gettid                 186 end
 macro SYS_readahead              187 end
 macro SYS_setxattr               188 end
@@ -219,8 +219,8 @@ macro SYS_io_cancel              210 end
 macro ARCh/x86/kernel/tls.c      211 end
 macro SYS_lookup_dcookie         212 end
 macro SYS_epoll_create           213 end
-macro not                        214 end
-macro not                        215 end
+-- macro not                        214 end
+-- macro not                        215 end
 macro SYS_remap_file_pages       216 end
 macro SYS_getdents64             217 end
 macro SYS_set_tid_address        218 end
@@ -241,7 +241,7 @@ macro SYS_epoll_wait             232 end
 macro SYS_epoll_ctl              233 end
 macro SYS_tgkill                 234 end
 macro SYS_utimes                 235 end
-macro not                        236 end
+-- macro not                        236 end
 macro SYS_mbind                  237 end
 macro SYS_set_mempolicy          238 end
 macro SYS_get_mempolicy          239 end
