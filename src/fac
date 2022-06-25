@@ -303,7 +303,7 @@ assert (
 def generate_assembly_linux_x86_64_yasm(
     ast: Tuple[Token, ...],
 ) -> Generator[Tuple[str, Token], None, None]:
-    log("Getting  Linux x86_64 yasm assembly from AST")
+    log("Getting Linux x86_64 yasm assembly from AST")
 
     ip: int = 0
 
