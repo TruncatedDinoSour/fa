@@ -20,7 +20,7 @@ lln() {
 main() {
     echo 'Installing vim syntax'
 
-    mkdir -p -- "$VIMDIR/syntax" "$VIMDIR/ftdetect" "$VIMDIR/completion"
+    mkdir -p -- "$VIMDIR/syntax" "$VIMDIR/ftdetect" "$VIMDIR/complete"
     lln "$P/editor/fa.vim" "$VIMDIR/syntax"
     lln "$P/editor/fa.ftp.vim" "$VIMDIR/ftdetect"
     lln "$P/editor/fa_completion.clist" "$VIMDIR/complete"
