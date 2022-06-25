@@ -301,7 +301,7 @@ assert (
 
 
 def generate_assembly_linux_x86_64_yasm(
-    ast: Tuple[Token, ...],
+    ast: Tuple[Token, ...]
 ) -> Generator[Tuple[str, Token], None, None]:
     log("Getting Linux x86_64 yasm assembly from AST")
 
@@ -524,8 +524,9 @@ outside of word context",
         yield from bss_lb
 
 
-def file_to_ast(file: str) -> Generator[Token, None, None]:
-    log(f"Generating ast for {file!r}")
+def file_to_ast(file: str, logging: bool = False) -> Generator[Token, None, None]:
+    if logging:
+        log(f"Generating AST for {file!r}")
 
     with open(file, "r") as fa_code:
         for line_num, line in enumerate(fa_code):
@@ -714,7 +715,7 @@ assert len(Operator) == 6, "Unhandled operators in type checking"
 
 
 def type_check_ast(
-        ast: Tuple[Token, ...], assembly_flavour: str, logging: bool = False
+    ast: Tuple[Token, ...], assembly_flavour: str, logging: bool = False
 ) -> Generator[Token, None, None]:
     if logging:
         log("Type checking AST")
@@ -965,13 +966,13 @@ def main() -> int:
                     type_check_ast(
                         tuple(
                             preprocess_ast(
-                                tuple(file_to_ast(sys.argv[1])),
+                                tuple(file_to_ast(sys.argv[1], True)),
                                 "yasm-x86_64-linux",
                                 True,
                             )
                         ),
                         "yasm-x86_64-linux",
-                        True
+                        True,
                     )
                 )
             ),
