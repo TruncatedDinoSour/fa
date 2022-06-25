@@ -171,7 +171,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             break
 
         if word.startswith('"'):
-            if word.startswith('"') and word.endswith('"'):
+            if word.startswith('"') and word.endswith('"') and word != '"':
                 yield make_token(
                     TokenType.PUSH_STR,
                     word[1:-1],
