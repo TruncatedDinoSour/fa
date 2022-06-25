@@ -77,7 +77,7 @@ ASM_SNIPPETS: Dict[str, Dict[str, Tuple[str, ...]]] = {
 }
 
 MACROS: Dict[str, List[Token]] = {}
-MEMORIES: Dict[str, int] = {}
+BUFFERS: Dict[str, int] = {}
 CTX: Set[str] = set()
 
 
@@ -435,15 +435,15 @@ outside of word context",
             item: Any = tmp_stack.pop()
             tmp_stack.extend((item, item))
         elif token.ttype == TokenType.PUSH_BUFFER:
-            mem_name: str = f"mem_{token.tvalue}"
+            buffer_name: str = f"buffer_{token.tvalue}"
 
-            if mem_name not in CTX:
-                bss_lb.append((f"{mem_name}: resb {MEMORIES[token.tvalue]}", token))
-                CTX.add(f"mem_{token.tvalue}")
+            if buffer_name not in CTX:
+                bss_lb.append((f"{buffer_name}: resb {BUFFERS[token.tvalue]}", token))
+                CTX.add(buffer_name)
 
             start_lb.extend(
                 (
-                    (f"mov rax, {mem_name}", token),
+                    (f"mov rax, {buffer_name}", token),
                     ("push rax", token),
                 )
             )
@@ -611,19 +611,22 @@ def preprocess_ast(
         elif token.ttype == TokenType.INCLUDE:
             yield from preprocess_ast(tuple(file_to_ast(token.tvalue)))
         elif token.ttype == TokenType.BUFFER:
-            mem_name: str = token.tvalue
+            buffer_name: str = token.tvalue
 
             ip += 1
             token = ast[ip]
+            buffer_size: int
 
             if token.ttype == TokenType.PUSH_INT:
-                MEMORIES[mem_name] = token.tvalue
+                buffer_size = token.tvalue
             elif token.ttype == TokenType.EXPAND_MACRO:
-                MEMORIES[mem_name] = tuple(preprocess_ast(tuple(MACROS[token.tvalue])))[
+                buffer_size = tuple(preprocess_ast(tuple(MACROS[token.tvalue])))[
                     0
                 ].tvalue
             else:
-                error(f"Unsuported memory size: {token}", token)
+                error(f"Unsuported buffer size: {token}", token)
+
+            BUFFERS[buffer_name] = buffer_size
         else:
             yield token
 
