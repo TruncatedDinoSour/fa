@@ -11,3 +11,4 @@
 - [Swap keyword in fa](/doc/md/SWAP.md)
 - [Sys keyword in fa](/doc/md/SYS.md)
 - [Fa data types](/doc/md/TYPES.md)
+- [Undefine keyword in fa](/doc/md/UNDEFINE.md)
