@@ -56,7 +56,7 @@ NULL_TOKEN: Token = Token(None, None, ("", 0, 0))
 ANOTATION_CONF: Dict[str, bool] = {"enabled": True}
 
 ASM_SNIPPETS: Dict[str, Dict[str, Tuple[str, ...]]] = {
-    "nasm-x86_64-linux": {
+    "yasm-x86_64-linux": {
         "registers": (
             "rax",
             "rdi",
@@ -244,19 +244,19 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
 
 assert (
     len(TokenType) == 12
-), "Unhandled token types in Linux x86_64 nasm assembly generation"
+), "Unhandled token types in Linux x86_64 yasm assembly generation"
 assert (
     len(Mutability) == 2
-), "Unhandled mutability contexts in Linux x86_64 nasm assembly generation generation"
+), "Unhandled mutability contexts in Linux x86_64 yasm assembly generation generation"
 assert (
     len(Operator) == 3
-), "Unhandled operators in Linux x86_64 nasm assembly generation generation"
+), "Unhandled operators in Linux x86_64 yasm assembly generation generation"
 
 
-def generate_assembly_linux_x86_64_nasm(
+def generate_assembly_linux_x86_64_yasm(
     ast: Tuple[Token, ...],
 ) -> Generator[Tuple[str, Token], None, None]:
-    log("Making generator for Linux x86_64 nasm assembly from AST")
+    log("Making generator for Linux x86_64 yasm assembly from AST")
 
     ip: int = 0
 
@@ -331,7 +331,7 @@ outside of word context",
             )
         elif token.ttype == TokenType.SYS:
             start_lb.extend(
-                (f"pop {ASM_SNIPPETS['nasm-x86_64-linux']['registers'][reg]}", token)
+                (f"pop {ASM_SNIPPETS['yasm-x86_64-linux']['registers'][reg]}", token)
                 for reg in range(token.tvalue)
             )
             start_lb.extend((("syscall", token), ("push rax", token)))
@@ -584,19 +584,19 @@ def main() -> int:
 
         preprocessed_ast: Tuple[Token, ...] = tuple(preprocess_ast(file_ast, True))
 
-        nasm_assembly: Generator[
+        yasm_assembly: Generator[
             Tuple[str, Token], None, None
-        ] = generate_assembly_linux_x86_64_nasm(preprocessed_ast)
+        ] = generate_assembly_linux_x86_64_yasm(preprocessed_ast)
 
-        anotated_nasm_assembly: Generator[str, None, None] = anotate_assembly(
-            nasm_assembly, ";"
+        anotated_yasm_assembly: Generator[str, None, None] = anotate_assembly(
+            yasm_assembly, ";"
         )
 
         log(f"Writting assembly to {asm_file.name!r}")
-        asm_file.write("\n".join(anotated_nasm_assembly))
+        asm_file.write("\n".join(anotated_yasm_assembly))
 
     run_command_log(
-        f"nasm -felf64 -o {obj_name!r} {asm_name!r} {' '.join(flags['asm-flags'])}"
+        f"yasm -felf64 -o {obj_name!r} {' '.join(flags['asm-flags'])} {asm_name!r}"
     )
     run_command_log(f"ld -o {bin_name!r} {obj_name!r} {' '.join(flags['ld-flags'])}")
 
