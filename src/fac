@@ -371,7 +371,7 @@ outside of word context",
             start_lb.extend(
                 (
                     ("pop rax", token),
-                    ("mul rax, 8", token),
+                    ("imul rax, 8", token),
                     ("add rsp, rax", token),
                 )
             )
