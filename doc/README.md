@@ -1,4 +1,5 @@
 # Fa documentation index
+- [Copy keyword in fa](/doc/md/COPY.md)
 - [Drop keyword in fa](/doc/md/DROP.md)
 - [End keyword in fa](/doc/md/END.md)
 - [Include keyword in fa](/doc/md/INCLUDE.md)

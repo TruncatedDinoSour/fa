@@ -22,6 +22,7 @@ class TokenType(Enum):
     EXPAND_MACRO = auto()
     INCLUDE = auto()
     OPERATOR = auto()
+    COPY = auto()
 
 
 class Mutability(Enum):
@@ -141,7 +142,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
         ip += 1
 
 
-assert len(TokenType) == 11, "Unhandled token types in AST generation"
+assert len(TokenType) == 12, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
 assert len(Operator) == 3, "Unhandled operators in AST generation"
 
@@ -231,6 +232,8 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.OPERATOR, Operator.MINUS)
         elif word == "*":
             yield make_token(TokenType.OPERATOR, Operator.MULTIPLY)
+        elif word == "copy":
+            yield make_token(TokenType.COPY, None)
         else:
             error(
                 f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
@@ -240,7 +243,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
 
 
 assert (
-    len(TokenType) == 11
+    len(TokenType) == 12
 ), "Unhandled token types in Linux x86_64 nasm assembly generation"
 assert (
     len(Mutability) == 2
@@ -391,6 +394,17 @@ outside of word context",
                 tmp_stack.append(tmp_stack.pop() * tmp_stack.pop())
             else:
                 error(f"Unknown operator {token}", token)
+        elif token.ttype == TokenType.COPY:
+            start_lb.extend(
+                (
+                    ("pop rax", token),
+                    ("push rax", token),
+                    ("push rax", token),
+                )
+            )
+
+            item: Any = tmp_stack.pop()
+            tmp_stack.extend((item, item))
         else:
             error(f"Unexpected {token}", token)
 
@@ -505,7 +519,7 @@ def run_command_log(cmd: str) -> None:
         error("Command failed")
 
 
-assert len(TokenType) == 11, "Unhandled token types in processing"
+assert len(TokenType) == 12, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
 assert len(Operator) == 3, "Unhandled operators in processing"
 
