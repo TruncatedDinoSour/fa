@@ -3,13 +3,13 @@ include 'std/std.fa'
 macro NAME_LEN 256 end
 
 macro main
-    buffer hello %NAME_LEN  -- Allocate a 256-byte (NAME_LEN) buffer in memory
+    buffer name %NAME_LEN  -- Allocate a 256-byte (NAME_LEN) buffer in memory
 
     "Enter your name: " ro     %STDOUT %fputs  -- fputs("...", STDOUT)
-    %NAME_LEN           #hello %STDIN   %read  -- read(STDIN, *buffer, NAME_LEN)
+    %NAME_LEN           #name  %STDIN   %read  -- read(STDIN, *buffer, NAME_LEN)
 
     "Your name is " ro %STDOUT %fputs          -- fputs("...", STDOUT)
-    1 #hello -                                 -- buffer = buffer - 1
+    1 #name -                                  -- buffer = buffer - 1
     -- We take away 1 from the buffer because it
     -- will include the <enter> key (a newline (\n))
     -- and we don't want that
