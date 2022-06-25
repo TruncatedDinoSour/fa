@@ -1,3 +1,10 @@
+macro STDIN  0 end
+macro STDOUT 1 end
+macro STDERR 2 end
+
+macro EXIT_OK       0 end
+macro EXIT_FAILURE  1 end
+
 macro SYS_read                   0   end
 macro SYS_write                  1   end
 macro SYS_open                   2   end
@@ -318,9 +325,24 @@ macro fputs  -- Print a string to a specified file descriptor
 end
 
 macro puts  -- Print a string and then a newline
-    1 %fputs "\n" ro 1 %fputs
+    %STDOUT %fputs            -- The string
+    "\n" ro %STDOUT %fputs    -- Newline
 end
 
 macro exit  -- Exit with a specified exit code
     %SYS_exit sys 2
+end
+
+macro todo
+    "TODO: " ro 2 %fputs
+    2 %fputs
+    "\n"     ro 2 %fputs
+
+    %EXIT_FAILURE %exit
+end
+
+macro alloc   -- Allocate x ammount of bytes
+    1 drop
+    "Implement custom memory allocator" ro %todo
+    -- SYS_brk or SYS_mmap
 end

@@ -21,11 +21,18 @@ class TokenType(Enum):
     END = auto()
     EXPAND_MACRO = auto()
     INCLUDE = auto()
+    OPERATOR = auto()
 
 
 class Mutability(Enum):
     RW = auto()
     RO = auto()
+
+
+class Operator(Enum):
+    PLUS = auto()
+    MINUS = auto()
+    MULTIPLY = auto()
 
 
 @dataclass
@@ -134,8 +141,9 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
         ip += 1
 
 
-assert len(TokenType) == 10, "Unhandled token types in AST generation"
+assert len(TokenType) == 11, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
+assert len(Operator) == 3, "Unhandled operators in AST generation"
 
 
 def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None]:
@@ -217,6 +225,12 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
                 _include_file.append(word)
 
             yield make_token(TokenType.INCLUDE, " ".join(_include_file)[:-1])
+        elif word == "+":
+            yield make_token(TokenType.OPERATOR, Operator.PLUS)
+        elif word == "-":
+            yield make_token(TokenType.OPERATOR, Operator.MINUS)
+        elif word == "*":
+            yield make_token(TokenType.OPERATOR, Operator.MULTIPLY)
         else:
             error(
                 f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
@@ -226,11 +240,14 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
 
 
 assert (
-    len(TokenType) == 10
+    len(TokenType) == 11
 ), "Unhandled token types in Linux x86_64 nasm assembly generation"
 assert (
     len(Mutability) == 2
 ), "Unhandled mutability contexts in Linux x86_64 nasm assembly generation generation"
+assert (
+    len(Operator) == 3
+), "Unhandled operators in Linux x86_64 nasm assembly generation generation"
 
 
 def generate_assembly_linux_x86_64_nasm(
@@ -259,7 +276,13 @@ def generate_assembly_linux_x86_64_nasm(
         tname: str = f"fa_{token.ttype.name}_{ip}_{len(start_lb) + len(data_lb) + len(rodata_lb)}"
 
         if token.ttype == TokenType.PUSH_INT:
-            start_lb.append((f"push {token.tvalue}", token))
+            # start_lb.append((f"push {token.tvalue}", token))
+            start_lb.extend(
+                (
+                    (f"mov rax, {token.tvalue}", token),
+                    ("push rax", token),
+                )
+            )
             tmp_stack.append(token.tvalue)
         elif token.ttype == TokenType.PUSH_STR:
             parsed_string_codes: Tuple[int, ...] = tuple(
@@ -332,6 +355,42 @@ outside of word context",
             )
 
             tmp_stack.extend((tmp_stack.pop(), tmp_stack.pop()))
+        elif token.ttype == TokenType.OPERATOR:
+            if token.tvalue == Operator.PLUS:
+                start_lb.extend(
+                    (
+                        ("pop rax", token),
+                        ("pop rdi", token),
+                        ("add rax, rdi", token),
+                        ("push rax", token),
+                    )
+                )
+
+                tmp_stack.append(tmp_stack.pop() + tmp_stack.pop())
+            elif token.tvalue == Operator.MINUS:
+                start_lb.extend(
+                    (
+                        ("pop rax", token),
+                        ("pop rdi", token),
+                        ("sub rax, rdi", token),
+                        ("push rax", token),
+                    )
+                )
+
+                tmp_stack.append(tmp_stack.pop() - tmp_stack.pop())
+            elif token.tvalue == Operator.MULTIPLY:
+                start_lb.extend(
+                    (
+                        ("pop rax", token),
+                        ("pop rdi", token),
+                        ("imul rax, rdi", token),
+                        ("push rax", token),
+                    )
+                )
+
+                tmp_stack.append(tmp_stack.pop() * tmp_stack.pop())
+            else:
+                error(f"Unknown operator {token}", token)
         else:
             error(f"Unexpected {token}", token)
 
@@ -446,8 +505,9 @@ def run_command_log(cmd: str) -> None:
         error("Command failed")
 
 
-assert len(TokenType) == 10, "Unhandled token types in processing"
+assert len(TokenType) == 11, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
+assert len(Operator) == 3, "Unhandled operators in processing"
 
 
 def preprocess_ast(
