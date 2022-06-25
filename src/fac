@@ -549,6 +549,7 @@ def print_help() -> int:
         "   -help                                       Prints help",
         "   -no-compile                                 Only transpiles to assembly",
         "   -stdout                                     Print generated assembly",
+        "   -no-logging                                 Disable logging",
         "",
     )
 
@@ -567,6 +568,7 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
         "output": os.path.basename(os.path.splitext(sys.argv[1])[0]),
         "compile": True,
         "stdout": False,
+        "logging": True,
     }
 
     if not flags:
@@ -611,6 +613,8 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
         elif flag == "-stdout":
             flagd["stdout"] = True
             flagd["compile"] = False
+        elif flag == "-no-logging":
+            flagd["logging"] = False
         else:
             error(f"Unknown flag {flag!r}")
 
@@ -620,6 +624,9 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
 
 
 def log(msg: str) -> None:
+    if "flags.nolog" in CTX:
+        return
+
     print(f" :: {msg}", file=sys.stderr)
 
 
@@ -942,6 +949,9 @@ def main() -> int:
 
     if not flags["anotate"]:
         ANOTATION_CONF["enabled"] = False
+
+    if not flags["logging"]:
+        CTX.add("flags.nolog")
 
     bin_name: str = flags["output"]
     asm_name: str = f"{bin_name}.asm"
