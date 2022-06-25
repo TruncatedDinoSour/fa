@@ -267,7 +267,7 @@ assert (
 def generate_assembly_linux_x86_64_yasm(
     ast: Tuple[Token, ...],
 ) -> Generator[Tuple[str, Token], None, None]:
-    log("Making generator for Linux x86_64 yasm assembly from AST")
+    log("Getting  Linux x86_64 yasm assembly from AST")
 
     ip: int = 0
 
@@ -476,6 +476,8 @@ def print_help() -> int:
         "   -asm-flags <flag,flag,flag,...>             Sets assembly flags",
         "   -ld-flags <flag,flag,flag,...>              Sets linker flags",
         "   -help                                       Prints help",
+        "   -no-compile                                 Only transpiles to assembly",
+        "   -stdout                                     Print generated assembly",
         "",
     )
 
@@ -492,6 +494,8 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
         "asm-flags": "",
         "ld-flags": "",
         "output": os.path.basename(os.path.splitext(sys.argv[1])[0]),
+        "compile": True,
+        "stdout": False,
     }
 
     if not flags:
@@ -531,6 +535,11 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
             flag = flags[ip]
 
             flagd["output"] = flag
+        elif flag == "-no-compile":
+            flagd["compile"] = False
+        elif flag == "-stdout":
+            flagd["stdout"] = True
+            flagd["compile"] = False
         else:
             error(f"Unknown flag {flag!r}")
 
@@ -540,7 +549,7 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
 
 
 def log(msg: str) -> None:
-    print(f" :: {msg}")
+    print(f" :: {msg}", file=sys.stderr)
 
 
 def run_command_log(cmd: str) -> None:
@@ -624,26 +633,36 @@ def main() -> int:
     asm_name: str = f"{bin_name}.asm"
     obj_name: str = f"{bin_name}.o"
 
-    with open(asm_name, "w") as asm_file:
-        file_ast: Tuple[Token, ...] = tuple(file_to_ast(sys.argv[1]))
+    file_ast: Tuple[Token, ...] = tuple(file_to_ast(sys.argv[1]))
 
-        preprocessed_ast: Tuple[Token, ...] = tuple(preprocess_ast(file_ast, True))
+    preprocessed_ast: Tuple[Token, ...] = tuple(preprocess_ast(file_ast, True))
 
-        yasm_assembly: Generator[
-            Tuple[str, Token], None, None
-        ] = generate_assembly_linux_x86_64_yasm(preprocessed_ast)
+    yasm_assembly: Generator[
+        Tuple[str, Token], None, None
+    ] = generate_assembly_linux_x86_64_yasm(preprocessed_ast)
 
-        anotated_yasm_assembly: Generator[str, None, None] = anotate_assembly(
-            yasm_assembly, ";"
-        )
-
-        log(f"Writting assembly to {asm_file.name!r}")
-        asm_file.write("\n".join(anotated_yasm_assembly))
-
-    run_command_log(
-        f"yasm -felf64 -o {obj_name!r} {' '.join(flags['asm-flags'])} {asm_name!r}"
+    anotated_yasm_assembly: Generator[str, None, None] = anotate_assembly(
+        yasm_assembly, ";"
     )
-    run_command_log(f"ld -o {bin_name!r} {obj_name!r} {' '.join(flags['ld-flags'])}")
+
+    log("Generating assembly content")
+    asm_content: str = "\n".join(anotated_yasm_assembly)
+
+    if flags["stdout"]:
+        log("Printing generated assembly to STDOUT")
+        print(asm_content)
+    else:
+        with open(asm_name, "w") as asm_file:
+            log(f"Writting assembly to {asm_file.name!r}")
+            asm_file.write(asm_content)
+
+    if flags["compile"]:
+        run_command_log(
+            f"yasm -felf64 -o {obj_name!r} {' '.join(flags['asm-flags'])} {asm_name!r}"
+        )
+        run_command_log(
+            f"ld -o {bin_name!r} {obj_name!r} {' '.join(flags['ld-flags'])}"
+        )
 
     return EXIT_OK
 
