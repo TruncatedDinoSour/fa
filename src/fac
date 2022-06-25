@@ -707,9 +707,10 @@ assert len(Operator) == 6, "Unhandled operators in type checking"
 
 
 def type_check_ast(
-    ast: Tuple[Token, ...], assembly_flavour: str
+        ast: Tuple[Token, ...], assembly_flavour: str, logging: bool = False
 ) -> Generator[Token, None, None]:
-    log("Type checking AST")
+    if logging:
+        log("Type checking AST")
 
     ip: int = 0
     type_stack: List[Tuple[TokenType, Any]] = []
@@ -960,6 +961,7 @@ def main() -> int:
                             )
                         ),
                         "yasm-x86_64-linux",
+                        True
                     )
                 )
             ),
