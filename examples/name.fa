@@ -1,4 +1,4 @@
-include 'std/std.fa'
+include 'std.fa'
 
 macro NAME_LEN 256 end
 
