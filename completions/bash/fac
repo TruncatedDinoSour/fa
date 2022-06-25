@@ -1,0 +1,15 @@
+# fac completion                                    -*- shell-script -*-
+
+_fac() {
+    local words cword cmd cur
+    _init_completion -s || return
+
+    for ((cmd = 1; cmd <= cword; cmd++)); do
+        if [[ ${words[cmd]} == -* ]]; then
+            COMPREPLY=($(compgen -W "-no-anotate -asm-flags -ld-flags -help \
+                -no-compile -stdout" -- "$cur"))
+        fi
+    done
+} && complete -F _fac -o bashdefault -o default fac
+
+# ex: filetype=sh

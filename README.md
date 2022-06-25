@@ -20,6 +20,7 @@ some time
 - Binutils/`ld` linker
 - `Yasm` compiler
 - `Python3` (for now)
+- Bash-completion (optional, for completions)
 
 # Installation for developing
 
