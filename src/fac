@@ -25,6 +25,7 @@ class TokenType(Enum):
     COPY = auto()
     BUFFER = auto()
     PUSH_BUFFER = auto()
+    UNDEFINE = auto()
 
 
 class Mutability(Enum):
@@ -158,7 +159,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
         ip += 1
 
 
-assert len(TokenType) == 14, "Unhandled token types in AST generation"
+assert len(TokenType) == 15, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
 assert len(Operator) == 6, "Unhandled operators in AST generation"
 
@@ -281,6 +282,11 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.OPERATOR, Operator.BAND)
         elif word == "xor":
             yield make_token(TokenType.OPERATOR, Operator.XOR)
+        elif word == "undefine":
+            ip += 1
+            word = words[ip].strip()
+
+            yield make_token(TokenType.UNDEFINE, word)
         else:
             error(
                 f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
@@ -290,7 +296,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
 
 
 assert (
-    len(TokenType) == 14
+    len(TokenType) == 15
 ), "Unhandled token types in Linux x86_64 yasm assembly generation"
 assert (
     len(Mutability) == 2
@@ -372,8 +378,7 @@ def generate_assembly_linux_x86_64_yasm(
             tmp_stack.extend((len(_tmp_str), _tmp_str))
         elif token.ttype == TokenType.MUTABILITY:
             error(
-                "Mutability must not be parsed \
-outside of word context",
+                "Mutability should not be parsed outside of word context",
                 token,
             )
         elif token.ttype == TokenType.SYS:
@@ -408,6 +413,26 @@ outside of word context",
             b = tmp_stack.pop()
 
             tmp_stack.extend((a, b))
+        elif token.ttype == TokenType.MACRO:
+            error(
+                "Macro should not be parsed outside of processing context",
+                token,
+            )
+        elif token.ttype == TokenType.END:
+            error(
+                "End should not be parsed outside of word context",
+                token,
+            )
+        elif token.ttype == TokenType.EXPAND_MACRO:
+            error(
+                "Macro espansion should not be parsed outside of processing context",
+                token,
+            )
+        elif token.ttype == TokenType.INCLUDE:
+            error(
+                "Include should not be parsed outside of processing context",
+                token,
+            )
         elif token.ttype == TokenType.OPERATOR:
             if token.tvalue == Operator.ADD:
                 start_lb.extend(
@@ -503,6 +528,11 @@ outside of word context",
             )
 
             tmp_stack.append(0)
+        elif token.ttype == TokenType.UNDEFINE:
+            error(
+                "Undefine should not be parsed outside of processing context",
+                token,
+            )
         else:
             error(f"Unexpected {token}", token)
 
@@ -638,7 +668,7 @@ def run_command_log(cmd: str) -> None:
         error("Command failed")
 
 
-assert len(TokenType) == 14, "Unhandled token types in processing"
+assert len(TokenType) == 15, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
 assert len(Operator) == 6, "Unhandled operators in processing"
 
@@ -657,6 +687,9 @@ def preprocess_ast(
         if token.ttype == TokenType.MACRO:
             macro_body = []
             macro_name = token.tvalue
+
+            if macro_name in MACROS:
+                error(f"Macro {macro_name!r} is already defined", token)
 
             while token.ttype != TokenType.END:
                 ip += 1
@@ -703,13 +736,18 @@ def preprocess_ast(
                 error(f"Unsuported buffer size: {token}", token)
 
             BUFFERS[buffer_name] = buffer_size
+        elif token.ttype == TokenType.UNDEFINE:
+            if token.tvalue not in MACROS:
+                error(f"Macro {token.tvalue!r} is not defined")
+
+            del MACROS[token.tvalue]
         else:
             yield token
 
         ip += 1
 
 
-assert len(TokenType) == 14, "Unhandled token types in type checking"
+assert len(TokenType) == 15, "Unhandled token types in type checking"
 assert len(Mutability) == 2, "Unhandled mutability contexts in type checking"
 assert len(Operator) == 6, "Unhandled operators in type checking"
 
@@ -927,6 +965,8 @@ def type_check_ast(
         elif token.ttype == TokenType.PUSH_BUFFER:
             if token.tvalue not in BUFFERS:
                 error(f"Buffer {token.tvalue!r} does not exist")
+        elif token.ttype == TokenType.UNDEFINE:
+            error("Undefine should not be parsed outside processing", token)
         else:
             error(f"Unknown token while type checking: {token}", token)
 

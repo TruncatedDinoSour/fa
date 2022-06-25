@@ -44,7 +44,7 @@ syntax keyword faMutability ro rw
 
 
 " Macros
-syntax keyword faMacro macro end
+syntax keyword faMacro macro end undefine
 syntax match faMacro "%\S*"
 
 
