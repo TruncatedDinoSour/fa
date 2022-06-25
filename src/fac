@@ -171,17 +171,32 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             break
 
         if word.startswith('"'):
-            _tmp_str: List[str] = [word]
+            if word.startswith('"') and word.endswith('"'):
+                yield make_token(
+                    TokenType.PUSH_STR,
+                    word[1:-1],
+                )
+                ip += 1
+                continue
+
+            old_word = word
+
+            ip += 1
+            word = words[ip]
+
+            _tmp_str: List[str] = [old_word, word]
 
             while not word.endswith('"'):
                 ip += 1
+
                 try:
                     word = words[ip].strip()
                 except IndexError:
-                    error(
-                        f"Unclosed string at position {_position} at file {file!r} \
+                    if len(_tmp_str) >= 2 and word != '"':
+                        error(
+                            f"Unclosed string at position {_position} at file {file!r} \
 (starting at IP {old_ip})",
-                    )
+                        )
 
                 _tmp_str.append(word)
 
