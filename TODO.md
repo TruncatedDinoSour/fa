@@ -1,3 +1,4 @@
 - [x] Use return value in `drop`
 - [x] Type checking
 - [ ] Dynamic buffer allocation
+- [ ] Locality of macros

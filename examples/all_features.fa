@@ -54,7 +54,24 @@ macro main
     --< Block comments >--
     -- Line comments
 
-    0 %exit
+    -- Nested macros
+
+    macro a 0 end
+    macro b %a end
+    macro c %b end
+
+    macro d
+        macro f
+            macro e %c end
+            %e
+        end
+
+        %f
+    end
+
+    -- Some math
+
+    1 %d sub 1 add --< Macro expansion with math >-- %exit
 end
 
 %main

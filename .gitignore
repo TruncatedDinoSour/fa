@@ -1,3 +1,4 @@
 *.asm
 *.o
 .mypy_cache/
+/all_features

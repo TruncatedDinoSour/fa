@@ -94,6 +94,7 @@ INCLUDE_RESOLVE_ORDER: Tuple[str, ...] = (
     os.path.expanduser("~/.local/include/fa"),
     os.path.expanduser("~/.local/lib/fa"),
 )
+SCOPES: List[str] = []
 
 
 def error(msg: str, token: Token = NULL_TOKEN) -> None:
@@ -281,9 +282,13 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
 
             word = words[ip].strip()
 
+            SCOPES.append(f"macro.{word}")
             yield make_token(TokenType.MACRO, word)
         elif word == "end":
-            yield make_token(TokenType.END, None)
+            if not SCOPES:
+                error(f"No scope to end at position {_position}", NULL_TOKEN)
+
+            yield make_token(TokenType.END, SCOPES.pop())
         elif word == "include":
             _include_file: List[str] = []
 
@@ -759,7 +764,10 @@ def preprocess_ast(
             if macro_name in MACROS:
                 error(f"Macro {macro_name!r} is already defined", token)
 
-            while token.ttype != TokenType.END:
+            while True:
+                if token.ttype == TokenType.END and token.tvalue == f"macro.{macro_name}":
+                    break
+
                 ip += 1
                 ei("Macro definition overflow", token, ast, ip)
 
