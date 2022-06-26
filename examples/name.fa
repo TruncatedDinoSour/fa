@@ -8,13 +8,13 @@ macro main
     --<
             Print the prompt
     >--
-    "Enter your name: " ro %STDOUT %fputs  -- fputs("...", stdout)           => null
+    "Enter your name: " ro %STDOUT %fputs  -- fputs("...", stdout)          => null
 
 
     --<
             Read the name into the name buffer
     >--
-    %NAME_LEN #name %STDIN %SYS_read sys 4  -- read(stdin, *name, NAME_LEN)  => ammount of bytes read
+    %NAME_LEN #name %STDIN %SYS_read sys 4  -- read(stdin, *name, NAME_LEN) => ammount of bytes read
 
 
     --<
