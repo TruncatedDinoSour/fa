@@ -622,7 +622,7 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
 
             flag = flags[ip]
 
-            flagd["asm-flags"].append(flag.split(","))
+            flagd["asm-flags"].extend(flag.split(","))
         elif flag == "-help":
             sys.exit(print_help())
         elif flag == "-o":
