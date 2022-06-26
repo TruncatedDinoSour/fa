@@ -1,0 +1,54 @@
+-- Include
+include 'std.fa'
+
+-- Macro and end
+macro hi 0 end
+
+macro main
+    -- Mutability and strings
+    "Hello world" ro %puts
+    "Hello world" rw %puts
+
+    -- Sys, numbers and drop
+    "Hello world\n" ro 1 1 sys 4 1 drop
+
+    -- Swap
+    "Hello world\n" ro swap swap 2 drop
+
+    -- Expand macro
+    %hi 1 drop
+
+    -- Add
+    "Hello world\n" ro 1 1 add %fputs
+
+    -- Sub
+    "Hello world\n" ro 2 1 sub %fputs
+
+    -- Mul
+    "Hello world\n" ro 2 1 mul %fputs
+
+    -- Bor
+    "Hello world\n" ro 2 2 bor %fputs
+
+    -- Band
+    "Hello world\n" ro 2 2 band %fputs
+
+    -- Xor
+    "Hello world\n" ro 2 0 xor %fputs
+
+    -- Copy
+    1 copy drop
+
+    -- Buffer
+    buffer test_buffer 1
+
+    -- Push buffer
+    #test_buffer 1 drop
+
+    -- Undefine
+    undefine hi
+
+    0 %exit
+end
+
+%main

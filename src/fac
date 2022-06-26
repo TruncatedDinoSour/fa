@@ -581,11 +581,11 @@ def print_help() -> int:
         "Flags:",
         "   -no-anotate                                 Doesn't anotate assembly",
         "   -asm-flags <flag,flag,flag,...>             Sets assembly flags",
-        "   -ld-flags <flag,flag,flag,...>              Sets linker flags",
         "   -help                                       Prints help",
         "   -no-compile                                 Only transpiles to assembly",
         "   -stdout                                     Print generated assembly",
         "   -no-logging                                 Disable logging",
+        "   -dbg <file>                                 Where to dump debugging symbols",
         "",
     )
 
@@ -599,8 +599,7 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
 
     flagd: Dict[str, Any] = {
         "anotate": True,
-        "asm-flags": "",
-        "ld-flags": "",
+        "asm-flags": [],
         "output": os.path.basename(os.path.splitext(sys.argv[1])[0]),
         "compile": True,
         "stdout": False,
@@ -623,16 +622,7 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
 
             flag = flags[ip]
 
-            flagd["asm-flags"] = flag.split(",")
-        elif flag == "-ld-flags":
-            ip += 1
-
-            if ip >= len(flags):
-                error("Missing comma-seperated flags to -ld-flags")
-
-            flag = flags[ip]
-
-            flagd["ld-flags"] = flag.split(",")
+            flagd["asm-flags"].append(flag.split(","))
         elif flag == "-help":
             sys.exit(print_help())
         elif flag == "-o":
@@ -651,6 +641,15 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
             flagd["compile"] = False
         elif flag == "-no-logging":
             flagd["logging"] = False
+        elif flag == "-dbg":
+            ip += 1
+
+            if ip >= len(flags):
+                error("Missing output file to -dbg")
+
+            flag = flags[ip]
+
+            flagd["asm-flags"].extend(("-s", repr(flag)))
         else:
             error(f"Unknown flag {flag!r}")
 
@@ -1067,7 +1066,9 @@ def main() -> int:
             asm_file.write(asm_content)
 
     if flags["compile"]:
-        run_command_log(f"fasm {asm_name!r} {bin_name!r} -m 1048576")
+        run_command_log(
+            f"fasm {asm_name!r} {bin_name!r} {' '.join(flags['asm-flags'])}"
+        )
 
     return EXIT_OK
 
