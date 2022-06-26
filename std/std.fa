@@ -384,26 +384,21 @@ end
 
 
 macro puts  -- Print a string and then a newline
-    %STDOUT %fputs            -- The string
-    "\n" ro %STDOUT %fputs    -- Newline
+    %STDOUT         %fputs  -- The string
+    "\n" ro %STDOUT %fputs  -- Newline
 end
 
 
 macro exit  -- Exit with a specified exit code
-    %SYS_exit sys 2
+    %SYS_exit sys 2 1 drop
 end
 
 
 macro todo  -- Print a todo messag
             -- and exit with EXIT_FAILURE
     "TODO: " ro 2 %fputs
-    2 %fputs
+    2             %fputs
     "\n"     ro 2 %fputs
 
     %EXIT_FAILURE %exit
-end
-
-
-macro read  -- 'Wrapper' for SYS_read
-    %SYS_read sys 4
 end

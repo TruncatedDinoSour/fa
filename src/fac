@@ -62,7 +62,7 @@ NULL_TOKEN: Token = Token(None, None, ("", 0, 0))
 ANOTATION_CONF: Dict[str, bool] = {"enabled": True}
 
 ASM_SNIPPETS: Dict[str, Dict[str, Tuple[str, ...]]] = {
-    "yasm-x86_64-linux": {
+    "fasm-x86_64-linux": {
         "registers": (
             "rax",
             "rdi",
@@ -297,23 +297,25 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
 
 assert (
     len(TokenType) == 15
-), "Unhandled token types in Linux x86_64 yasm assembly generation"
+), "Unhandled token types in Linux x86_64 fasm assembly generation"
 assert (
     len(Mutability) == 2
-), "Unhandled mutability contexts in Linux x86_64 yasm assembly generation generation"
+), "Unhandled mutability contexts in Linux x86_64 fasm assembly generation generation"
 assert (
     len(Operator) == 6
-), "Unhandled operators in Linux x86_64 yasm assembly generation generation"
+), "Unhandled operators in Linux x86_64 fasm assembly generation generation"
 
 
-def generate_assembly_linux_x86_64_yasm(
+def generate_assembly_linux_x86_64_fasm(
     ast: Tuple[Token, ...]
 ) -> Generator[Tuple[str, Token], None, None]:
-    log("Getting Linux x86_64 yasm assembly from AST")
+    log("Getting Linux x86_64 fasm assembly from AST")
 
     ip: int = 0
 
-    yield from make_usable_asm(("BITS 64", "global _start"))
+    yield from make_usable_asm(
+        ("format ELF64 executable 3", "segment readable executable")
+    )
 
     start_lb: List[Tuple[str, Token]] = []
     data_lb: List[Tuple[str, Token]] = []
@@ -363,7 +365,7 @@ def generate_assembly_linux_x86_64_yasm(
                         f"str_{tname}: db {','.join(map(str, parsed_string_codes))}",
                         ast[old_ip],
                     ),
-                    (f"strlen_{tname}: equ $-str_{tname}", ast[old_ip]),
+                    (f"strlen_{tname} = $ - str_{tname}", ast[old_ip]),
                 )
             )
 
@@ -383,7 +385,7 @@ def generate_assembly_linux_x86_64_yasm(
             )
         elif token.ttype == TokenType.SYS:
             start_lb.extend(
-                (f"pop {ASM_SNIPPETS['yasm-x86_64-linux']['registers'][reg]}", token)
+                (f"pop {ASM_SNIPPETS['fasm-x86_64-linux']['registers'][reg]}", token)
                 for reg in range(token.tvalue)
             )
             start_lb.extend((("syscall", token), ("push rax", token)))
@@ -517,7 +519,7 @@ def generate_assembly_linux_x86_64_yasm(
             buffer_name: str = f"buffer_{token.tvalue}"
 
             if buffer_name not in CTX:
-                bss_lb.append((f"{buffer_name}: resb {BUFFERS[token.tvalue]}", token))
+                bss_lb.append((f"{buffer_name}: rb {BUFFERS[token.tvalue]}", token))
                 CTX.add(buffer_name)
 
             start_lb.extend(
@@ -538,19 +540,22 @@ def generate_assembly_linux_x86_64_yasm(
 
         ip += 1
 
-    yield from make_usable_asm(("segment .text", "_start:"))
+    if not start_lb:
+        error("No code found")
+
+    yield ("_start:", NULL_TOKEN)
     yield from start_lb
 
     if data_lb:
-        yield "segment .data", NULL_TOKEN
+        yield "segment readable writeable", NULL_TOKEN
         yield from data_lb
 
     if rodata_lb:
-        yield "segment .rodata", NULL_TOKEN
+        yield "segment readable", NULL_TOKEN
         yield from rodata_lb
 
     if bss_lb:
-        yield "segment .bss", NULL_TOKEN
+        yield "segment readable writable", NULL_TOKEN
         yield from bss_lb
 
 
@@ -559,7 +564,7 @@ def file_to_ast(file: str, logging: bool = False) -> Generator[Token, None, None
         log(f"Generating AST for {file!r}")
 
     with open(file, "r") as fa_code:
-        for line_num, line in enumerate(fa_code):
+        for line_num, line in enumerate(fa_code, 1):
             if not line:
                 continue
 
@@ -760,12 +765,13 @@ def type_check_ast(
 
     ip: int = 0
     type_stack: List[Tuple[TokenType, Any]] = []
+    ast_len: int = len(ast)
 
     def ei(msg: str, token: Token) -> None:
         if ip > len(ast):
             error(f"Exceeding IP: {msg}", token)
 
-    while ip < len(ast):
+    while ip < ast_len:
         token: Token = ast[ip]
 
         if token.ttype == TokenType.PUSH_INT:
@@ -797,12 +803,34 @@ def type_check_ast(
                     f"Cannot use {token.tvalue} registers when there's only {asm_registers_len} available"
                 )
 
+            # Accounting the syscall number
+            sys_type_stack_len: int = len(type_stack)
+
+            if token.tvalue > sys_type_stack_len:
+                print(token.tvalue, sys_type_stack_len, type_stack)
+                error(f"Cannot use more than {sys_type_stack_len} registers", token)
+
+            for _ in range(token.tvalue):
+                type_stack.pop()
+
             type_stack.append((TokenType.PUSH_INT, 0))
         elif token.ttype == TokenType.DROP:
             if not len(type_stack):
                 error("No items to drop off the stack", token)
 
-            type_stack.pop()
+            drop_ammount: Tuple[TokenType, Any] = type_stack.pop()
+            drop_type_stack_len: int = len(type_stack)
+
+            if drop_ammount[0] != TokenType.PUSH_INT:
+                error("Drop expected integer as the drop ammount", token)
+
+            if drop_ammount[1] > drop_type_stack_len:
+                error(
+                    f"Cannot drop more than {drop_type_stack_len} items from the stack"
+                )
+
+            for _ in range(drop_ammount[1]):
+                type_stack.pop()
         elif token.ttype == TokenType.SWAP:
             if len(type_stack) < 2:
                 error("No items to swap", token)
@@ -840,7 +868,7 @@ def type_check_ast(
                         f"Second argument of operator {token.tvalue.name!r} should be an integer"
                     )
 
-                type_stack.append(add_a[1] + add_b[1])
+                type_stack.append((TokenType.PUSH_INT, add_a[1] + add_b[1]))
             elif token.tvalue == Operator.SUB:
                 if len(type_stack) < 2:
                     error(
@@ -861,7 +889,7 @@ def type_check_ast(
                         f"Second argument of operator {token.tvalue.name!r} should be an integer"
                     )
 
-                type_stack.append(sub_a[1] - sub_b[1])
+                type_stack.append((TokenType.PUSH_INT, sub_a[1] - sub_b[1]))
             elif token.tvalue == Operator.MUL:
                 if len(type_stack) < 2:
                     error(
@@ -882,7 +910,7 @@ def type_check_ast(
                         f"Second argument of operator {token.tvalue.name!r} should be an integer"
                     )
 
-                type_stack.append(mul_a[1] * mul_b[1])
+                type_stack.append((TokenType.PUSH_INT, mul_a[1] * mul_b[1]))
             elif token.tvalue == Operator.BOR:
                 if len(type_stack) < 2:
                     error(
@@ -903,7 +931,7 @@ def type_check_ast(
                         f"Second argument of operator {token.tvalue.name!r} should be an integer"
                     )
 
-                type_stack.append(bor_a[1] | bor_b[1])
+                type_stack.append((TokenType.PUSH_INT, bor_a[1] | bor_b[1]))
             elif token.tvalue == Operator.BAND:
                 if len(type_stack) < 2:
                     error(
@@ -924,7 +952,7 @@ def type_check_ast(
                         f"Second argument of operator {token.tvalue.name!r} should be an integer"
                     )
 
-                type_stack.append(band_a[1] & band_b[1])
+                type_stack.append((TokenType.PUSH_INT, band_a[1] & band_b[1]))
             elif token.tvalue == Operator.XOR:
                 if len(type_stack) < 2:
                     error(
@@ -945,7 +973,7 @@ def type_check_ast(
                         f"Second argument of operator {token.tvalue.name!r} should be an integer"
                     )
 
-                type_stack.append(xor_a[1] ^ xor_b[1])
+                type_stack.append((TokenType.PUSH_INT, xor_a[1] ^ xor_b[1]))
             else:
                 error(
                     f"Unknown operator while type checking: {token.tvalue.name!r}",
@@ -965,12 +993,23 @@ def type_check_ast(
         elif token.ttype == TokenType.PUSH_BUFFER:
             if token.tvalue not in BUFFERS:
                 error(f"Buffer {token.tvalue!r} does not exist")
+
+            type_stack.append((TokenType.PUSH_INT, 1))
         elif token.ttype == TokenType.UNDEFINE:
             error("Undefine should not be parsed outside processing", token)
         else:
             error(f"Unknown token while type checking: {token}", token)
 
         ip += 1
+
+    if type_stack:
+        log("Unhandled items on the stack")
+
+        for item in type_stack:
+            sys.stderr.write("    ")
+            log(str(item))
+
+        sys.exit(EXIT_ER)
 
     yield from ast
 
@@ -996,22 +1035,21 @@ def main() -> int:
 
     bin_name: str = flags["output"]
     asm_name: str = f"{bin_name}.asm"
-    obj_name: str = f"{bin_name}.o"
 
     log("Generating assembly")
     asm_content: str = "\n".join(
         anotate_assembly(
-            generate_assembly_linux_x86_64_yasm(
+            generate_assembly_linux_x86_64_fasm(
                 tuple(
                     type_check_ast(
                         tuple(
                             preprocess_ast(
                                 tuple(file_to_ast(sys.argv[1], True)),
-                                "yasm-x86_64-linux",
+                                "fasm-x86_64-linux",
                                 True,
                             )
                         ),
-                        "yasm-x86_64-linux",
+                        "fasm-x86_64-linux",
                         True,
                     )
                 )
@@ -1029,12 +1067,7 @@ def main() -> int:
             asm_file.write(asm_content)
 
     if flags["compile"]:
-        run_command_log(
-            f"yasm -felf64 -o {obj_name!r} {' '.join(flags['asm-flags'])} {asm_name!r}"
-        )
-        run_command_log(
-            f"ld -o {bin_name!r} {obj_name!r} {' '.join(flags['ld-flags'])}"
-        )
+        run_command_log(f"fasm {asm_name!r} {bin_name!r} -m 1048576")
 
     return EXIT_OK
 

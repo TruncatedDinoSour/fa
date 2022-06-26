@@ -18,7 +18,7 @@ some time
 # System requirements
 
 - Binutils/`ld` linker
-- `Yasm` compiler
+- `Fasm` compiler
 - `Python3` (for now)
 - Bash-completion (optional, for completions)
 
