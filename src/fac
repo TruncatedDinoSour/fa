@@ -6,7 +6,8 @@ import os
 import sys
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Any, Dict, Generator, Iterable, List, Optional, Set, Tuple
+from typing import (Any, Dict, Generator, Iterable, List, Optional, Set, Sized,
+                    Tuple)
 from warnings import filterwarnings as filter_warnings
 
 
@@ -100,6 +101,11 @@ def error(msg: str, token: Token = NULL_TOKEN) -> None:
     sys.exit(EXIT_ER)
 
 
+def ei(msg: str, token: Token, ast: Sized, ip: int) -> None:
+    if ip >= len(ast):
+        error(f"IP overflow: {msg}", token)
+
+
 def make_usable_asm(asm: Iterable[str]) -> Generator[Tuple[str, Token], None, None]:
     yield from ((line, NULL_TOKEN) for line in asm)
 
@@ -125,6 +131,8 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
 
         if char == "\\":
             ip += 1
+            ei("Invalid escape sequence", token, string, ip)
+
             char = string[ip]
 
             if char == "n":
@@ -141,6 +149,8 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
                 _code: str = ""
 
                 ip += 1
+                ei("No closing } in \\{ escape", token, string, ip)
+
                 char = string[ip]
 
                 while char != "}":
@@ -242,6 +252,8 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.SWAP, None)
         elif word == "macro":
             ip += 1
+            ei(f"No macro name supplied at position {_position}", NULL_TOKEN, words, ip)
+
             word = words[ip].strip()
 
             yield make_token(TokenType.MACRO, word)
@@ -251,6 +263,13 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             _include_file: List[str] = []
 
             ip += 1
+            ei(
+                f"No include filename supplied at position {_position}",
+                NULL_TOKEN,
+                words,
+                ip,
+            )
+
             word = words[ip].strip()
 
             if not word.startswith("'"):
@@ -274,6 +293,13 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.COPY, None)
         elif word == "buffer":
             ip += 1
+            ei(
+                f"No buffer name supplied at position {_position}",
+                NULL_TOKEN,
+                words,
+                ip,
+            )
+
             word = words[ip]
 
             yield make_token(TokenType.BUFFER, word)
@@ -285,6 +311,13 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.OPERATOR, Operator.XOR)
         elif word == "undefine":
             ip += 1
+            ei(
+                f"No macro undefinition name supplied at position {_position}",
+                NULL_TOKEN,
+                words,
+                ip,
+            )
+
             word = words[ip].strip()
 
             yield make_token(TokenType.UNDEFINE, word)
@@ -621,9 +654,7 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
             flagd["anotate"] = False
         elif flag == "-asm-flags":
             ip += 1
-
-            if ip >= len(flags):
-                error("Missing comma-seperated flags to -asm-flags")
+            ei("Missing comma-seperated flags to -asm-flags", NULL_TOKEN, flags, ip)
 
             flag = flags[ip]
 
@@ -632,9 +663,7 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
             sys.exit(print_help())
         elif flag == "-o":
             ip += 1
-
-            if ip >= len(flags):
-                error("Missing output file to -o")
+            ei("Missing output file to -o", NULL_TOKEN, flags, ip)
 
             flag = flags[ip]
 
@@ -648,9 +677,7 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
             flagd["logging"] = False
         elif flag == "-dbg":
             ip += 1
-
-            if ip >= len(flags):
-                error("Missing output file to -dbg")
+            ei("Missing output file for -dbg", NULL_TOKEN, flags, ip)
 
             flag = flags[ip]
 
@@ -702,6 +729,8 @@ def preprocess_ast(
 
             while token.ttype != TokenType.END:
                 ip += 1
+                ei("Macro definition overflow", token, ast, ip)
+
                 token = ast[ip]
                 macro_body.append(token)
 
@@ -732,6 +761,8 @@ def preprocess_ast(
             buffer_name: str = token.tvalue
 
             ip += 1
+            ei("No buffer size specified", token, ast, ip)
+
             token = ast[ip]
             buffer_size: int
 
@@ -771,10 +802,6 @@ def type_check_ast(
     type_stack: List[Tuple[TokenType, Any]] = []
     ast_len: int = len(ast)
 
-    def ei(msg: str, token: Token) -> None:
-        if ip > ast_len:
-            error(f"Exceeding IP: {msg}", token)
-
     while ip < ast_len:
         token: Token = ast[ip]
 
@@ -782,7 +809,7 @@ def type_check_ast(
             type_stack.append((token.ttype, token.tvalue))
         elif token.ttype == TokenType.PUSH_STR:
             ip += 1
-            ei("Missing mutability while trying to push string", token)
+            ei("Missing mutability while trying to push string", token, ast, ip)
 
             old_token = token
             token = ast[ip]
@@ -807,11 +834,12 @@ def type_check_ast(
                     f"Cannot use {token.tvalue} registers when there's only {asm_registers_len} available"
                 )
 
-            # Accounting the syscall number
+            if token.tvalue < 1:
+                error("Cannot use less than 1 register", token)
+
             sys_type_stack_len: int = len(type_stack)
 
             if token.tvalue > sys_type_stack_len:
-                print(token.tvalue, sys_type_stack_len, type_stack)
                 error(f"Cannot use more than {sys_type_stack_len} registers", token)
 
             for _ in range(token.tvalue):

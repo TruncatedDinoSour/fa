@@ -48,6 +48,9 @@ macro main
     -- Undefine
     undefine hi
 
+    -- Nop
+    nop
+
     0 %exit
 end
 
