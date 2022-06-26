@@ -51,6 +51,9 @@ macro main
     -- Nop
     nop
 
+    --< Block comments >--
+    -- Line comments
+
     0 %exit
 end
 

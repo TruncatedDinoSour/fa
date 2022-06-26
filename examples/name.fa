@@ -5,38 +5,39 @@ macro NAME_LEN 256 end
 macro main
     buffer name %NAME_LEN  -- Allocate a 256-byte (NAME_LEN) buffer in memory
 
-    -------------------------------------------------------
-    --                 Print the prompt                  --
-    -------------------------------------------------------
-    "Enter your name: " ro %STDOUT %fputs  -- fputs("...", stdout)                           => null
+    --<
+            Print the prompt
+    >--
+    "Enter your name: " ro %STDOUT %fputs  -- fputs("...", stdout)           => null
 
 
-    -------------------------------------------------------
-    --         Read the name into the name buffer        --
-    -------------------------------------------------------
-    %NAME_LEN #name %STDIN %SYS_read sys 4  -- read(stdin, *name, NAME_LEN)                 => ammount of bytes read
+    --<
+            Read the name into the name buffer
+    >--
+    %NAME_LEN #name %STDIN %SYS_read sys 4  -- read(stdin, *name, NAME_LEN)  => ammount of bytes read
 
 
-    -------------------------------------------------------
-    --                  Remove the newline              --
-    -------------------------------------------------------
-    -- Subtract the newline from the bytes read
-    -- because \n gets added when you press <enter>
-    1 swap sub                              -- <ammount of bytes read> = <ammount of bytes read> - 1
+    --<
+            Remove the newline
+    >--
+
+    --< Subtract the newline from the bytes read
+        because \n gets added when you press <enter> >--
+
+    1 swap sub  -- <ammount of bytes read> = <ammount of bytes read> - 1
 
 
-    -------------------------------------------------------
-    --   Print "Your name is " and the truncated buffer  --
-    -------------------------------------------------------
-    "Your name is " ro  %STDOUT %fputs      -- fputs("...", stdout)                          => null
-    #name %puts                             -- write(STDOUT, *name, <ammount of bytes read>) => null
+    --<
+            Print "Your name is " and the truncated buffer
+    >--
+    "Your name is " ro  %STDOUT %fputs  -- fputs("...", stdout)                          => null
+    #name %puts                         -- write(STDOUT, *name, <ammount of bytes read>) => null
 
 
-    -------------------------------------------------------
-    --                Exit the program                  --
-    -------------------------------------------------------
-    0 %exit                                 -- exit(0)
-    -------------------------------------------------------
+    --<
+            Exit the program
+    >--
+    0 %exit  -- exit(0)
 
     -- TODO: Add a check for name using conditionals
 end
