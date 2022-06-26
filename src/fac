@@ -1055,7 +1055,7 @@ def type_check_ast(
 
         for item in type_stack:
             sys.stderr.write("    ")
-            log(str(item))
+            log(f"{item[0].name:30s}{item[1]!r}")
 
         sys.exit(EXIT_ER)
 
