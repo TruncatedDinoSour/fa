@@ -144,7 +144,6 @@ macro SYS_rt_sigsuspend           130 end
 macro SYS_sigaltstack             131 end
 macro SYS_utime                   132 end
 macro SYS_mknod                   133 end
-macro 134                         end
 macro SYS_personality             135 end
 macro SYS_ustat                   136 end
 macro SYS_statfs                  137 end
@@ -184,18 +183,9 @@ macro SYS_sethostname             170 end
 macro SYS_setdomainname           171 end
 macro SYS_iopl                    172 end
 macro SYS_ioperm                  173 end
-macro 174                         end
 macro SYS_init_module             175 end
 macro SYS_delete_module           176 end
-macro 177                         end
-macro 178                         end
 macro SYS_quotactl                179 end
-macro 180                         end
-macro 181                         end
-macro 182                         end
-macro 183                         end
-macro 184                         end
-macro 185                         end
 macro SYS_gettid                  186 end
 macro SYS_readahead               187 end
 macro SYS_setxattr                188 end
@@ -215,17 +205,13 @@ macro SYS_time                    201 end
 macro SYS_futex                   202 end
 macro SYS_sched_setaffinity       203 end
 macro SYS_sched_getaffinity       204 end
-macro 205                         end
 macro SYS_io_setup                206 end
 macro SYS_io_destroy              207 end
 macro SYS_io_getevents            208 end
 macro SYS_io_submit               209 end
 macro SYS_io_cancel               210 end
-macro 211                         end
 macro SYS_lookup_dcookie          212 end
 macro SYS_epoll_create            213 end
-macro 214                         end
-macro 215                         end
 macro SYS_remap_file_pages        216 end
 macro SYS_getdents64              217 end
 macro SYS_set_tid_address         218 end
@@ -246,7 +232,6 @@ macro SYS_epoll_wait              232 end
 macro SYS_epoll_ctl               233 end
 macro SYS_tgkill                  234 end
 macro SYS_utimes                  235 end
-macro 236                         end
 macro SYS_mbind                   237 end
 macro SYS_set_mempolicy           238 end
 macro SYS_get_mempolicy           239 end
