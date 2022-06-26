@@ -6,6 +6,7 @@
 - [Include keyword in fa](/doc/md/INCLUDE.md)
 - [Fa macros](/doc/md/MACROS.md)
 - [Fa mutability](/doc/md/MUTABILITY.md)
+- [Nop keyword in fa](/doc/md/NOP.md)
 - [Fa operators](/doc/md/OPERATORS.md)
 - [Fa strings](/doc/md/STRINGS.md)
 - [Swap keyword in fa](/doc/md/SWAP.md)

@@ -26,6 +26,7 @@ class TokenType(Enum):
     BUFFER = auto()
     PUSH_BUFFER = auto()
     UNDEFINE = auto()
+    NOP = auto()
 
 
 class Mutability(Enum):
@@ -159,7 +160,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
         ip += 1
 
 
-assert len(TokenType) == 15, "Unhandled token types in AST generation"
+assert len(TokenType) == 16, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
 assert len(Operator) == 6, "Unhandled operators in AST generation"
 
@@ -287,6 +288,8 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             word = words[ip].strip()
 
             yield make_token(TokenType.UNDEFINE, word)
+        elif word == "nop":
+            yield make_token(TokenType.NOP, None)
         else:
             error(
                 f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
@@ -296,7 +299,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
 
 
 assert (
-    len(TokenType) == 15
+    len(TokenType) == 16
 ), "Unhandled token types in Linux x86_64 fasm assembly generation"
 assert (
     len(Mutability) == 2
@@ -535,6 +538,8 @@ def generate_assembly_linux_x86_64_fasm(
                 "Undefine should not be parsed outside of processing context",
                 token,
             )
+        elif token.ttype == TokenType.NOP:
+            start_lb.append(("nop", token))
         else:
             error(f"Unexpected {token}", token)
 
@@ -672,7 +677,7 @@ def run_command_log(cmd: str) -> None:
         error("Command failed")
 
 
-assert len(TokenType) == 15, "Unhandled token types in processing"
+assert len(TokenType) == 16, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
 assert len(Operator) == 6, "Unhandled operators in processing"
 
@@ -751,7 +756,7 @@ def preprocess_ast(
         ip += 1
 
 
-assert len(TokenType) == 15, "Unhandled token types in type checking"
+assert len(TokenType) == 16, "Unhandled token types in type checking"
 assert len(Mutability) == 2, "Unhandled mutability contexts in type checking"
 assert len(Operator) == 6, "Unhandled operators in type checking"
 
@@ -996,6 +1001,8 @@ def type_check_ast(
             type_stack.append((TokenType.PUSH_INT, 1))
         elif token.ttype == TokenType.UNDEFINE:
             error("Undefine should not be parsed outside processing", token)
+        elif token.ttype == TokenType.NOP:
+            pass
         else:
             error(f"Unknown token while type checking: {token}", token)
 
