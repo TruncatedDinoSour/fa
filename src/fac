@@ -768,7 +768,7 @@ def type_check_ast(
     ast_len: int = len(ast)
 
     def ei(msg: str, token: Token) -> None:
-        if ip > len(ast):
+        if ip > ast_len:
             error(f"Exceeding IP: {msg}", token)
 
     while ip < ast_len:
