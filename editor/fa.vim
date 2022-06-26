@@ -33,6 +33,7 @@ syntax match faNumber "\<\d*\>"
 
 " Comments
 syntax region faCommentLine start="--" end="$" contains=faTodo
+syntax region faCommentLine start="--<" end=">--" contains=faTodo
 
 
 " Strings

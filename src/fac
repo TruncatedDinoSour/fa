@@ -191,6 +191,24 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             ip += 1
             continue
 
+        if word.startswith("--<") and word.endswith(">--"):
+            ip += 1
+            continue
+
+        if "comment" in CTX and word.endswith(">--"):
+            CTX.remove("comment")
+            ip += 1
+            continue
+
+        if "comment" in CTX:
+            ip += 1
+            continue
+
+        if word.startswith("--<") and "comment" not in CTX:
+            CTX.add("comment")
+            ip += 1
+            continue
+
         if word.startswith("--"):
             break
 
