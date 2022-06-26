@@ -1070,6 +1070,8 @@ def main() -> int:
             f"fasm {asm_name!r} {bin_name!r} {' '.join(flags['asm-flags'])}"
         )
 
+        run_command_log(f"chmod a+rx -- {bin_name!r}")
+
     return EXIT_OK
 
 
