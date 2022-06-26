@@ -463,7 +463,7 @@ def generate_assembly_linux_x86_64_fasm(
                     (
                         ("pop rax", token),
                         ("pop rdi", token),
-                        ("mul rax, rdi", token),
+                        ("imul rax, rdi", token),
                         ("push rax", token),
                     )
                 )
@@ -980,7 +980,7 @@ def type_check_ast(
                     token,
                 )
         elif token.ttype == TokenType.COPY:
-            if len(type_stack) < 2:
+            if not len(type_stack):
                 error(
                     "Cannot copy any elements from an empty stack",
                     token,
