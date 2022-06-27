@@ -440,10 +440,9 @@ end
         INT: The pointer to the old .data
 >--
 macro balloc
-    %cdptr
-    add               -- Takes the argument on the stack
-    %SYS_brk   sys 2  --< Extend the .data section
-                          Also returns the new .data size >--
+    %cdptr add         -- Takes the argument on the stack
+    %SYS_brk sys 2     --< Extend the .data section
+                           Also returns the new .data size >--
 end
 
 
@@ -454,7 +453,7 @@ end
         INT: The buffer size
 >--
 macro bfree
-    %cdptr
-    sub %SYS_brk sys 2      -- Resize .data
-    1 drop                  -- Drop the current .data
+    %cdptr   sub       -- Takes the argument on the stack
+    %SYS_brk sys 2     -- Shrink .data
+    1        drop      -- Drop the current .data
 end
