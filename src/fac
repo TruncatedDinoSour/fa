@@ -661,6 +661,7 @@ def print_help() -> int:
         "   -stdout                                     Print generated assembly",
         "   -no-logging                                 Disable logging",
         "   -dbg <file>                                 Where to dump debugging symbols",
+        "   -run                                        Run binary after compiling",
         "",
     )
 
@@ -679,6 +680,7 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
         "compile": True,
         "stdout": False,
         "logging": True,
+        "run": False,
     }
 
     if not flags:
@@ -719,6 +721,8 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
             flag = flags[ip]
 
             flagd["asm-flags"].extend(("-s", repr(flag)))
+        elif flag == "-run":
+            flagd["run"] = True
         else:
             error(f"Unknown flag {flag!r}")
 
@@ -734,10 +738,10 @@ def log(msg: str) -> None:
     print(f" :: {msg}", file=sys.stderr)
 
 
-def run_command_log(cmd: str) -> None:
+def run_command_log(cmd: str, fail: bool = True) -> None:
     log(f"Running: {cmd}")
 
-    if os.system(cmd):
+    if os.system(cmd) and fail:
         error("Command failed")
 
 
@@ -1146,6 +1150,10 @@ def main() -> int:
         )
 
         run_command_log(f"chmod a+rx -- {bin_name!r}")
+
+    if flags["run"]:
+        log("Running binary")
+        run_command_log(f"./{bin_name!r}", False)
 
     return EXIT_OK
 

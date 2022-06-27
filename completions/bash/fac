@@ -7,7 +7,7 @@ _fac() {
     for ((cmd = 1; cmd <= cword; cmd++)); do
         if [[ ${words[cmd]} == -* ]]; then
             COMPREPLY=($(compgen -W "-no-anotate -asm-flags -help \
-                -no-compile -stdout -no-logging -dbg" -- "$cur"))
+                -no-compile -stdout -no-logging -dbg -run" -- "$cur"))
         fi
     done
 } && complete -F _fac -o bashdefault -o default fac
