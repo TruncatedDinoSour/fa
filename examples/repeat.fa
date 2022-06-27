@@ -1,6 +1,6 @@
 include 'std.fa'
 
-macro SIZE 256 end
+macro SIZE 2 128 mul end
 
 macro main
     %SIZE %balloc  -- Allocate SIZE ammount of bytes
