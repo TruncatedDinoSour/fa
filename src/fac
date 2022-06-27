@@ -393,7 +393,6 @@ def generate_assembly_linux_x86_64_fasm(
     start_lb: List[Tuple[str, Token]] = []
     data_lb: List[Tuple[str, Token]] = []
     rodata_lb: List[Tuple[str, Token]] = []
-    bss_lb: List[Tuple[str, Token]] = []
 
     tmp_stack: List[Any] = []
 
@@ -592,7 +591,7 @@ def generate_assembly_linux_x86_64_fasm(
             buffer_name: str = f"buffer_{token.tvalue}"
 
             if buffer_name not in CTX:
-                bss_lb.append((f"{buffer_name}: rb {BUFFERS[token.tvalue]}", token))
+                data_lb.append((f"{buffer_name}: rb {BUFFERS[token.tvalue]}", token))
                 CTX.add(buffer_name)
 
             start_lb.extend(
@@ -628,10 +627,6 @@ def generate_assembly_linux_x86_64_fasm(
     if rodata_lb:
         yield "segment readable", NULL_TOKEN
         yield from rodata_lb
-
-    if bss_lb:
-        yield "segment readable writable", NULL_TOKEN
-        yield from bss_lb
 
 
 def file_to_ast(file: str, logging: bool = False) -> Generator[Token, None, None]:
@@ -769,7 +764,10 @@ def preprocess_ast(
                 error(f"Macro {macro_name!r} is already defined", token)
 
             while True:
-                if token.ttype == TokenType.END and token.tvalue == f"macro.{macro_name}":
+                if (
+                    token.ttype == TokenType.END
+                    and token.tvalue == f"macro.{macro_name}"
+                ):
                     break
 
                 ip += 1
