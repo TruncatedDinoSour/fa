@@ -17,10 +17,13 @@ some time
 
 # System requirements
 
-- Binutils/`ld` linker
 - `Fasm` compiler
 - `Python3` (for now)
 - Bash-completion (optional, for completions)
+
+# Development requirements
+
+- Curl
 
 # Installation for developing
 

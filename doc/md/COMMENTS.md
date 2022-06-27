@@ -12,7 +12,7 @@ Examples of these comments:
 - Block comment
 
 ```fa
-include 'std.fa'  --< stdlib >--
+include 'std/std.fa'  --< stdlib >--
 0  --< 0 is the exit code >-- %exit
 1 copy drop  --<Spaces are optional>--
 ```

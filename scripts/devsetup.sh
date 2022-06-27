@@ -5,42 +5,63 @@ set -e
 VIMDIR="${VIMDIR:-"$HOME/.vim"}"
 BASHCOMP_DIR="${BASHCOMP_DIR:-"$HOME/.local/share/bash-completion/completions"}"
 LOCALLIB_DIR="${LOCALLIB_DIR:-"$HOME/.local/include/fa"}"
+SYSCALL_TABLE='https://raw.githubusercontent.com/torvalds/linux/v5.18/arch/x86/entry/syscalls/syscall_64.tbl'
 P="$(pwd)"
+
+log() {
+    echo " * $1"
+}
 
 lln() {
     lnp="$2/$(basename -- "$1")"
     if [ -h "$lnp" ]; then
-        echo " ** $lnp is a symlink, relinking"
+        log "$lnp is a symlink, relinking"
         unlink "$lnp"
     fi
 
     ln -s "$1" "$2"
 }
 
+check_deps() {
+    for dep in "$@"; do
+        if ! command -v -- "$dep" >/dev/null; then
+            log "Please install a package that supplies '$dep'" >&2
+            exit 1
+        fi
+    done
+}
+
 main() {
-    echo 'Installing vim syntax'
+    check_deps basename unlink ln mkdir curl python3
+
+    log 'Installing vim syntax'
 
     mkdir -p -- "$VIMDIR/syntax" "$VIMDIR/ftdetect" "$VIMDIR/complete"
     lln "$P/editor/fa.vim" "$VIMDIR/syntax"
     lln "$P/editor/fa.ftp.vim" "$VIMDIR/ftdetect"
     lln "$P/editor/fa_completion.clist" "$VIMDIR/complete"
 
-    echo 'Installing shell completions'
+    log 'Installing shell completions'
 
     mkdir -p -- "$BASHCOMP_DIR"
     lln "$P/completions/bash/fac" "$BASHCOMP_DIR"
 
-    echo 'Installing fac to local binaries'
+    log 'Installing fac to local binaries'
 
     mkdir -p "$HOME/.local/bin"
     lln "$P/src/fac" "$HOME/.local/bin"
 
-    echo 'Installing fa stdlib locally'
+    log 'Generating syscall table'
+
+    curl -fLsS  -- "$SYSCALL_TABLE" | ./scripts/syscalls.py >'std/syscalls.fa'
+
+    log 'Installing fa stdlib locally'
 
     mkdir -p -- "$LOCALLIB_DIR"
-    lln "$P/std/std.fa" "$LOCALLIB_DIR"
+    [ -h "$LOCALLIB_DIR/std" ] && log 'Relinking current stdlib' && unlink "$LOCALLIB_DIR/std"
+    ln -s "$P/std" "$LOCALLIB_DIR/std"
 
-    echo 'Done'
+    log 'Done'
 }
 
 main "$@"

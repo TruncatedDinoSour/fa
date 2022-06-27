@@ -1,4 +1,4 @@
-include 'std.fa'
+include 'std/std.fa'
 
 macro SIZE 256 end
 
