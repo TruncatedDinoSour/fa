@@ -1144,7 +1144,7 @@ def main() -> int:
 
     if flags["compile"]:
         run_command_log(
-            f"fasm {asm_name!r} {bin_name!r} {' '.join(flags['asm-flags'])}"
+            f"fasm {asm_name!r} {bin_name!r} {' '.join(flags['asm-flags'])} >/dev/null"
         )
 
         run_command_log(f"chmod a+rx -- {bin_name!r}")
