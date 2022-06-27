@@ -3,12 +3,14 @@ macro STDOUT 1 end
 macro STDERR 2 end
 
 
-macro EXIT_OK       0 end
+macro EXIT_SUCESS   0 end
 macro EXIT_FAILURE  1 end
 
 
--- Syscall mapping for Linux 5.18
--- https://raw.githubusercontent.com/torvalds/linux/v5.18/arch/x86/entry/syscalls/syscall_64.tbl
+--<
+    Syscall mapping for Linux 5.18
+    https://raw.githubusercontent.com/torvalds/linux/v5.18/arch/x86/entry/syscalls/syscall_64.tbl
+>--
 
 macro SYS_read                    0   end
 macro SYS_write                   1   end
@@ -331,8 +333,10 @@ macro SYS_statx                   332 end
 macro SYS_io_pgetevents           333 end
 macro SYS_rseq                    334 end
 
--- don't use numbers 387 through 423, add new calls after the last
--- 'common' entry
+--<
+    don't use numbers 387 through 423, add new calls after the last
+    'common' entry
+>--
 
 macro SYS_pidfd_send_signal       424 end
 macro SYS_io_uring_setup          425 end
@@ -363,27 +367,94 @@ macro SYS_futex_waitv             449 end
 macro SYS_set_mempolicy_home_node 450 end
 
 
-macro fputs  -- Print a string to a specified file descriptor
+--<
+    Write a string to a specified file descriptor
+
+    Takes:
+        INT: File descriptor
+        STR: The string
+>--
+macro fputs
     %SYS_write sys 4 1 drop
 end
 
 
-macro puts  -- Print a string and then a newline
+--<
+    Print a string and then a newline
+
+    Takes:
+        STR: The string
+>--
+macro puts
     %STDOUT         %fputs  -- The string
     "\n" ro %STDOUT %fputs  -- Newline
 end
 
 
-macro exit  -- Exit with a specified exit code
+--<
+    Exit with a specified exit code
+
+    Takes:
+        INT: The exit code
+>--
+macro exit
     %SYS_exit sys 2 1 drop
 end
 
 
-macro todo  -- Print a todo messag
-            -- and exit with EXIT_FAILURE
+--<
+    Print a todo messag and exit with EXIT_FAILURE
+
+    Takes:
+        INT: The exit code
+>--
+macro todo
     "TODO: " ro 2 %fputs
     2             %fputs
     "\n"     ro 2 %fputs
 
     %EXIT_FAILURE %exit
+end
+
+
+--<
+    Get current .data
+
+    Returns:
+        BUFFER: *data
+>--
+macro cdptr
+    0 %SYS_brk sys 2
+end
+
+
+--<
+    Allocate n bytes
+    WARNING: Don't forgot to %bfree after
+
+    Takes:
+        INT: The buffer size
+
+    Returns:
+        INT: The pointer to the new .data
+        INT: The pointer to the old .data
+>--
+macro balloc
+    %cdptr
+    add               -- Takes the argument on the stack
+    %SYS_brk   sys 2  --< Extend the .data section
+                          Also returns the new .data size >--
+end
+
+
+--<
+    Deallocate n bytes
+
+    Takes:
+        INT: The buffer size
+>--
+macro bfree
+    %cdptr
+    sub %SYS_brk sys 2      -- Resize .data
+    1 drop                  -- Drop the current .data
 end

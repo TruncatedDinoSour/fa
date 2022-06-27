@@ -1,4 +1,10 @@
-- [x] Use return value in `drop`
-- [x] Type checking
-- [ ] Dynamic buffer allocation
-- [ ] Locality of macros
+-   [x] Use return value in `drop` (using `imul`)
+    -   Problem: Didn't use
+-   [x] Type checking (Implemented)
+    -   Problem: Is complicated
+-   [x] Dynamic buffer allocation (In STDLIB using `brk` syscall)
+    -   Problem: Both mmap and brk confused me
+-   [ ] Macro scope
+    -   Problem: No scope tracking
+-   [ ] Copying `n` ammount of elements (instead of `1`)
+    -   Problem: Limited registers and no second stack

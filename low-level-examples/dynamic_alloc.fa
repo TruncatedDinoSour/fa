@@ -1,0 +1,22 @@
+include 'std.fa'
+
+macro SIZE 256 end
+
+macro main
+    0 %SYS_brk sys 2        -- Get the current .data addr
+    %SIZE add               -- Add SIZE to data
+    %SYS_brk sys 2          -- Expand .data
+    copy                    -- Copy new .data addr
+    %SIZE swap              --< You need to swap because SYS_read
+                                the buffer in a different order >--
+    %STDIN %SYS_read sys 4  -- Perform a read from STDIN
+    swap %puts              -- Output the buffer
+
+    0 %SYS_brk sys 2                       --< Get the current .data (could
+                                               use `copy` but I'm lazy >--
+    %SIZE swap sub %SYS_brk sys 2 1 drop   -- Set .data to its initial size
+
+    0 %exit
+end
+
+%main

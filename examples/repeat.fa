@@ -1,0 +1,22 @@
+include 'std.fa'
+
+macro SIZE 256 end
+
+macro main
+    %SIZE %balloc  -- Allocate SIZE ammount of bytes
+    copy           -- Copy buffer pointer
+
+    "What do I repeat? " ro %STDOUT %fputs
+
+    %SIZE swap              -- (*buffer; 256) => (256; *buffer)
+    %STDIN %SYS_read sys 4  -- read(STDIN, *buffer, 256)
+
+    swap        -- (*buffer; read_bytes) => (read_bytes; *buffer)
+    1 swap sub  -- Remove the <enter>
+    %puts       -- write(1, *buffer. read_bytes)
+
+    %SIZE %bfree
+    0 %exit
+end
+
+%main

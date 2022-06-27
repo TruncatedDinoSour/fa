@@ -54,8 +54,8 @@ class Token:
         if self.ttype is None:
             return self.__repr__()
 
-        return f"Token at position {':'.join(map(str, self.tpos))!r} \
-{self.ttype.name!r} with value {self.tvalue!r}"
+        return f"Token {self.ttype.name!r} at position {':'.join(map(str, self.tpos))!r} \
+with value {self.tvalue!r}"
 
 
 EXIT_OK: int = 0
