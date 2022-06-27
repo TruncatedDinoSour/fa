@@ -3,9 +3,10 @@
 set -e
 
 VIMDIR="${VIMDIR:-"$HOME/.vim"}"
+KVER="${KVER:-5.18}"
 BASHCOMP_DIR="${BASHCOMP_DIR:-"$HOME/.local/share/bash-completion/completions"}"
 LOCALLIB_DIR="${LOCALLIB_DIR:-"$HOME/.local/include/fa"}"
-SYSCALL_TABLE="https://raw.githubusercontent.com/torvalds/linux/v${KVER:-5.18}/arch/x86/entry/syscalls/syscall_64.tbl"
+SYSCALL_TABLE="https://raw.githubusercontent.com/torvalds/linux/v${KVER}/arch/x86/entry/syscalls/syscall_64.tbl"
 P="$(pwd)"
 
 log() {
@@ -53,7 +54,15 @@ main() {
 
     log 'Generating syscall table'
 
-    curl -fLsS  -- "$SYSCALL_TABLE" | ./scripts/syscalls.py >'std/syscalls.fa'
+    {
+        echo '--<'
+        echo "    Linux syscall mapping for Linux v$KVER"
+        echo "    Source: $SYSCALL_TABLE"
+        echo '>--'
+        echo
+
+        curl -fLsS -- "$SYSCALL_TABLE" | ./scripts/syscalls.py
+    } >'std/syscalls.fa'
 
     log 'Installing fa stdlib locally'
 
