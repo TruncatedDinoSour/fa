@@ -5,7 +5,7 @@ set -e
 VIMDIR="${VIMDIR:-"$HOME/.vim"}"
 BASHCOMP_DIR="${BASHCOMP_DIR:-"$HOME/.local/share/bash-completion/completions"}"
 LOCALLIB_DIR="${LOCALLIB_DIR:-"$HOME/.local/include/fa"}"
-SYSCALL_TABLE='https://raw.githubusercontent.com/torvalds/linux/v5.18/arch/x86/entry/syscalls/syscall_64.tbl'
+SYSCALL_TABLE="https://raw.githubusercontent.com/torvalds/linux/v${KVER:-5.18}/arch/x86/entry/syscalls/syscall_64.tbl"
 P="$(pwd)"
 
 log() {

@@ -35,7 +35,7 @@ def main() -> int:
     for syscall_num, syscall_name in syscall_gen:
         print(
             f"macro {syscall_name} \
-{' ' * (biggest_sys_len - len(syscall_name))}{syscall_num} end"
+{' ' * (biggest_sys_len - len(syscall_name))}{syscall_num} {' ' * (2 - len(syscall_num))}end"
         )
 
     return 0
