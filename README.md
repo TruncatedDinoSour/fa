@@ -6,7 +6,8 @@
 # Note
 
 Do not contribute to the python script, it will be deleted eventually,
-for any ideas make an issue
+for any ideas make an issue and also in **no way** is this currently
+a production-friendly language
 
 # Goal
 
