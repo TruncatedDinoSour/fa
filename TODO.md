@@ -2,19 +2,19 @@
     -   **Problem:** Didn't use
     -   **Potential solution:** Using `imul`
     -   **Solution:** Used `imul`
--   [x] Type checking (Implemented)
+-   [x] Type checking
     -   **Problem:** Is complicated
     -   **Potential solution:** Well.. to type check it
     -   **Solution:** Implemented it
 -   [x] Dynamic buffer allocation
     -   **Problem:** Both mmap and brk confused me
-    -   **Potential solution:** Using `brk()` or `mmap()` syscalls
+    -   **Potential solution:** Use `brk()` or `mmap()` syscalls
     -   **Solution:** Used `brk()` syscall
 -   [ ] Macro scope
     -   **Problem:** No scope tracking
     -   **Potential solution:** Keep track of the current scope using strings
         and concantination so for e.g. `macro a macro b 0 end end`
-        would be `[macro.a, macro.a.macro.b]`?
+        would be `[macro.a, macro.a.macro.b]`
     -   **Solution:**
 -   [ ] Copying `n` ammount of elements (instead of `1`)
     -   **Problem:** Limited registers and no second stack
