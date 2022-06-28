@@ -237,8 +237,8 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
                 except IndexError:
                     if len(_tmp_str) >= 2 and word != '"':
                         error(
-                            f"Unclosed string at position {_position} at file {file!r} \
-(starting at IP {old_ip})",
+                            f'Unclosed string at position {_position} at file {file!r} \
+(starting at IP {old_ip}), did you forget to add a " at the end?',
                         )
 
                 _tmp_str.append(word)
@@ -249,7 +249,9 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             )
         elif word.isnumeric():
             if word.startswith("0") and len(word) != 1:
-                error(f"Word at position {_position}: numbers cannot start with 0")
+                error(
+                    f"Word at position {_position}: numbers cannot start with 0, did you mean {word.lstrip('0')}"
+                )
 
             yield make_token(TokenType.PUSH_INT, int(word))
         elif word.startswith("%"):
@@ -263,7 +265,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
         elif word == "sys":
             ip += 1
             ei(
-                f"No register ammount supplied at position {_position}",
+                f"No register ammount supplied at position {_position}, did you forget to supply a number that is at least a 1",
                 NULL_TOKEN,
                 words,
                 ip,
@@ -278,7 +280,12 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.SWAP, None)
         elif word == "macro":
             ip += 1
-            ei(f"No macro name supplied at position {_position}", NULL_TOKEN, words, ip)
+            ei(
+                f"No macro name for definition supplied at position {_position}",
+                NULL_TOKEN,
+                words,
+                ip,
+            )
 
             word = words[ip].strip()
 
@@ -286,7 +293,10 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.MACRO, word)
         elif word == "end":
             if not SCOPES:
-                error(f"No scope to end at position {_position}", NULL_TOKEN)
+                error(
+                    f"No scope(s) to end at position {_position}, did you mean for e.g. 'macro'?",
+                    NULL_TOKEN,
+                )
 
             yield make_token(TokenType.END, SCOPES.pop())
         elif word == "include":
@@ -310,7 +320,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             while not word.endswith("'"):
                 ip += 1
                 ei(
-                    f"Unclosed include filename supplied at position {_position}",
+                    f"Unclosed include filename supplied at position {_position}, did you forget to add a '",
                     NULL_TOKEN,
                     words,
                     ip,
@@ -331,7 +341,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
         elif word == "buffer":
             ip += 1
             ei(
-                f"No buffer name supplied at position {_position}",
+                f"No buffer name for allocation supplied at position {_position}",
                 NULL_TOKEN,
                 words,
                 ip,
@@ -348,8 +358,13 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.OPERATOR, Operator.XOR)
         elif word == "undefine":
             ip += 1
+            msg = f"No macro name for undefinition supplied at position {_position}"
+
+            if len(MACROS):
+                msg += f", did you mean `undefine {tuple(MACROS.keys())[-1]}"
+
             ei(
-                f"No macro undefinition name supplied at position {_position}",
+                msg,
                 NULL_TOKEN,
                 words,
                 ip,
@@ -429,7 +444,10 @@ def generate_assembly_linux_x86_64_fasm(
             elif token.tvalue == Mutability.RO:
                 str_data_lb = rodata_lb
             else:
-                error("Unknown mutability context for string", token)
+                error(
+                    "Unknown mutability context for string, did you forget to add `ro` or `rw` after the string?",
+                    token,
+                )
 
             str_data_lb.extend(
                 (
@@ -452,7 +470,7 @@ def generate_assembly_linux_x86_64_fasm(
             tmp_stack.extend((len(_tmp_str), _tmp_str))
         elif token.ttype == TokenType.MUTABILITY:
             error(
-                "Mutability should not be parsed outside of word context",
+                "Mutability should not be parsed outside of word context, this is most likely a bug in the parser",
                 token,
             )
         elif token.ttype == TokenType.SYS:
@@ -489,22 +507,22 @@ def generate_assembly_linux_x86_64_fasm(
             tmp_stack.extend((a, b))
         elif token.ttype == TokenType.MACRO:
             error(
-                "Macro should not be parsed outside of processing context",
+                "Macro should not be parsed outside of processing context, this is most likely a bug in the (pre-)processor",
                 token,
             )
         elif token.ttype == TokenType.END:
             error(
-                "End should not be parsed outside of word context",
+                "End should not be parsed outside of word context, this is most likely a compiler bug",
                 token,
             )
         elif token.ttype == TokenType.EXPAND_MACRO:
             error(
-                "Macro espansion should not be parsed outside of processing context",
+                "Macro espansion should not be parsed outside of processing context, this is most likely a bug in the (pre-)processor",
                 token,
             )
         elif token.ttype == TokenType.INCLUDE:
             error(
-                "Include should not be parsed outside of processing context",
+                "Include should not be parsed outside of processing context, this is most likely a bug in the (pre-)processor",
                 token,
             )
         elif token.ttype == TokenType.OPERATOR:
@@ -604,7 +622,7 @@ def generate_assembly_linux_x86_64_fasm(
             tmp_stack.append(0)
         elif token.ttype == TokenType.UNDEFINE:
             error(
-                "Undefine should not be parsed outside of processing context",
+                "Undefine should not be parsed outside of processing context, this is most likely a bug in the (pre-)processor",
                 token,
             )
         elif token.ttype == TokenType.NOP:
@@ -615,7 +633,7 @@ def generate_assembly_linux_x86_64_fasm(
         ip += 1
 
     if not start_lb:
-        error("No code found")
+        error("No executable code found, try adding `nop`")
 
     yield ("_start:", NULL_TOKEN)
     yield from start_lb
@@ -697,7 +715,7 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
             sys.exit(print_help())
         elif flag == "-o":
             ip += 1
-            ei("Missing output file to -o", NULL_TOKEN, flags, ip)
+            ei("Missing output file for -o", NULL_TOKEN, flags, ip)
 
             flag = flags[ip]
 
@@ -761,7 +779,10 @@ def preprocess_ast(
             macro_name = token.tvalue
 
             if macro_name in MACROS:
-                error(f"Macro {macro_name!r} is already defined", token)
+                error(
+                    f"Macro {macro_name!r} is already defined, did you try to `undefine {macro_name}`",
+                    token,
+                )
 
             while True:
                 if (
@@ -771,7 +792,12 @@ def preprocess_ast(
                     break
 
                 ip += 1
-                ei("Macro definition overflow", token, ast, ip)
+                ei(
+                    "Macro definition overflow, did you forget to `end` it/all nested scopes?",
+                    token,
+                    ast,
+                    ip,
+                )
 
                 token = ast[ip]
                 macro_body.append(token)
@@ -782,7 +808,10 @@ def preprocess_ast(
             )
         elif token.ttype == TokenType.EXPAND_MACRO:
             if token.tvalue not in MACROS:
-                error(f"Cannot expand undefined macro {token.tvalue!r}", token)
+                error(
+                    f"Cannot expand undefined macro {token.tvalue!r}, did you define it using `macro {token.tvalue} <...> end`",
+                    token,
+                )
 
             yield from preprocess_ast(tuple(MACROS[token.tvalue]), assembly_flavour)
         elif token.ttype == TokenType.INCLUDE:
@@ -803,7 +832,12 @@ def preprocess_ast(
             buffer_name: str = token.tvalue
 
             ip += 1
-            ei("No buffer size specified", token, ast, ip)
+            ei(
+                "No buffer size specified, did you try adding a number after the buffer name?",
+                token,
+                ast,
+                ip,
+            )
 
             token = ast[ip]
             buffer_size: int
@@ -815,12 +849,18 @@ def preprocess_ast(
                     preprocess_ast(tuple(MACROS[token.tvalue]), assembly_flavour)
                 )[0].tvalue
             else:
-                error(f"Unsuported buffer size: {token}", token)
+                error(
+                    f"Unsuported buffer size: {token}, try using a %macro or a number",
+                    token,
+                )
 
             BUFFERS[buffer_name] = buffer_size
         elif token.ttype == TokenType.UNDEFINE:
             if token.tvalue not in MACROS:
-                error(f"Macro {token.tvalue!r} is not defined", token)
+                error(
+                    f"Macro {token.tvalue!r} is not defined, did you define it using `macro {token.tvalue} <...> end`",
+                    token,
+                )
 
             del MACROS[token.tvalue]
         else:
@@ -851,16 +891,27 @@ def type_check_ast(
             type_stack.append((token.ttype, token.tvalue, token))
         elif token.ttype == TokenType.PUSH_STR:
             ip += 1
-            ei("Missing mutability while trying to push string", token, ast, ip)
+            ei(
+                "Missing mutability while trying to push string, did you forget to add `ro`/`rw` after the string?",
+                token,
+                ast,
+                ip,
+            )
 
             old_token = token
             token = ast[ip]
 
             if token.ttype == TokenType.MUTABILITY:
                 if token.tvalue not in (Mutability.RO, Mutability.RW):
-                    error(f"Unknown mutability context: {token}", old_token)
+                    error(
+                        f"Unknown mutability context: {token}, valid ones are: ro, rw",
+                        old_token,
+                    )
             else:
-                error("Unspecified mutability while tring to push a string", old_token)
+                error(
+                    "Unspecified mutability while tring to push a string, did you put anything than `ro` or `rw` after the string?",
+                    old_token,
+                )
 
             tmp_str: str = "".join(
                 chr(charcode) for charcode in parse_string(old_token.tvalue, old_token)
@@ -876,7 +927,8 @@ def type_check_ast(
 
             if token.tvalue > asm_registers_len:
                 error(
-                    f"Cannot use {token.tvalue} registers when there's only {asm_registers_len} available",
+                    f"Cannot use {token.tvalue} registers when there's only {asm_registers_len} available, \
+you can at maximum only use `sys {asm_registers_len}`",
                     token,
                 )
 
@@ -886,25 +938,32 @@ def type_check_ast(
             sys_type_stack_len: int = len(type_stack)
 
             if token.tvalue > sys_type_stack_len:
-                error(f"Cannot use more than {sys_type_stack_len} registers", token)
+                error(
+                    f"Cannot use more than {sys_type_stack_len} register values, you're trying to use {token.tvalue!r} registers, \
+did you try to push more items onto the stack?",
+                    token,
+                )
 
             for _ in range(token.tvalue):
                 type_stack.pop()
 
             type_stack.append((TokenType.PUSH_INT, 0, token))
         elif token.ttype == TokenType.DROP:
-            if not len(type_stack):
-                error("No items to drop off the stack", token)
-
             drop_ammount: Tuple[TokenType, Any, Token] = type_stack.pop()
             drop_type_stack_len: int = len(type_stack)
 
+            if not drop_type_stack_len:
+                error("No items to drop off the stack, did you try pushing any?", token)
+
             if drop_ammount[0] != TokenType.PUSH_INT:
-                error("Drop expected integer as the drop ammount", token)
+                error(
+                    f"Drop expected integer as the drop ammount, did you try for e.g. `{drop_type_stack_len} drop`",
+                    token,
+                )
 
             if drop_ammount[1] > drop_type_stack_len:
                 error(
-                    f"Cannot drop more than {drop_type_stack_len} items from the stack",
+                    f"Cannot drop more than {drop_type_stack_len} (I.e. the whole stack) items from the stack",
                     token,
                 )
 
@@ -919,18 +978,31 @@ def type_check_ast(
 
             type_stack.extend((a, b))
         elif token.ttype == TokenType.MACRO:
-            error("Macro should not be parsed outside processing", token)
+            error(
+                "Macro should not be parsed outside processing, this is most likely a bug in the (pre-)processor",
+                token,
+            )
         elif token.ttype == TokenType.END:
-            error("End should not be parsed outside processing", token)
+            error(
+                "End should not be parsed outside processing, this is most likely a bug in the (pre-)processor",
+                token,
+            )
         elif token.ttype == TokenType.EXPAND_MACRO:
-            error("Macro expansion should not be parsed outside processing", token)
+            error(
+                "Macro expansion should not be parsed outside processing, this is most likely a bug in the (pre-)processor",
+                token,
+            )
         elif token.ttype == TokenType.INCLUDE:
-            error("Include should not be parsed outside processing", token)
+            error(
+                "Include should not be parsed outside processing, this is most likely a bug in the (pre-)processor",
+                token,
+            )
         elif token.ttype == TokenType.OPERATOR:
             if token.tvalue == Operator.ADD:
                 if len(type_stack) < 2:
                     error(
-                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack",
+                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack, try pushing more \
+items onto the stack",
                         token,
                     )
 
@@ -953,7 +1025,8 @@ def type_check_ast(
             elif token.tvalue == Operator.SUB:
                 if len(type_stack) < 2:
                     error(
-                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack",
+                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack, try pushing more \
+items onto the stack",
                         token,
                     )
 
@@ -976,7 +1049,8 @@ def type_check_ast(
             elif token.tvalue == Operator.MUL:
                 if len(type_stack) < 2:
                     error(
-                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack",
+                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack, try pushing more \
+items onto the stack",
                         token,
                     )
 
@@ -999,7 +1073,8 @@ def type_check_ast(
             elif token.tvalue == Operator.BOR:
                 if len(type_stack) < 2:
                     error(
-                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack",
+                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack, try pushing more \
+items onto the stack",
                         token,
                     )
 
@@ -1008,7 +1083,8 @@ def type_check_ast(
 
                 if bor_a[0] != TokenType.PUSH_INT:
                     error(
-                        f"First argument of operator {token.tvalue.name!r} should be an integer",
+                        f"First argument of operator {token.tvalue.name!r} should be an integer, try pushing more \
+items onto the stack",
                         token,
                     )
 
@@ -1022,7 +1098,8 @@ def type_check_ast(
             elif token.tvalue == Operator.BAND:
                 if len(type_stack) < 2:
                     error(
-                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack",
+                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack, try pushing more \
+items onto the stack",
                         token,
                     )
 
@@ -1045,7 +1122,8 @@ def type_check_ast(
             elif token.tvalue == Operator.XOR:
                 if len(type_stack) < 2:
                     error(
-                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack",
+                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack, try pushing more \
+items onto the stack",
                         token,
                     )
 
@@ -1067,42 +1145,56 @@ def type_check_ast(
                 type_stack.append((TokenType.PUSH_INT, xor_a[1] ^ xor_b[1], token))
             else:
                 error(
-                    f"Unknown operator while type checking: {token.tvalue.name!r}",
+                    f"Unknown operator while type checking: {token.tvalue.name!r}, this is probably a bug in the AST generator",
                     token,
                 )
         elif token.ttype == TokenType.COPY:
             if not len(type_stack):
                 error(
-                    "Cannot copy any elements from an empty stack",
+                    "Cannot copy any elements from an empty stack, try pushing something on it",
                     token,
                 )
 
             copy_element: Tuple[TokenType, Any, Token] = type_stack.pop()
             type_stack.extend((copy_element, copy_element))
         elif token.ttype == TokenType.BUFFER:
-            error("Buffer should not be parsed outside processing", token)
+            error(
+                "Buffer should not be parsed outside processing, this is most likely a bug in the (pre-)processor",
+                token,
+            )
         elif token.ttype == TokenType.PUSH_BUFFER:
             if token.tvalue not in BUFFERS:
-                error(f"Buffer {token.tvalue!r} does not exist", token)
+                error(
+                    f"Buffer {token.tvalue!r} does not exist, did you try defining it using \
+`buffer {token.tvalue} <size>`",
+                    token,
+                )
 
             type_stack.append((TokenType.PUSH_INT, 1, token))
         elif token.ttype == TokenType.UNDEFINE:
-            error("Undefine should not be parsed outside processing", token)
+            error(
+                "Undefine should not be parsed outside processing, this is most likely a bug in the (pre-)processor",
+                token,
+            )
         elif token.ttype == TokenType.NOP:
             pass
         else:
-            error(f"Unknown token while type checking: {token}", token)
+            error(
+                f"Unknown token while type checking: {token}, this is probably a bug in the AST generator",
+                token,
+            )
 
         ip += 1
 
     if type_stack:
-        log("Orphaned items on the stack")
+        err_type_stack_len: int = len(type_stack)
+        log(f"{err_type_stack_len} orphaned items on the stack")
 
         for item in type_stack:
             sys.stderr.write("    ")
             log(f"{item[0].name:30s}{item[1]!r} @ {item[2]}")
 
-        sys.exit(EXIT_ER)
+        error(f"Try using: {err_type_stack_len} drop")
 
     yield from ast
 
