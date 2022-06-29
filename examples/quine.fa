@@ -2,7 +2,6 @@ include 'std/std.fa'
 
 macro FILE_SIZE 1024 128 add end
 
-
 macro FILE
     "examples/quine.fa" ro  -- ("examples/quine.fa"; 17)
     swap                    -- (17; "examples/quine.fa")
@@ -26,9 +25,10 @@ macro main
     %SYS_write sys 4         -- write(STDOUT, *file_buffer, read_bytes_c) => <bytes_written_c>
     1 drop                   -- (fd)
 
-    %SYS_close sys 2 1 drop  -- close(fd) => ?success
+    %SYS_close sys 2         -- close(fd) => ?success
+    1 drop                   -- ()
+
     %EXIT_SUCCESS %exit
 end
-
 
 %main
