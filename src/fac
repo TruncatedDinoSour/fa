@@ -339,6 +339,8 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
         elif word == "copy":
             yield make_token(TokenType.COPY, None)
         elif word == "buffer":
+            log("WARNING: Buffer keyword is being deprecated")
+
             ip += 1
             ei(
                 f"No buffer name for allocation supplied at position {_position}",
