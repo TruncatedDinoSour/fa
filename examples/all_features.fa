@@ -39,12 +39,6 @@ macro main
     -- Copy
     1 copy drop
 
-    -- Buffer
-    buffer test_buffer 1
-
-    -- Push buffer
-    #test_buffer 1 drop
-
     -- Undefine
     undefine hi
 

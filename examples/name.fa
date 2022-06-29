@@ -3,7 +3,8 @@ include 'std/std.fa'
 macro NAME_LEN 256 end
 
 macro main
-    buffer name %NAME_LEN  -- Allocate a 256-byte (NAME_LEN) buffer in memory
+    %NAME_LEN %balloc  -- Allocate a 256-byte (NAME_LEN) buffer in memory (let's call it "name")
+    copy               -- Copy the buffer's address
 
     --<
             Print the prompt
@@ -14,7 +15,7 @@ macro main
     --<
             Read the name into the name buffer
     >--
-    %NAME_LEN #name %STDIN %SYS_read sys 4  -- read(stdin, *name, NAME_LEN) => ammount of bytes read
+    %NAME_LEN swap %STDIN %SYS_read sys 4  -- read(stdin, *name, NAME_LEN) => ammount of bytes read
 
 
     --<
@@ -31,8 +32,14 @@ macro main
             Print "Your name is " and the truncated buffer
     >--
     "Your name is " ro  %STDOUT %fputs  -- fputs("...", stdout)                          => null
-    #name %puts                         -- write(STDOUT, *name, <ammount of bytes read>) => null
+    swap %puts                          -- write(STDOUT, *name, <ammount of bytes read>) => null
 
+
+    --<
+            Free the buffer
+    >--
+
+    %NAME_LEN %bfree
 
     --<
             Exit the program
