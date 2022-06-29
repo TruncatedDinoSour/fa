@@ -1,6 +1,6 @@
 include 'std/std.fa'
 
-macro FILE_SIZE 1024 128 add end
+macro FILE_SIZE 1024 64 add end
 
 macro FILE
     "examples/quine.fa" ro  -- ("examples/quine.fa"; 17)
