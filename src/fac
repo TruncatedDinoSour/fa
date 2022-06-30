@@ -801,11 +801,21 @@ def log(msg: str) -> None:
     print(f" :: {msg}", file=sys.stderr)
 
 
-def run_command_log(cmd: str, fail: bool = True) -> None:
-    log(f"Running: {cmd}")
+def run_command_log(cmd: Tuple[str, ...]) -> None:
+    pid: int = os.fork()
 
-    if os.system(cmd) and fail:
-        error("Command failed")
+    if pid < 0:
+        error("fork() failed")
+    elif pid == 0:
+        log(f"Executing in child: {' '.join(cmd)!r}")
+
+        os.dup2(os.open(os.devnull, os.O_WRONLY | os.O_CREAT | os.O_TRUNC), 1)
+
+        if os.execvp(cmd[0], cmd) == -1:
+            error("Command failed!")
+    else:
+        if os.waitpid(pid, 0)[1] != EXIT_OK:
+            sys.exit(EXIT_ER)
 
 
 assert len(TokenType) == 19, "Unhandled token types in processing"
@@ -1328,15 +1338,14 @@ def main() -> int:
             asm_file.write(asm_content)
 
     if flags["compile"]:
-        run_command_log(
-            f"fasm {asm_name!r} {bin_name!r} {' '.join(flags['asm-flags'])} >/dev/null"
-        )
+        run_command_log(("fasm", asm_name, bin_name, *flags["asm-flags"]))
 
         log(f"Making {bin_name!r} R(W)E")
         os.chmod(bin_name, 0o0755)
 
     if flags["run"]:
-        run_command_log(f"./{bin_name!r}", False)
+        log("Executing the binary (replacing current process)")
+        os.execv(bin_name, (bin_name,))
 
     return EXIT_OK
 
