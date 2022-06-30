@@ -999,7 +999,7 @@ did you try to push more items onto the stack?",
             for _ in range(token.tvalue):
                 type_stack.pop()
 
-            type_stack.append((TokenType.PUSH_INT, 0, token))
+            type_stack.append((TokenType.PUSH_INT, 1, token))
         elif token.ttype == TokenType.DROP:
             drop_ammount: Tuple[TokenType, Any, Token] = type_stack.pop()
             drop_type_stack_len: int = len(type_stack)
@@ -1232,16 +1232,13 @@ items onto the stack",
                     "No pointers to dereference on the stack, try pushing some", token
                 )
 
-            ptr_t, ptr_value, ptr_token = type_stack.pop()
+            ptr_t, _, ptr_token = type_stack.pop()
 
             if ptr_t != TokenType.PUSH_INT:
                 error(
                     "No valid pointer type found, are you sure it's an integer?",
                     ptr_token,
                 )
-
-            if ptr_value < 1:
-                error("Pointer underflow detected", ptr_value)
 
             type_stack.append((TokenType.PUSH_INT, 1, token))
         elif token.ttype == TokenType.POINT:
