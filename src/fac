@@ -1332,7 +1332,8 @@ def main() -> int:
             f"fasm {asm_name!r} {bin_name!r} {' '.join(flags['asm-flags'])} >/dev/null"
         )
 
-        run_command_log(f"chmod a+rx -- {bin_name!r}")
+        log(f"Making {bin_name!r} R(W)E")
+        os.chmod(bin_name, 0o0755)
 
     if flags["run"]:
         run_command_log(f"./{bin_name!r}", False)
