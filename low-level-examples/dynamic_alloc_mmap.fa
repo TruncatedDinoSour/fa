@@ -1,13 +1,6 @@
 include 'std/std.fa'
 
 macro main
-    --<1 0 sub  -- File descriptor
-    2        -- Flags
-    3        -- Protecton
-    1        -- Length
-    0        -- Offset_
-    %SYS_mmap sys 6 1 drop>__a__aa>--
-
     --<
         mov     rax, 9
         mov     rdi, 0
@@ -19,12 +12,12 @@ macro main
         syscall
     >--
 
-    34
-    0
-    1 0 sub
-    3
-    4096
-    0
+    34          -- Flags
+    0           -- Offset
+    1 0 sub     -- Fd
+    3           -- Prot
+    4096        -- Length
+    0           -- Addr
     %SYS_mmap sys 7 1 drop
 
     0 %exit
