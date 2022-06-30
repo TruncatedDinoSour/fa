@@ -1,0 +1,2 @@
+"Hello" ro 2 1 mul drop
+0 60 sys 2 1 drop

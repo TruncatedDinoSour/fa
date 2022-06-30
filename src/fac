@@ -1245,6 +1245,9 @@ items onto the stack",
                 token,
             )
         else:
+            if token.ttype == TokenType.MUTABILITY:
+                error("Nothing has consumed the mutability context provided", token)
+
             error(
                 f"Unknown token while type checking: {token}, this is probably a bug in the AST generator",
                 token,

@@ -1,8 +1,0 @@
-include 'std/std.fa'
-
-macro main
-    "Passing tests are on the todo" ro %puts
-    %EXIT_SUCCESS %exit
-end
-
-%main

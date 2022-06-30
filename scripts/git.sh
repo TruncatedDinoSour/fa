@@ -7,6 +7,7 @@ main() {
     rm -- ./all_features ./all_features.asm
 
     sh ./scripts/docindex.sh
+    bash ./scripts/test.sh
 
     git add -A
     git commit -sa
