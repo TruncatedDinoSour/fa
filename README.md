@@ -35,3 +35,12 @@ some time
 ```bash
 $ ./scripts/devsetup.sh
 ```
+
+# Testing the compiler
+
+-   Install the compiler
+-   Run
+
+```bash
+$ ./scripts/test.sh
+```
