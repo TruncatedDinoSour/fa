@@ -63,9 +63,22 @@ macro main
         %f
     end
 
-    -- Some math
 
-    1 %d sub 1 add --< Macro expansion with math >-- %exit
+    -- Names
+    10 as hello
+
+    -- Dereferencing
+    @hello deref as bye
+
+    -- Point
+    @bye 1 point
+
+    -- Unname
+    unname hello
+
+    -- Some math and variables
+
+    1 %d sub @bye deref add --< Macro expansion with math >-- %exit
 end
 
 %main
