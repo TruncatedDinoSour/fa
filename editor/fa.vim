@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:     Fa
 " Maintainer:   Ari Archer <ari.web.xyz@gmail.com>
-" Last Change:  2022 Jun 24
+" Last Change:  2022 Jun 30
 
 " Usage Instructions
 " Put this file in ~/.vim/syntax/fa.vim and
@@ -50,8 +50,8 @@ syntax match faMacro "%\S*"
 
 
 " Includes
-syntax keyword faInclude include
-syntax region faString start=/\v'/ skip=/\v\\./ end=/\v'/
+syntax keyword faInclude include nextgroup=faString skipwhite
+syntax region faString start=/\W'/ skip=/\v\\./ end=/\v'/ contained
 
 
 " Operators
@@ -63,17 +63,17 @@ syntax keyword faDeprecated buffer
 
 
 " Set highlights
-highlight default link faTodo Todo
-highlight default link faKeyword Keyword
+highlight default link faTodo        Todo
+highlight default link faKeyword     Keyword
 highlight default link faCommentLine Comment
-highlight default link faString String
-highlight default link faEscape Special
-highlight default link faNumber Number
-highlight default link faMutability Define
-highlight default link faMacro Define
-highlight default link faInclude Function
-highlight default link faOperator Operator
-highlight default link faDeprecated Error
+highlight default link faString      String
+highlight default link faEscape      Special
+highlight default link faNumber      Number
+highlight default link faMutability  Define
+highlight default link faMacro       Define
+highlight default link faInclude     Include
+highlight default link faOperator    Operator
+highlight default link faDeprecated  Error
 
 
 " Set syntax
