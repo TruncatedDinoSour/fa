@@ -73,6 +73,8 @@ end
 --<
     Allocate n bytes
     WARNING: Don't forgot to %bfree after
+    WARNING: This is a very non-portable macro, use
+             %malloc and %mfree
 
     Takes:
         INT: The buffer size
@@ -98,4 +100,40 @@ macro bfree
     %cdptr   sub       -- Takes the argument on the stack
     %SYS_brk sys 2     -- Shrink .data
     1        drop      -- Drop the current .data
+end
+
+
+--<
+    Allocate memory
+
+    Takes:
+        INT: The buffer size
+
+    Returns:
+        INT: *buffer
+>--
+macro malloc
+    as length      -- Element from the stack
+
+    34             -- Flags
+    0              -- Offset
+    1 0 sub        -- Fd
+    3              -- Prot
+    @length deref  -- Length
+    0              -- Addr
+    %SYS_mmap sys 7
+
+    unname length
+end
+
+
+--<
+    Deallocate memory
+
+    Takes:
+        INT: The buffer size
+        INT: *buffer
+>--
+macro mfree
+    %SYS_munmap sys 3 1 drop
 end
