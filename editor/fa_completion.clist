@@ -22,6 +22,12 @@ copy
 
 undefine
 nop
+as
+
+@
+
+deref
+point
 
 --
 --<

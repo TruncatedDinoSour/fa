@@ -26,6 +26,10 @@ class TokenType(Enum):
     COPY = auto()
     UNDEFINE = auto()
     NOP = auto()
+    AS = auto()
+    PUSH_NAME = auto()
+    DEREF = auto()
+    POINT = auto()
 
 
 class Mutability(Enum):
@@ -92,6 +96,7 @@ INCLUDE_RESOLVE_ORDER: Tuple[str, ...] = (
     os.path.expanduser("~/.local/lib/fa"),
 )
 SCOPES: List[str] = []
+NAMES: Set[str] = set()
 
 
 def error(msg: str, token: Token = NULL_TOKEN) -> None:
@@ -168,7 +173,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
         ip += 1
 
 
-assert len(TokenType) == 14, "Unhandled token types in AST generation"
+assert len(TokenType) == 18, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
 assert len(Operator) == 6, "Unhandled operators in AST generation"
 
@@ -253,6 +258,8 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.PUSH_INT, int(word))
         elif word.startswith("%"):
             yield make_token(TokenType.EXPAND_MACRO, word[1:])
+        elif word.startswith("@"):
+            yield make_token(TokenType.PUSH_NAME, word[1:])
         elif word == "rw":
             yield make_token(TokenType.MUTABILITY, Mutability.RW)
         elif word == "ro":
@@ -266,7 +273,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
                 ip,
             )
 
-            word = words[ip]
+            word = words[ip].strip()
 
             yield make_token(TokenType.SYS, int(word))
         elif word == "drop":
@@ -358,6 +365,22 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.UNDEFINE, word)
         elif word == "nop":
             yield make_token(TokenType.NOP, None)
+        elif word == "as":
+            ip += 1
+            ei(
+                f"No name supplied at position {_position}",
+                NULL_TOKEN,
+                words,
+                ip,
+            )
+
+            word = words[ip].strip()
+
+            yield make_token(TokenType.AS, word)
+        elif word == "deref":
+            yield make_token(TokenType.DEREF, None)
+        elif word == "point":
+            yield make_token(TokenType.POINT, None)
         else:
             error(
                 f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
@@ -367,7 +390,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
 
 
 assert (
-    len(TokenType) == 14
+    len(TokenType) == 18
 ), "Unhandled token types in Linux x86_64 fasm assembly generation"
 assert (
     len(Mutability) == 2
@@ -595,6 +618,47 @@ def generate_assembly_linux_x86_64_fasm(
             )
         elif token.ttype == TokenType.NOP:
             start_lb.append(("nop", token))
+        elif token.ttype == TokenType.AS:
+            name_name: str = f"name_{token.tvalue}"
+
+            if name_name not in CTX:
+                CTX.add(name_name)
+                data_lb.append((f"{name_name}: rb 8", token))
+
+            start_lb.extend(
+                (
+                    ("pop rax", token),
+                    ("mov rdi, rax", token),
+                    (f"mov [{name_name}], rdi", token),
+                )
+            )
+
+            tmp_stack.pop()
+        elif token.ttype == TokenType.PUSH_NAME:
+            start_lb.append((f"push name_{token.tvalue}", token))
+            tmp_stack.append(1)
+        elif token.ttype == TokenType.DEREF:
+            start_lb.extend(
+                (
+                    ("pop rax", token),
+                    ("mov rdi, [rax]", token),
+                    ("push rdi", token),
+                )
+            )
+
+            tmp_stack.pop()
+            tmp_stack.append(1)
+        elif token.ttype == TokenType.POINT:
+            start_lb.extend(
+                (
+                    ("pop rax", token),
+                    ("pop rdi", token),
+                    ("mov [rdi], rax", token),
+                )
+            )
+
+            tmp_stack.pop()
+            tmp_stack.pop()
         else:
             error(f"Unexpected {token}", token)
 
@@ -726,7 +790,7 @@ def run_command_log(cmd: str, fail: bool = True) -> None:
         error("Command failed")
 
 
-assert len(TokenType) == 14, "Unhandled token types in processing"
+assert len(TokenType) == 18, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
 assert len(Operator) == 6, "Unhandled operators in processing"
 
@@ -804,13 +868,24 @@ def preprocess_ast(
                 )
 
             del MACROS[token.tvalue]
+        elif token.ttype == TokenType.AS:
+            NAMES.add(token.tvalue)
+            yield token
+        elif token.ttype == TokenType.PUSH_NAME:
+            if token.tvalue not in NAMES:
+                error(
+                    f"{token.tvalue!r} is not a defined name, try something like `0 as {token.tvalue}`",
+                    token,
+                )
+
+            yield token
         else:
             yield token
 
         ip += 1
 
 
-assert len(TokenType) == 14, "Unhandled token types in type checking"
+assert len(TokenType) == 18, "Unhandled token types in type checking"
 assert len(Mutability) == 2, "Unhandled mutability contexts in type checking"
 assert len(Operator) == 6, "Unhandled operators in type checking"
 
@@ -1105,6 +1180,49 @@ items onto the stack",
             )
         elif token.ttype == TokenType.NOP:
             pass
+        elif token.ttype == TokenType.AS:
+            if not len(type_stack):
+                error(
+                    "Please initialise the name before declaring it, did you try using `0` as the value?",
+                    token,
+                )
+
+            type_stack.pop()
+        elif token.ttype == TokenType.PUSH_NAME:
+            type_stack.append((TokenType.PUSH_INT, 1, token))
+        elif token.ttype == TokenType.DEREF:
+            if not len(type_stack):
+                error(
+                    "No pointers to dereference on the stack, try pushing some", token
+                )
+
+            ptr_t, ptr_value, ptr_token = type_stack.pop()
+
+            if ptr_t != TokenType.PUSH_INT:
+                error(
+                    "No valid pointer type found, are you sure it's an integer?",
+                    ptr_token,
+                )
+
+            if ptr_value < 1:
+                error("Pointer underflow detected", ptr_value)
+
+            type_stack.append((TokenType.PUSH_INT, 1, token))
+        elif token.ttype == TokenType.POINT:
+            if len(type_stack) < 2:
+                error(
+                    "Point requires at least you arguments on the stack: a pointer and a value",
+                    token,
+                )
+
+            type_stack.pop()
+
+            new_ptr_value_t, _, new_ptr_token = type_stack.pop()
+
+            if new_ptr_value_t != TokenType.PUSH_INT:
+                error(
+                    "No valid pointer type found, are you sure it's an integer?", token
+                )
         else:
             error(
                 f"Unknown token while type checking: {token}, this is probably a bug in the AST generator",

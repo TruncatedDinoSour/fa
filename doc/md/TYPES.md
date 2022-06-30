@@ -9,7 +9,7 @@ programming language:
   - Read only string (put `ro` after the string`)
   - Read/write string (put `rw` after the string`)
 
-- Integers just push the integer on the stack
+- Integers just push the integer on the stack, also serve as pointers
 - Strings push the string and the length of it on the stack:
 
 ```

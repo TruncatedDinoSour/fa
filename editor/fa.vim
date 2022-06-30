@@ -19,7 +19,7 @@ syntax keyword faTodo TODO XXX FIXME NOTE
 
 
 " Language keywords
-syntax keyword faKeyword sys drop swap copy nop
+syntax keyword faKeyword sys drop swap copy nop as deref point
 
 
 " Escapes
@@ -62,6 +62,10 @@ syntax keyword faOperator add sub mul bor band xor
 syntax keyword faDeprecated buffer
 
 
+" Names
+syntax match faName "@\S*"
+
+
 " Set highlights
 highlight default link faTodo        Todo
 highlight default link faKeyword     Keyword
@@ -74,6 +78,7 @@ highlight default link faMacro       Define
 highlight default link faInclude     Include
 highlight default link faOperator    Operator
 highlight default link faDeprecated  Error
+highlight default link faName        Type
 
 
 " Set syntax
