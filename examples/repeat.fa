@@ -1,3 +1,4 @@
+include 'std/mem/lmem.fa'
 include 'std/std.fa'
 
 macro SIZE 2 128 mul end

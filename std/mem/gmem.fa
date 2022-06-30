@@ -1,0 +1,38 @@
+include 'std/syscall.fa'
+
+
+--<
+    Allocate memory
+
+    Takes:
+        INT: The buffer size
+
+    Returns:
+        INT: *buffer
+>--
+macro malloc
+    as length      -- Element from the stack
+
+    34             -- Flags
+    0              -- Offset
+    1 0 sub        -- Fd
+    3              -- Prot
+    @length deref  -- Length
+    0              -- Addr
+    %SYS_mmap sys 7
+
+    unname length
+end
+
+
+--<
+    Deallocate memory
+
+    Takes:
+        INT: The buffer size
+        INT: *buffer
+>--
+macro mfree
+    %SYS_munmap sys 3 1 drop
+end
+

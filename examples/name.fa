@@ -1,3 +1,4 @@
+include 'std/mem/lmem.fa'
 include 'std/std.fa'
 
 macro NAME_LEN 256 end

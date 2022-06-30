@@ -2,4 +2,4 @@
 *.o
 .mypy_cache/
 /all_features
-/std/syscalls.fa
+/std/syscall.fa

@@ -838,11 +838,11 @@ def preprocess_ast(
             macro_body = []
             macro_name = token.tvalue
 
-            if macro_name in MACROS:
-                error(
-                    f"Macro {macro_name!r} is already defined, did you try to `undefine {macro_name}`",
-                    token,
-                )
+            # if macro_name in MACROS:
+            #     error(
+            #         f"Macro {macro_name!r} is already defined, did you try to `undefine {macro_name}`",
+            #         token,
+            #     )
 
             while True:
                 if (

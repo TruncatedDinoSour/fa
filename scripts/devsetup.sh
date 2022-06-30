@@ -62,7 +62,7 @@ main() {
         echo
 
         curl -fLsS -- "$SYSCALL_TABLE" | ./scripts/syscalls.py
-    } >'std/syscalls.fa'
+    } >'std/syscall.fa'
 
     log 'Installing fa stdlib locally'
 
