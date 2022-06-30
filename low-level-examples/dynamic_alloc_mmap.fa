@@ -1,0 +1,33 @@
+include 'std/std.fa'
+
+macro main
+    --<1 0 sub  -- File descriptor
+    2        -- Flags
+    3        -- Protecton
+    1        -- Length
+    0        -- Offset_
+    %SYS_mmap sys 6 1 drop>__a__aa>--
+
+    --<
+        mov     rax, 9
+        mov     rdi, 0
+        mov     rsi, 4096
+        mov     rdx, 3
+        mov     r8,  -1
+        mov     r9,  0
+        mov     r10, 34
+        syscall
+    >--
+
+    34
+    0
+    1 0 sub
+    3
+    4096
+    0
+    %SYS_mmap sys 7 1 drop
+
+    0 %exit
+end
+
+%main
