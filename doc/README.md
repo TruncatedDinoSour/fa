@@ -13,4 +13,4 @@
 - [Sys keyword in fa](/doc/md/SYS.md)
 - [Fa data types](/doc/md/TYPES.md)
 - [Undefine keyword in fa](/doc/md/UNDEFINE.md)
-- [Variables in fa](/doc/md/VARIABLES.md)
+- [Variables (names) in fa](/doc/md/VARIABLES.md)

@@ -30,6 +30,7 @@ class TokenType(Enum):
     PUSH_NAME = auto()
     DEREF = auto()
     POINT = auto()
+    UNNAME = auto()
 
 
 class Mutability(Enum):
@@ -173,7 +174,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
         ip += 1
 
 
-assert len(TokenType) == 18, "Unhandled token types in AST generation"
+assert len(TokenType) == 19, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
 assert len(Operator) == 6, "Unhandled operators in AST generation"
 
@@ -368,7 +369,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
         elif word == "as":
             ip += 1
             ei(
-                f"No name supplied at position {_position}",
+                f"No name for defining supplied at position {_position}",
                 NULL_TOKEN,
                 words,
                 ip,
@@ -381,6 +382,18 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.DEREF, None)
         elif word == "point":
             yield make_token(TokenType.POINT, None)
+        elif word == "unname":
+            ip += 1
+            ei(
+                f"No name for undefining supplied at position {_position}",
+                NULL_TOKEN,
+                words,
+                ip,
+            )
+
+            word = words[ip].strip()
+
+            yield make_token(TokenType.UNNAME, word)
         else:
             error(
                 f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
@@ -390,7 +403,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
 
 
 assert (
-    len(TokenType) == 18
+    len(TokenType) == 19
 ), "Unhandled token types in Linux x86_64 fasm assembly generation"
 assert (
     len(Mutability) == 2
@@ -659,6 +672,11 @@ def generate_assembly_linux_x86_64_fasm(
 
             tmp_stack.pop()
             tmp_stack.pop()
+        elif token.tvalue == TokenType.UNNAME:
+            error(
+                "Unname should not be parsed outside of processing context, this is most likely a bug in the preprocessor",
+                token,
+            )
         else:
             error(f"Unexpected {token}", token)
 
@@ -790,7 +808,7 @@ def run_command_log(cmd: str, fail: bool = True) -> None:
         error("Command failed")
 
 
-assert len(TokenType) == 18, "Unhandled token types in processing"
+assert len(TokenType) == 19, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
 assert len(Operator) == 6, "Unhandled operators in processing"
 
@@ -879,13 +897,21 @@ def preprocess_ast(
                 )
 
             yield token
+        elif token.ttype == TokenType.UNNAME:
+            if token.tvalue not in NAMES:
+                error(
+                    f"{token.tvalue!r} is not a defined name, try something like `0 as {token.tvalue}`",
+                    token,
+                )
+
+            NAMES.remove(token.tvalue)
         else:
             yield token
 
         ip += 1
 
 
-assert len(TokenType) == 18, "Unhandled token types in type checking"
+assert len(TokenType) == 19, "Unhandled token types in type checking"
 assert len(Mutability) == 2, "Unhandled mutability contexts in type checking"
 assert len(Operator) == 6, "Unhandled operators in type checking"
 
@@ -1223,6 +1249,11 @@ items onto the stack",
                 error(
                     "No valid pointer type found, are you sure it's an integer?", token
                 )
+        elif token.ttype == TokenType.UNNAME:
+            error(
+                "Unname should not be parsed outside of processing context, this is most likely a bug in the preprocessor",
+                token,
+            )
         else:
             error(
                 f"Unknown token while type checking: {token}, this is probably a bug in the AST generator",

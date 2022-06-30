@@ -44,8 +44,8 @@ syntax region faString start=/\v"/ skip=/\v\\./ end=/\v"/ contains=faEscape
 syntax keyword faMutability ro rw
 
 
-" Macros
-syntax keyword faMacro macro end undefine
+" Macros/definitions
+syntax keyword faMacro macro end undefine unname
 syntax match faMacro "%\S*"
 
 
