@@ -165,7 +165,10 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
                 if not _code:
                     error("Empty escape code", token)
 
-                yield int(_code)
+                try:
+                    yield int(_code)
+                except ValueError:
+                    error(f"Invalid escape code at IP {ip}", token)
             else:
                 yield ord(char)
         else:
@@ -228,6 +231,12 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             old_word = word
 
             ip += 1
+            ei(
+                f'Unclosed string at position: {_position}, did you forget to add a " at the end?',
+                NULL_TOKEN,
+                words,
+                ip,
+            )
             word = words[ip]
 
             _tmp_str: List[str] = [old_word, word]
@@ -275,6 +284,11 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             )
 
             word = words[ip].strip()
+
+            if not word.isnumeric():
+                error(
+                    f"{word!r} is not a valid register ammount at position {_position}"
+                )
 
             yield make_token(TokenType.SYS, int(word))
         elif word == "drop":
@@ -845,6 +859,9 @@ def preprocess_ast(
                         file = include_file
                         break
 
+            if not os.path.exists(file):
+                error(f"Cannot include a non-existant file {file!r}", token)
+
             yield from type_check_ast(
                 tuple(preprocess_ast(tuple(file_to_ast(file)), assembly_flavour)),
                 assembly_flavour,
@@ -962,6 +979,12 @@ did you try to push more items onto the stack?",
 
             type_stack.append((TokenType.PUSH_INT, 1, token))
         elif token.ttype == TokenType.DROP:
+            if not len(type_stack):
+                error(
+                    "No drop ammount supplied on the stack for `drop`, try `1 drop`",
+                    token,
+                )
+
             drop_ammount: Tuple[TokenType, Any, Token] = type_stack.pop()
             drop_type_stack_len: int = len(type_stack)
 
@@ -1205,12 +1228,11 @@ items onto the stack",
         elif token.ttype == TokenType.POINT:
             if len(type_stack) < 2:
                 error(
-                    "Point requires at least you arguments on the stack: a pointer and a value",
+                    "Point requires at least two arguments on the stack: a pointer and a value",
                     token,
                 )
 
             type_stack.pop()
-
             new_ptr_value_t, _, new_ptr_token = type_stack.pop()
 
             if new_ptr_value_t != TokenType.PUSH_INT:

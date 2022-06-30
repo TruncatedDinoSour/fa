@@ -1,4 +1,4 @@
-# [Fa](https://en.wikipedia.org/wiki/Fa_(letter)) programming language
+# [Fa](<https://en.wikipedia.org/wiki/Fa_(letter)>) programming language
 
 > A rys-like stack based, reverse polish notation low-level programming
 > language that transpiles down to assembly
@@ -18,13 +18,17 @@ some time
 
 # System requirements
 
-- `Fasm` compiler
-- `Python3` (for now)
-- Bash-completion (optional, for completions)
+-   `Fasm` compiler
+-   `Python3` (for now)
+-   Bash-completion (optional, for completions)
 
 # Development requirements
 
-- Curl
+-   Curl
+
+# Testing requirements
+
+-   (The only tested coreuitls are GNU) coreutils
 
 # Installation for developing
 

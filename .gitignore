@@ -3,3 +3,4 @@
 .mypy_cache/
 /all_features
 /std/syscall.fa
+/test_results/
