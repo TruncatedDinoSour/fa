@@ -14,7 +14,7 @@ run_tests() {
         pptest="${ptest##*/}"
         _ex="/tmp/fa.$RANDOM.$pptest.lock"
 
-        log "Testing: $pptest"
+        log "Testing ($3 mode): $pptest"
 
         {
             _cmd="echo | fac \"\$ptest\" -run"
