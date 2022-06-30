@@ -428,8 +428,6 @@ def generate_assembly_linux_x86_64_fasm(
     data_lb: List[Tuple[str, Token]] = []
     rodata_lb: List[Tuple[str, Token]] = []
 
-    tmp_stack: List[Any] = []
-
     while ip < len(ast):
         token: Token = ast[ip]
         old_ip: int = ip
@@ -447,7 +445,6 @@ def generate_assembly_linux_x86_64_fasm(
                     ("push rax", token),
                 )
             )
-            tmp_stack.append(token.tvalue)
         elif token.ttype == TokenType.PUSH_STR:
             parsed_string_codes: Tuple[int, ...] = tuple(
                 parse_string(token.tvalue, token)
@@ -484,9 +481,6 @@ def generate_assembly_linux_x86_64_fasm(
                     (f"push str_{tname}", ast[old_ip]),
                 )
             )
-
-            _tmp_str: str = "".join(chr(charcode) for charcode in parsed_string_codes)
-            tmp_stack.extend((len(_tmp_str), _tmp_str))
         elif token.ttype == TokenType.MUTABILITY:
             error(
                 "Mutability should not be parsed outside of word context, this is most likely a bug in the parser",
@@ -498,9 +492,6 @@ def generate_assembly_linux_x86_64_fasm(
                 for reg in range(token.tvalue)
             )
             start_lb.extend((("syscall", token), ("push rax", token)))
-
-            # Syscall always returns
-            tmp_stack.append(0)
         elif token.ttype == TokenType.DROP:
             start_lb.extend(
                 (
@@ -509,7 +500,6 @@ def generate_assembly_linux_x86_64_fasm(
                     ("add rsp, rax", token),
                 )
             )
-            tmp_stack.pop()
         elif token.ttype == TokenType.SWAP:
             start_lb.extend(
                 (
@@ -519,11 +509,6 @@ def generate_assembly_linux_x86_64_fasm(
                     ("push rdi", token),
                 )
             )
-
-            a = tmp_stack.pop()
-            b = tmp_stack.pop()
-
-            tmp_stack.extend((a, b))
         elif token.ttype == TokenType.MACRO:
             error(
                 "Macro should not be parsed outside of processing context, this is most likely a bug in the (pre-)processor",
@@ -554,8 +539,6 @@ def generate_assembly_linux_x86_64_fasm(
                         ("push rax", token),
                     )
                 )
-
-                tmp_stack.append(tmp_stack.pop() + tmp_stack.pop())
             elif token.tvalue == Operator.SUB:
                 start_lb.extend(
                     (
@@ -565,8 +548,6 @@ def generate_assembly_linux_x86_64_fasm(
                         ("push rax", token),
                     )
                 )
-
-                tmp_stack.append(tmp_stack.pop() - tmp_stack.pop())
             elif token.tvalue == Operator.MUL:
                 start_lb.extend(
                     (
@@ -576,8 +557,6 @@ def generate_assembly_linux_x86_64_fasm(
                         ("push rax", token),
                     )
                 )
-
-                tmp_stack.append(tmp_stack.pop() * tmp_stack.pop())
             elif token.tvalue == Operator.BOR:
                 start_lb.extend(
                     (
@@ -587,8 +566,6 @@ def generate_assembly_linux_x86_64_fasm(
                         ("push rax", token),
                     )
                 )
-
-                tmp_stack.append(tmp_stack.pop() | tmp_stack.pop())
             elif token.tvalue == Operator.BAND:
                 start_lb.extend(
                     (
@@ -598,8 +575,6 @@ def generate_assembly_linux_x86_64_fasm(
                         ("push rax", token),
                     )
                 )
-
-                tmp_stack.append(tmp_stack.pop() & tmp_stack.pop())
             elif token.tvalue == Operator.XOR:
                 start_lb.extend(
                     (
@@ -609,8 +584,6 @@ def generate_assembly_linux_x86_64_fasm(
                         ("push rax", token),
                     )
                 )
-
-                tmp_stack.append(tmp_stack.pop() ^ tmp_stack.pop())
             else:
                 error(f"Unknown operator {token}", token)
         elif token.ttype == TokenType.COPY:
@@ -621,9 +594,6 @@ def generate_assembly_linux_x86_64_fasm(
                     ("push rax", token),
                 )
             )
-
-            item: Any = tmp_stack.pop()
-            tmp_stack.extend((item, item))
         elif token.ttype == TokenType.UNDEFINE:
             error(
                 "Undefine should not be parsed outside of processing context, this is most likely a bug in the (pre-)processor",
@@ -645,11 +615,8 @@ def generate_assembly_linux_x86_64_fasm(
                     (f"mov [{name_name}], rdi", token),
                 )
             )
-
-            tmp_stack.pop()
         elif token.ttype == TokenType.PUSH_NAME:
             start_lb.append((f"push name_{token.tvalue}", token))
-            tmp_stack.append(1)
         elif token.ttype == TokenType.DEREF:
             start_lb.extend(
                 (
@@ -658,9 +625,6 @@ def generate_assembly_linux_x86_64_fasm(
                     ("push rdi", token),
                 )
             )
-
-            tmp_stack.pop()
-            tmp_stack.append(1)
         elif token.ttype == TokenType.POINT:
             start_lb.extend(
                 (
@@ -669,9 +633,6 @@ def generate_assembly_linux_x86_64_fasm(
                     ("mov [rdi], rax", token),
                 )
             )
-
-            tmp_stack.pop()
-            tmp_stack.pop()
         elif token.tvalue == TokenType.UNNAME:
             error(
                 "Unname should not be parsed outside of processing context, this is most likely a bug in the preprocessor",
