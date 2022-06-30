@@ -20,9 +20,9 @@
     -   **Problem:** Limited registers and no second stack
     -   **Potential solution:** Using math just like `drop`
     -   **Solution:**
--   [ ] Better buffer management
+-   [-] Better buffer management
     -   **Problem:** a) How you you free reserved bytes b) How do I manage the labels
     -   **Potential solution:** Store a tuple of the label name and
         buffer size in the token and/or `BUFFERS`
         dictionary
-    -   **Solution:**
+    -   **Solution:** None, keyword has been deprecated

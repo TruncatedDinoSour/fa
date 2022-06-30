@@ -19,9 +19,6 @@ band
 xor
 
 copy
-buffer
-
-#
 
 undefine
 nop

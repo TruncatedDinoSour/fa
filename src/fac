@@ -24,8 +24,6 @@ class TokenType(Enum):
     INCLUDE = auto()
     OPERATOR = auto()
     COPY = auto()
-    BUFFER = auto()
-    PUSH_BUFFER = auto()
     UNDEFINE = auto()
     NOP = auto()
 
@@ -83,7 +81,6 @@ ASM_SNIPPETS: Dict[str, Dict[str, Tuple[str, ...]]] = {
 }
 
 MACROS: Dict[str, List[Token]] = {}
-BUFFERS: Dict[str, int] = {}
 CTX: Set[str] = set()
 INCLUDE_RESOLVE_ORDER: Tuple[str, ...] = (
     ".",
@@ -171,7 +168,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
         ip += 1
 
 
-assert len(TokenType) == 16, "Unhandled token types in AST generation"
+assert len(TokenType) == 14, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
 assert len(Operator) == 6, "Unhandled operators in AST generation"
 
@@ -256,8 +253,6 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.PUSH_INT, int(word))
         elif word.startswith("%"):
             yield make_token(TokenType.EXPAND_MACRO, word[1:])
-        elif word.startswith("#"):
-            yield make_token(TokenType.PUSH_BUFFER, word[1:])
         elif word == "rw":
             yield make_token(TokenType.MUTABILITY, Mutability.RW)
         elif word == "ro":
@@ -338,20 +333,6 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.OPERATOR, Operator.MUL)
         elif word == "copy":
             yield make_token(TokenType.COPY, None)
-        elif word == "buffer":
-            log("WARNING: Buffer keyword is being deprecated")
-
-            ip += 1
-            ei(
-                f"No buffer name for allocation supplied at position {_position}",
-                NULL_TOKEN,
-                words,
-                ip,
-            )
-
-            word = words[ip]
-
-            yield make_token(TokenType.BUFFER, word)
         elif word == "bor":
             yield make_token(TokenType.OPERATOR, Operator.BOR)
         elif word == "band":
@@ -386,7 +367,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
 
 
 assert (
-    len(TokenType) == 16
+    len(TokenType) == 14
 ), "Unhandled token types in Linux x86_64 fasm assembly generation"
 assert (
     len(Mutability) == 2
@@ -607,21 +588,6 @@ def generate_assembly_linux_x86_64_fasm(
 
             item: Any = tmp_stack.pop()
             tmp_stack.extend((item, item))
-        elif token.ttype == TokenType.PUSH_BUFFER:
-            buffer_name: str = f"buffer_{token.tvalue}"
-
-            if buffer_name not in CTX:
-                data_lb.append((f"{buffer_name}: rb {BUFFERS[token.tvalue]}", token))
-                CTX.add(buffer_name)
-
-            start_lb.extend(
-                (
-                    (f"mov rax, {buffer_name}", token),
-                    ("push rax", token),
-                )
-            )
-
-            tmp_stack.append(0)
         elif token.ttype == TokenType.UNDEFINE:
             error(
                 "Undefine should not be parsed outside of processing context, this is most likely a bug in the (pre-)processor",
@@ -760,7 +726,7 @@ def run_command_log(cmd: str, fail: bool = True) -> None:
         error("Command failed")
 
 
-assert len(TokenType) == 16, "Unhandled token types in processing"
+assert len(TokenType) == 14, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
 assert len(Operator) == 6, "Unhandled operators in processing"
 
@@ -830,33 +796,6 @@ def preprocess_ast(
                 tuple(preprocess_ast(tuple(file_to_ast(file)), assembly_flavour)),
                 assembly_flavour,
             )
-        elif token.ttype == TokenType.BUFFER:
-            buffer_name: str = token.tvalue
-
-            ip += 1
-            ei(
-                "No buffer size specified, did you try adding a number after the buffer name?",
-                token,
-                ast,
-                ip,
-            )
-
-            token = ast[ip]
-            buffer_size: int
-
-            if token.ttype == TokenType.PUSH_INT:
-                buffer_size = token.tvalue
-            elif token.ttype == TokenType.EXPAND_MACRO:
-                buffer_size = tuple(
-                    preprocess_ast(tuple(MACROS[token.tvalue]), assembly_flavour)
-                )[0].tvalue
-            else:
-                error(
-                    f"Unsuported buffer size: {token}, try using a %macro or a number",
-                    token,
-                )
-
-            BUFFERS[buffer_name] = buffer_size
         elif token.ttype == TokenType.UNDEFINE:
             if token.tvalue not in MACROS:
                 error(
@@ -871,7 +810,7 @@ def preprocess_ast(
         ip += 1
 
 
-assert len(TokenType) == 16, "Unhandled token types in type checking"
+assert len(TokenType) == 14, "Unhandled token types in type checking"
 assert len(Mutability) == 2, "Unhandled mutability contexts in type checking"
 assert len(Operator) == 6, "Unhandled operators in type checking"
 
@@ -1159,20 +1098,6 @@ items onto the stack",
 
             copy_element: Tuple[TokenType, Any, Token] = type_stack.pop()
             type_stack.extend((copy_element, copy_element))
-        elif token.ttype == TokenType.BUFFER:
-            error(
-                "Buffer should not be parsed outside processing, this is most likely a bug in the (pre-)processor",
-                token,
-            )
-        elif token.ttype == TokenType.PUSH_BUFFER:
-            if token.tvalue not in BUFFERS:
-                error(
-                    f"Buffer {token.tvalue!r} does not exist, did you try defining it using \
-`buffer {token.tvalue} <size>`",
-                    token,
-                )
-
-            type_stack.append((TokenType.PUSH_INT, 1, token))
         elif token.ttype == TokenType.UNDEFINE:
             error(
                 "Undefine should not be parsed outside processing, this is most likely a bug in the (pre-)processor",

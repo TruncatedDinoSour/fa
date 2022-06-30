@@ -63,7 +63,7 @@ end
     Get current .data
 
     Returns:
-        BUFFER: *data
+        INT: *data
 >--
 macro cdptr
     0 %SYS_brk sys 2

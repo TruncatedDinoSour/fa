@@ -1,5 +1,4 @@
 # Fa documentation index
-- [Buffer keyword in fa](/doc/md/BUFFER.md)
 - [Comments in fa](/doc/md/COMMENTS.md)
 - [Copy keyword in fa](/doc/md/COPY.md)
 - [Drop keyword in fa](/doc/md/DROP.md)

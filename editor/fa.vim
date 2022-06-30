@@ -19,7 +19,7 @@ syntax keyword faTodo TODO XXX FIXME NOTE
 
 
 " Language keywords
-syntax keyword faKeyword sys drop swap copy buffer nop
+syntax keyword faKeyword sys drop swap copy nop
 
 
 " Escapes
@@ -49,10 +49,6 @@ syntax keyword faMacro macro end undefine
 syntax match faMacro "%\S*"
 
 
-" Buffers
-syntax match faBuffer "#\S*"
-
-
 " Includes
 syntax keyword faInclude include
 syntax region faString start=/\v'/ skip=/\v\\./ end=/\v'/
@@ -60,6 +56,10 @@ syntax region faString start=/\v'/ skip=/\v\\./ end=/\v'/
 
 " Operators
 syntax keyword faOperator add sub mul bor band xor
+
+
+" Deprecated keywords
+syntax keyword faDeprecated buffer
 
 
 " Set highlights
@@ -72,8 +72,8 @@ highlight default link faNumber Number
 highlight default link faMutability Define
 highlight default link faMacro Define
 highlight default link faInclude Function
-highlight default link faBuffer Function
 highlight default link faOperator Operator
+highlight default link faDeprecated Error
 
 
 " Set syntax
