@@ -45,7 +45,7 @@ syntax keyword faMutability ro rw
 
 
 " Macros/definitions
-syntax keyword faMacro macro end undefine unname
+syntax keyword faMacro macro end undefine unname shift
 syntax match faMacro "%\S*"
 
 

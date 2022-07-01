@@ -31,6 +31,7 @@ class TokenType(Enum):
     DEREF = auto()
     POINT = auto()
     UNNAME = auto()
+    SHIFT = auto()
 
 
 class Mutability(Enum):
@@ -98,6 +99,7 @@ INCLUDE_RESOLVE_ORDER: Tuple[str, ...] = (
 )
 SCOPES: List[str] = []
 NAMES: Set[str] = set()
+GLOBAL_STATES: Dict[str, Any] = {"shift": 0}
 
 
 def error(msg: str, token: Token = NULL_TOKEN) -> None:
@@ -177,7 +179,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
         ip += 1
 
 
-assert len(TokenType) == 19, "Unhandled token types in AST generation"
+assert len(TokenType) == 20, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
 assert len(Operator) == 6, "Unhandled operators in AST generation"
 
@@ -408,6 +410,8 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             word = words[ip].strip()
 
             yield make_token(TokenType.UNNAME, word)
+        elif word == "shift":
+            yield make_token(TokenType.SHIFT, None)
         else:
             error(
                 f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
@@ -417,7 +421,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
 
 
 assert (
-    len(TokenType) == 19
+    len(TokenType) == 20
 ), "Unhandled token types in Linux x86_64 fasm assembly generation"
 assert (
     len(Mutability) == 2
@@ -652,6 +656,11 @@ def generate_assembly_linux_x86_64_fasm(
                 "Unname should not be parsed outside of processing context, this is most likely a bug in the preprocessor",
                 token,
             )
+        elif token.ttype == TokenType.SHIFT:
+            error(
+                "Shift should not be parsed outside of processing context, this is most likely a bug in the (pre-)processor",
+                token,
+            )
         else:
             error(f"Unexpected {token}", token)
 
@@ -793,7 +802,7 @@ def run_command_log(cmd: Tuple[str, ...]) -> None:
             sys.exit(EXIT_ER)
 
 
-assert len(TokenType) == 19, "Unhandled token types in processing"
+assert len(TokenType) == 20, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
 assert len(Operator) == 6, "Unhandled operators in processing"
 
@@ -893,13 +902,16 @@ def preprocess_ast(
                 )
 
             NAMES.remove(token.tvalue)
+        elif token.ttype == TokenType.SHIFT:
+            yield Token(TokenType.PUSH_INT, GLOBAL_STATES["shift"], token.tpos)
+            GLOBAL_STATES["shift"] += 1
         else:
             yield token
 
         ip += 1
 
 
-assert len(TokenType) == 19, "Unhandled token types in type checking"
+assert len(TokenType) == 20, "Unhandled token types in type checking"
 assert len(Mutability) == 2, "Unhandled mutability contexts in type checking"
 assert len(Operator) == 6, "Unhandled operators in type checking"
 
@@ -1242,6 +1254,11 @@ items onto the stack",
         elif token.ttype == TokenType.UNNAME:
             error(
                 "Unname should not be parsed outside of processing context, this is most likely a bug in the preprocessor",
+                token,
+            )
+        elif token.ttype == TokenType.SHIFT:
+            error(
+                "Shift should not be parsed outside processing, this is most likely a bug in the (pre-)processor",
                 token,
             )
         else:

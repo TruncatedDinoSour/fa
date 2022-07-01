@@ -29,6 +29,7 @@ as
 deref
 point
 unname
+shift
 
 --
 --<
