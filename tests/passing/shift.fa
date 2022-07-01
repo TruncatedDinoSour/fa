@@ -1,0 +1,11 @@
+include 'std/std.fa'
+
+macro main
+    shift           -- (0)
+    shift           -- (1; 0)
+    drop            -- Consumes the `1` and drops the 0
+
+    %EXIT_SUCCESS %exit
+end
+
+%main
