@@ -13,7 +13,7 @@ a production-friendly language
 
 Fa programming language is supposed to be similar to rys but
 fixing a lot of issues it has, the initial name for fa was
-rys++ but I ended up on fa, this language is meant to be self-hosted
+rys++ but I ended up on fa, this language is going to be self-hosted
 some time
 
 # System requirements
