@@ -30,3 +30,7 @@
     -   **Problem:** None, just a lot of tests
     -   **Potential solution:** Make test cases
     -   **Solution:** Added test cases
+-   [ ] Type checking for names
+    -   **Problem:** Not checking the types of the value, only the pointers
+    -   **Potential solution:**
+    -   **Solution:**
