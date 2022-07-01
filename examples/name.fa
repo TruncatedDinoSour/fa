@@ -1,51 +1,27 @@
-include 'std/mem/lmem.fa'
+include 'std/mem/gmem.fa'
 include 'std/std.fa'
 
 macro NAME_LEN 256 end
 
 macro main
-    %NAME_LEN %balloc  -- Allocate a 256-byte (NAME_LEN) buffer in memory (let's call it "name")
-    copy               -- Copy the buffer's address
+    %NAME_LEN %malloc as name       -- Allocate NAME_LEN buffer
 
-    --<
-            Print the prompt
-    >--
-    "Enter your name: " ro %STDOUT %fputs  -- fputs("...", stdout)          => null
+    "Enter your name: " ro %STDOUT
+    %fputs                          -- fputs("...", stdout) => null
 
+    %NAME_LEN @name deref %STDIN
+    %SYS_read sys 4                 -- read(STDIN, *name, NAME_LEN) => <bytes_read>
 
-    --<
-            Read the name into the name buffer
-    >--
-    %NAME_LEN swap %STDIN %SYS_read sys 4  -- read(stdin, *name, NAME_LEN) => ammount of bytes read
+    "Your name is " ro %STDOUT
+    %fputs                          -- fputs("...", stdout) => null
 
+    1 swap sub @name deref
+    %puts                           -- puts(string) => null
 
-    --<
-            Remove the newline
-    >--
+    %NAME_LEN @name deref
+    %mfree 1 drop                   -- free(name) => null
 
-    --< Subtract the newline from the bytes read
-        because \n gets added when you press <enter> >--
-
-    1 swap sub  -- <ammount of bytes read> = <ammount of bytes read> - 1
-
-
-    --<
-            Print "Your name is " and the truncated buffer
-    >--
-    "Your name is " ro  %STDOUT %fputs  -- fputs("...", stdout)                          => null
-    swap %puts                          -- write(STDOUT, *name, <ammount of bytes read>) => null
-
-
-    --<
-            Free the buffer
-    >--
-
-    %NAME_LEN %bfree
-
-    --<
-            Exit the program
-    >--
-    0 %exit  -- exit(0)
+    %EXIT_SUCCESS %exit
 
     -- TODO: Add a check for name using conditionals
 end

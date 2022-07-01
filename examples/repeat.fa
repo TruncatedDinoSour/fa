@@ -1,22 +1,23 @@
-include 'std/mem/lmem.fa'
+include 'std/mem/gmem.fa'
 include 'std/std.fa'
 
 macro SIZE 2 128 mul end
 
 macro main
-    %SIZE %balloc  -- Allocate SIZE ammount of bytes
-    copy           -- Copy buffer pointer
+    %SIZE %malloc  -- Allocate SIZE ammount of bytes
+    as string      -- Store buffer as a pointer
 
     "What do I repeat? " ro %STDOUT %fputs
 
-    %SIZE swap              -- (*buffer; 256) => (256; *buffer)
-    %STDIN %SYS_read sys 4  -- read(STDIN, *buffer, 256)
+    %SIZE @string deref %STDIN
+    %SYS_read sys 4             -- read(STDIN, *string, SIZE) => <bytes_read>
 
-    swap        -- (*buffer; read_bytes) => (read_bytes; *buffer)
-    1 swap sub  -- Remove the <enter>
-    %puts       -- write(1, *buffer. read_bytes)
+    1 swap sub @string deref
+    %puts                       -- puts(string) => null
 
-    %SIZE %bfree
+    %SIZE @string deref %mfree
+    1 drop                      -- free(string) => null
+
     0 %exit
 end
 

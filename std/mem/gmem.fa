@@ -31,8 +31,11 @@ end
     Takes:
         INT: The buffer size
         INT: *buffer
+
+    Returns:
+        INT: ?error
 >--
 macro mfree
-    %SYS_munmap sys 3 1 drop
+    %SYS_munmap sys 3
 end
 
