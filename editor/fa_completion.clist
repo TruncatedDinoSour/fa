@@ -17,6 +17,8 @@ mul
 bor
 ban
 xor
+shr
+shl
 
 copy
 

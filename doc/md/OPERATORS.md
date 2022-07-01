@@ -6,3 +6,5 @@
 - `bor` -- Binary OR
 - `ban` -- Binary AND
 - `xor` -- Exclussive OR
+- `shr` -- Shift right
+- `shl` -- Shift left

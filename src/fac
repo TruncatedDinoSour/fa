@@ -46,6 +46,8 @@ class Operator(Enum):
     BOR = auto()
     BAN = auto()
     XOR = auto()
+    SHR = auto()
+    SHL = auto()
 
 
 @dataclass
@@ -181,7 +183,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
 
 assert len(TokenType) == 20, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
-assert len(Operator) == 6, "Unhandled operators in AST generation"
+assert len(Operator) == 8, "Unhandled operators in AST generation"
 
 
 def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None]:
@@ -363,6 +365,10 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.OPERATOR, Operator.BAN)
         elif word == "xor":
             yield make_token(TokenType.OPERATOR, Operator.XOR)
+        elif word == "shr":
+            yield make_token(TokenType.OPERATOR, Operator.SHR)
+        elif word == "shl":
+            yield make_token(TokenType.OPERATOR, Operator.SHL)
         elif word == "undefine":
             ip += 1
             msg = f"No macro name for undefinition supplied at position {_position}"
@@ -427,7 +433,7 @@ assert (
     len(Mutability) == 2
 ), "Unhandled mutability contexts in Linux x86_64 fasm assembly generation generation"
 assert (
-    len(Operator) == 6
+    len(Operator) == 8
 ), "Unhandled operators in Linux x86_64 fasm assembly generation generation"
 
 
@@ -600,6 +606,24 @@ def generate_assembly_linux_x86_64_fasm(
                         ("pop rdi", token),
                         ("xor rax, rdi", token),
                         ("push rax", token),
+                    )
+                )
+            elif token.tvalue == Operator.SHR:
+                start_lb.extend(
+                    (
+                        ("pop rcx", token),
+                        ("pop rbx", token),
+                        ("shr rbx, cl", token),
+                        ("push rbx", token),
+                    )
+                )
+            elif token.tvalue == Operator.SHL:
+                start_lb.extend(
+                    (
+                        ("pop rcx", token),
+                        ("pop rbx", token),
+                        ("shl rbx, cl", token),
+                        ("push rbx", token),
                     )
                 )
             else:
@@ -804,7 +828,7 @@ def run_command_log(cmd: Tuple[str, ...]) -> None:
 
 assert len(TokenType) == 20, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
-assert len(Operator) == 6, "Unhandled operators in processing"
+assert len(Operator) == 8, "Unhandled operators in processing"
 
 
 def preprocess_ast(
@@ -913,7 +937,7 @@ def preprocess_ast(
 
 assert len(TokenType) == 20, "Unhandled token types in type checking"
 assert len(Mutability) == 2, "Unhandled mutability contexts in type checking"
-assert len(Operator) == 6, "Unhandled operators in type checking"
+assert len(Operator) == 8, "Unhandled operators in type checking"
 
 
 def type_check_ast(
@@ -1191,6 +1215,56 @@ items onto the stack",
                     )
 
                 type_stack.append((TokenType.PUSH_INT, xor_a[1] ^ xor_b[1], token))
+            elif token.tvalue == Operator.SHR:
+                if len(type_stack) < 2:
+                    error(
+                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack, try pushing more \
+items onto the stack",
+                        token,
+                    )
+
+                shr_a: Tuple[TokenType, Any, Token] = type_stack.pop()
+                shr_b: Tuple[TokenType, Any, Token] = type_stack.pop()
+
+                if shr_a[0] != TokenType.PUSH_INT:
+                    error(
+                        f"First argument of operator {token.tvalue.name!r} should be an integer, try pushing more \
+items onto the stack",
+                        token,
+                    )
+
+                if shr_b[0] != TokenType.PUSH_INT:
+                    error(
+                        f"Second argument of operator {token.tvalue.name!r} should be an integer",
+                        token,
+                    )
+
+                type_stack.append((TokenType.PUSH_INT, shr_a[1] >> shr_b[1], token))
+            elif token.tvalue == Operator.SHL:
+                if len(type_stack) < 2:
+                    error(
+                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack, try pushing more \
+items onto the stack",
+                        token,
+                    )
+
+                shl_a: Tuple[TokenType, Any, Token] = type_stack.pop()
+                shl_b: Tuple[TokenType, Any, Token] = type_stack.pop()
+
+                if shl_a[0] != TokenType.PUSH_INT:
+                    error(
+                        f"First argument of operator {token.tvalue.name!r} should be an integer, try pushing more \
+items onto the stack",
+                        token,
+                    )
+
+                if shl_b[0] != TokenType.PUSH_INT:
+                    error(
+                        f"Second argument of operator {token.tvalue.name!r} should be an integer",
+                        token,
+                    )
+
+                type_stack.append((TokenType.PUSH_INT, shl_a[1] << shl_b[1], token))
             else:
                 error(
                     f"Unknown operator while type checking: {token.tvalue.name!r}, this is probably a bug in the AST generator",

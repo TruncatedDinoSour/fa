@@ -36,6 +36,12 @@ macro main
     -- Xor
     "Hello world\n" ro 2 0 xor %fputs
 
+    -- Shr
+    "Hello world\n" ro 10 2 shr %fputs
+
+    -- Shl
+    "Hello world\n" ro 1 1 shl %fputs
+
     -- Copy
     1 copy drop
 
