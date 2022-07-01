@@ -624,7 +624,7 @@ def generate_assembly_linux_x86_64_fasm(
 
             if name_name not in CTX:
                 CTX.add(name_name)
-                data_lb.append((f"{name_name}: rb 8", token))
+                data_lb.append((f"{name_name}: rq 1", token))
 
             start_lb.extend(
                 (
