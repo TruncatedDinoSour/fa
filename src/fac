@@ -44,7 +44,7 @@ class Operator(Enum):
     SUB = auto()
     MUL = auto()
     BOR = auto()
-    BAND = auto()
+    BAN = auto()
     XOR = auto()
 
 
@@ -359,8 +359,8 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.COPY, None)
         elif word == "bor":
             yield make_token(TokenType.OPERATOR, Operator.BOR)
-        elif word == "band":
-            yield make_token(TokenType.OPERATOR, Operator.BAND)
+        elif word == "ban":
+            yield make_token(TokenType.OPERATOR, Operator.BAN)
         elif word == "xor":
             yield make_token(TokenType.OPERATOR, Operator.XOR)
         elif word == "undefine":
@@ -584,7 +584,7 @@ def generate_assembly_linux_x86_64_fasm(
                         ("push rax", token),
                     )
                 )
-            elif token.tvalue == Operator.BAND:
+            elif token.tvalue == Operator.BAN:
                 start_lb.extend(
                     (
                         ("pop rax", token),
@@ -1143,7 +1143,7 @@ items onto the stack",
                     )
 
                 type_stack.append((TokenType.PUSH_INT, bor_a[1] | bor_b[1], token))
-            elif token.tvalue == Operator.BAND:
+            elif token.tvalue == Operator.BAN:
                 if len(type_stack) < 2:
                     error(
                         f"Operator {token.tvalue.name!r} requires at least two arguments on the stack, try pushing more \
@@ -1151,22 +1151,22 @@ items onto the stack",
                         token,
                     )
 
-                band_a: Tuple[TokenType, Any, Token] = type_stack.pop()
-                band_b: Tuple[TokenType, Any, Token] = type_stack.pop()
+                ban_a: Tuple[TokenType, Any, Token] = type_stack.pop()
+                ban_b: Tuple[TokenType, Any, Token] = type_stack.pop()
 
-                if band_a[0] != TokenType.PUSH_INT:
+                if ban_a[0] != TokenType.PUSH_INT:
                     error(
                         f"First argument of operator {token.tvalue.name!r} should be an integer",
                         token,
                     )
 
-                if band_b[0] != TokenType.PUSH_INT:
+                if ban_b[0] != TokenType.PUSH_INT:
                     error(
                         f"Second argument of operator {token.tvalue.name!r} should be an integer",
                         token,
                     )
 
-                type_stack.append((TokenType.PUSH_INT, band_a[1] & band_b[1], token))
+                type_stack.append((TokenType.PUSH_INT, ban_a[1] & ban_b[1], token))
             elif token.tvalue == Operator.XOR:
                 if len(type_stack) < 2:
                     error(

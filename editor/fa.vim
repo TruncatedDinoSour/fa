@@ -55,7 +55,7 @@ syntax region faString start=/\W'/ skip=/\v\\./ end=/\v'/ contained
 
 
 " Operators
-syntax keyword faOperator add sub mul bor band xor
+syntax keyword faOperator add sub mul bor ban xor
 
 
 " Deprecated keywords

@@ -30,8 +30,8 @@ macro main
     -- Bor
     "Hello world\n" ro 2 2 bor %fputs
 
-    -- Band
-    "Hello world\n" ro 2 2 band %fputs
+    -- Ban
+    "Hello world\n" ro 2 2 ban %fputs
 
     -- Xor
     "Hello world\n" ro 2 0 xor %fputs
