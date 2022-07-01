@@ -101,7 +101,14 @@ INCLUDE_RESOLVE_ORDER: Tuple[str, ...] = (
 )
 SCOPES: List[str] = []
 NAMES: Set[str] = set()
-GLOBAL_STATES: Dict[str, Any] = {"shift": 0}
+GLOBAL_STATES: Dict[str, Any] = {
+    "shift": 0,
+    "anot_passes": 0,
+    "asm_passes": 0,
+    "tc_passes": 0,
+    "pp_passes": 0,
+    "fin_passes": 0,
+}
 
 
 def error(msg: str, token: Token = NULL_TOKEN) -> None:
@@ -122,6 +129,7 @@ def anotate_assembly(
     assembly: Generator[Tuple[str, Token], None, None], comment_char: str
 ) -> Generator[str, None, None]:
     log("Anotating assembly")
+    GLOBAL_STATES["anot_passes"] += 1
 
     for asm in assembly:
         if asm[1] == NULL_TOKEN or not ANOTATION_CONF["enabled"]:
@@ -441,6 +449,7 @@ def generate_assembly_linux_x86_64_fasm(
     ast: Tuple[Token, ...]
 ) -> Generator[Tuple[str, Token], None, None]:
     log("Getting Linux x86_64 fasm assembly from AST")
+    GLOBAL_STATES["asm_passes"] += 1
 
     ip: int = 0
 
@@ -802,11 +811,11 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
     return flagd
 
 
-def log(msg: str) -> None:
+def log(msg: str, header: str = "::") -> None:
     if "flags.nolog" in CTX:
         return
 
-    print(f" :: {msg}", file=sys.stderr)
+    print(f" {header} {msg}", file=sys.stderr)
 
 
 def run_command_log(cmd: Tuple[str, ...]) -> None:
@@ -836,6 +845,8 @@ def preprocess_ast(
 ) -> Generator[Token, None, None]:
     if logging:
         log("Preprocessing AST")
+
+    GLOBAL_STATES["pp_passes"] += 1
 
     ip: int = 0
 
@@ -907,25 +918,6 @@ def preprocess_ast(
                 )
 
             del MACROS[token.tvalue]
-        elif token.ttype == TokenType.AS:
-            NAMES.add(token.tvalue)
-            yield token
-        elif token.ttype == TokenType.PUSH_NAME:
-            if token.tvalue not in NAMES:
-                error(
-                    f"{token.tvalue!r} is not a defined name, try something like `0 as {token.tvalue}`",
-                    token,
-                )
-
-            yield token
-        elif token.ttype == TokenType.UNNAME:
-            if token.tvalue not in NAMES:
-                error(
-                    f"{token.tvalue!r} is not a defined name, try something like `0 as {token.tvalue}`",
-                    token,
-                )
-
-            NAMES.remove(token.tvalue)
         elif token.ttype == TokenType.SHIFT:
             yield Token(TokenType.PUSH_INT, GLOBAL_STATES["shift"], token.tpos)
             GLOBAL_STATES["shift"] += 1
@@ -945,6 +937,8 @@ def type_check_ast(
 ) -> Generator[Token, None, None]:
     if logging:
         log("Type checking AST")
+
+    GLOBAL_STATES["tc_passes"] += 1
 
     ip: int = 0
     type_stack: List[Tuple[TokenType, Any, Token]] = []
@@ -1359,6 +1353,51 @@ items onto the stack",
     yield from ast
 
 
+assert len(TokenType) == 20, "Unhandled token types in AST validation"
+assert len(Mutability) == 2, "Unhandled mutability contexts in AST validation"
+assert len(Operator) == 8, "Unhandled operators in AST validation"
+
+
+def finalise_ast(ast: Tuple[Token, ...]) -> Generator[Token, None, None]:
+    log("Finalising the AST")
+    GLOBAL_STATES["fin_passes"] += 1
+
+    ip: int = 0
+    token: Token
+
+    while ip < len(ast):
+        token = ast[ip]
+
+        if token.ttype == TokenType.AS:
+            if token.tvalue in NAMES:
+                error(
+                    f"Name {token.tvalue!r} is already defined, try `unname {token.tvalue}`",
+                    token,
+                )
+
+            NAMES.add(token.tvalue)
+            yield token
+        elif token.ttype == TokenType.PUSH_NAME:
+            if token.tvalue not in NAMES:
+                error(
+                    f"{token.tvalue!r} is not a defined name, try something like `0 as {token.tvalue}`",
+                    token,
+                )
+            yield token
+        elif token.ttype == TokenType.UNNAME:
+            if token.tvalue not in NAMES:
+                error(
+                    f"{token.tvalue!r} is not a defined name, try something like `0 as {token.tvalue}`",
+                    token,
+                )
+
+            NAMES.remove(token.tvalue)
+        else:
+            yield token
+
+        ip += 1
+
+
 def main() -> int:
     """Entry/main function"""
 
@@ -1388,10 +1427,14 @@ def main() -> int:
                 tuple(
                     type_check_ast(
                         tuple(
-                            preprocess_ast(
-                                tuple(file_to_ast(sys.argv[1], True)),
-                                "fasm-x86_64-linux",
-                                True,
+                            finalise_ast(
+                                tuple(
+                                    preprocess_ast(
+                                        tuple(file_to_ast(sys.argv[1], True)),
+                                        "fasm-x86_64-linux",
+                                        True,
+                                    )
+                                ),
                             )
                         ),
                         "fasm-x86_64-linux",
@@ -1417,8 +1460,20 @@ def main() -> int:
         log(f"Making {bin_name!r} R(W)E")
         os.chmod(bin_name, 0o0755)
 
+    log("Compilation finished")
+
+    log("", "")
+    log(f"Anotation passes                  {GLOBAL_STATES['anot_passes']}", " ")
+    log(f"Assembly geneneration passes      {GLOBAL_STATES['asm_passes']}", " ")
+    log(f"Type checking passes              {GLOBAL_STATES['tc_passes']}", " ")
+    log(f"Preprocessing passes              {GLOBAL_STATES['pp_passes']}", " ")
+    log(f"Finalising passes                 {GLOBAL_STATES['fin_passes']}", " ")
+
     if flags["run"]:
+        log("", "")
         log("Executing the binary (replacing current process)")
+        log("", "")
+
         os.execv(bin_name, (bin_name,))
 
     return EXIT_OK

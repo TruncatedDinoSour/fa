@@ -29,6 +29,7 @@ some time
 # Testing requirements
 
 -   (The only tested coreuitls are GNU) coreutils
+-   BC
 
 # Installation for developing
 

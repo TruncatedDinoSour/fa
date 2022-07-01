@@ -1,0 +1,3 @@
+macro a 1 end
+macro a 0 end
+%a 60 sys 2 1 drop

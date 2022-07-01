@@ -1,0 +1,11 @@
+include 'std/std.fa'
+
+macro main
+    0 as name
+    unname name
+    0 as name
+
+    %EXIT_SUCCESS %exit
+end
+
+%main

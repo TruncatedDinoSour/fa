@@ -1,1 +1,2 @@
 "invalid args" ro swap shl
+0 60 sys 2 1 drop
