@@ -7,6 +7,7 @@ BOLD='\033[1m'
 RESET='\033[0m'
 BGREEN='\033[1;32m'
 BRED='\033[1;31m'
+FAC="${FAC:-fac}"
 
 log() { printf " $BOLD*$RESET %s" "$1"; }
 pass() { printf "${BGREEN}passed \u2713${RESET}\n"; }
@@ -21,8 +22,8 @@ llog() {
 
 timer() {
     _end="$(date +%s,%N)"
-    _e1=$(echo "$_end" | cut -d',' -f1)
-    _e2=$(echo "$_end" | cut -d',' -f2)
+    _e1="$(echo "$_end" | cut -d',' -f1)"
+    _e2="$(echo "$_end" | cut -d',' -f2)"
 
     llog "$(printf "Tests $3 in $BOLD~%f$RESET seconds" \
         "$(bc <<<"scale=3; $_e1 - $1 + (($_e2 - $2) / 1000000000)")")"
@@ -42,7 +43,7 @@ run_tests() {
         log "$(printf "Running test $BOLD#%d$RESET ($BOLD%s$RESET mode): $BOLD%s$RESET... " "$RAN_TESTS" "$3" "$pptest")"
 
         {
-            _cmd="echo | fac \"$ptest\" -run"
+            _cmd="echo | $FAC \"$ptest\" -run"
 
             case "$3" in
             passing) eval "$_cmd" || touch "$_ex" ;;
@@ -78,7 +79,7 @@ run_tests() {
 check_deps() {
     for dep in "$@"; do
         if ! command -v -- "$dep" >/dev/null; then
-            log "Please install a package that supplies '$dep'" >&2
+            llog "Unmet requirement (usually fixed by installing a package): '$dep'" >&2
             exit 1
         fi
     done
@@ -86,7 +87,7 @@ check_deps() {
 
 main() {
     llog 'Checking dependencies'
-    check_deps 'echo' 'rm' 'mkdir' 'cd' 'touch' 'exit' 'printf' 'date' 'bc'
+    check_deps 'echo' 'exit' "$FAC" 'rm' 'mkdir' 'cd' 'touch' 'exit' 'printf' 'date' 'bc'
 
     llog 'Preparing testing environment'
 
@@ -95,8 +96,10 @@ main() {
     cd test_results
 
     _start="$(date +%s,%N)"
-    _s1=$(echo "$_start" | cut -d',' -f1)
-    _s2=$(echo "$_start" | cut -d',' -f2)
+    _s1="$(cut -d',' -f1 <<<"$_start")"
+    _s2="$(cut -d',' -f2 <<<"$_start")"
+
+    echo
 
     llog 'Testing passing tests'
     run_tests 'passing_tests' ../tests/passing 'passing' "$_s1" "$_s2"
