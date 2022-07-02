@@ -15,7 +15,8 @@ macro EXIT_FAILURE  1 end
 
     Takes:
         INT: File descriptor
-        STR: The string
+        PTR: The string
+        INT: The size
 >--
 macro fputs
     %SYS_write sys 4 1 drop
