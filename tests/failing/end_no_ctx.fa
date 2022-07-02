@@ -1,2 +1,3 @@
+include 'std/std.fa'
 end
-0 60 sys 2 1 drop
+%EXIT_SUCCESS %exit

@@ -620,8 +620,8 @@ def generate_assembly_linux_x86_64_fasm(
             elif token.tvalue == Operator.SHR:
                 start_lb.extend(
                     (
-                        ("pop rcx", token),
                         ("pop rbx", token),
+                        ("pop rcx", token),
                         ("shr rbx, cl", token),
                         ("push rbx", token),
                     )
@@ -629,8 +629,8 @@ def generate_assembly_linux_x86_64_fasm(
             elif token.tvalue == Operator.SHL:
                 start_lb.extend(
                     (
-                        ("pop rcx", token),
                         ("pop rbx", token),
+                        ("pop rcx", token),
                         ("shl rbx, cl", token),
                         ("push rbx", token),
                     )

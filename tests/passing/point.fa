@@ -1,3 +1,4 @@
+include 'std/std.fa'
 60 as exit_code
-@exit_code 0 point
-@exit_code deref 60 sys 2 1 drop
+@exit_code %EXIT_SUCCESS point
+@exit_code deref %exit

@@ -1,8 +1,10 @@
+include 'std/std.fa'
+
 "hello world\n" ro  -- Read only string
-1                   -- Set file descriptor to 1 (stdout)
-1 sys 4             -- Call SYS_write
+%STDOUT             -- Set file descriptor to stdout
+%SYS_write sys 4    -- Call SYS_write
 1 drop              -- Drop return value
 
-0                   -- Set exit code to 0
-60 sys 2            -- Call SYS_exit
+%EXIT_SUCCESS       -- Set exit code to success
+%SYS_exit sys 2     -- Call SYS_exit
 1 drop              -- Drop return value

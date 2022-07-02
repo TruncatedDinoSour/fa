@@ -1,2 +1,3 @@
+include 'std/std.fa'
 include 'no_file_that_exists_8ee8edd4c480cfb21d547613a519d9bb'
-0 60 sys 2 1 drop
+%EXIT_SUCCESS %exit
