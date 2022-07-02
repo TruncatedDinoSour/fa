@@ -1477,7 +1477,7 @@ def main() -> int:
     log("Generating assembly")
     asm_content: str = "\n".join(
         anotate_assembly(
-            generate_assembly_gnulinux_x86_64_fasm(
+            FORMATS[flags["format"]](
                 tuple(
                     type_check_ast(
                         tuple(
