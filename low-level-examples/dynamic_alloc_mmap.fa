@@ -20,7 +20,7 @@ macro main
     0           -- Addr
     %SYS_mmap sys 7 1 drop
 
-    0 %exit
+    %EXIT_SUCCESS %exit
 end
 
 %main
