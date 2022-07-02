@@ -1217,8 +1217,8 @@ items onto the stack",
                         token,
                     )
 
-                shr_a: Tuple[TokenType, Any, Token] = type_stack.pop()
                 shr_b: Tuple[TokenType, Any, Token] = type_stack.pop()
+                shr_a: Tuple[TokenType, Any, Token] = type_stack.pop()
 
                 if shr_a[0] != TokenType.PUSH_INT:
                     error(
@@ -1242,8 +1242,8 @@ items onto the stack",
                         token,
                     )
 
-                shl_a: Tuple[TokenType, Any, Token] = type_stack.pop()
                 shl_b: Tuple[TokenType, Any, Token] = type_stack.pop()
+                shl_a: Tuple[TokenType, Any, Token] = type_stack.pop()
 
                 if shl_a[0] != TokenType.PUSH_INT:
                     error(
