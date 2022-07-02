@@ -59,3 +59,30 @@ macro todo
 
     %EXIT_FAILURE %exit
 end
+
+
+--<
+    Print a character from its charcode to
+    a specified file descriptor
+
+    Takes:
+        INT: The char code
+        INT: The file descriptor
+>--
+macro fputc
+    swap
+    as __fputc_charcode
+
+    1 @__fputc_charcode swap %fputs
+
+    unname __fputc_charcode
+end
+
+
+--<
+    Wrapper around %fputc for stdout
+
+    Takes:
+        INT: The char code
+>--
+macro putc %STDOUT %fputc end
