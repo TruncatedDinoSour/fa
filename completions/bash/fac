@@ -5,9 +5,17 @@ _fac() {
     _init_completion -s || return
 
     for ((cmd = 1; cmd <= cword; cmd++)); do
-        if [[ ${words[cmd]} == -* ]]; then
-            COMPREPLY=($(compgen -W "-no-anotate -asm-flags -help \
-                -no-compile -stdout -no-logging -dbg -run" -- "$cur"))
+        local flag="${words[cmd]}"
+
+        if [[ $flag == -* ]]; then
+            if [ "$flag" = '-format' ]; then
+                COMPREPLY=($(compgen -W "x86-64-gnulinux x86-64-freebsd" -- "$cur"))
+            elif [ "$flag" = '-input' ]; then
+                :
+            else
+                COMPREPLY=($(compgen -W "-no-anotate -asm-flags -help \
+                -no-compile -stdout -no-logging -dbg -run -list-formats -format -input" -- "$cur"))
+            fi
         fi
     done
 } && complete -F _fac -o bashdefault -o default fac

@@ -16,6 +16,11 @@ fixing a lot of issues it has, the initial name for fa was
 rys++ but I ended up on fa, this language is going to be self-hosted
 some time
 
+# Operating systems fa works on
+
+-   GNU/Linux
+-   FreeBSD
+
 # System requirements
 
 -   `Fasm` compiler
@@ -28,7 +33,8 @@ some time
 
 # Testing requirements
 
--   (The only tested coreuitls are GNU) coreutils
+-   coreutils
+    -   Tested: FreeBSD, GNU
 -   BC
 
 # Installation for developing

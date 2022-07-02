@@ -6,8 +6,8 @@ import os
 import sys
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import (Any, Dict, Generator, Iterable, List, Optional, Set, Sized,
-                    Tuple)
+from typing import (Any, Callable, Dict, Generator, Iterable, List, Optional,
+                    Set, Sized, Tuple)
 from warnings import filterwarnings as filter_warnings
 
 
@@ -434,18 +434,16 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
         ip += 1
 
 
-assert (
-    len(TokenType) == 20
-), "Unhandled token types in Linux x86_64 fasm assembly generation"
+assert len(TokenType) == 20, "Unhandled token types in x86_64 fasm assembly generation"
 assert (
     len(Mutability) == 2
-), "Unhandled mutability contexts in Linux x86_64 fasm assembly generation generation"
+), "Unhandled mutability contexts in x86_64 fasm assembly generation generation"
 assert (
     len(Operator) == 8
-), "Unhandled operators in Linux x86_64 fasm assembly generation generation"
+), "Unhandled operators in x86_64 fasm assembly generation generation"
 
 
-def generate_assembly_linux_x86_64_fasm(
+def generate_assembly_x86_64_fasm(
     ast: Tuple[Token, ...]
 ) -> Generator[Tuple[str, Token], None, None]:
     log("Getting Linux x86_64 fasm assembly from AST")
@@ -453,9 +451,7 @@ def generate_assembly_linux_x86_64_fasm(
 
     ip: int = 0
 
-    yield from make_usable_asm(
-        ("format ELF64 executable 3", "segment readable executable")
-    )
+    yield ("segment readable executable", NULL_TOKEN)
 
     start_lb: List[Tuple[str, Token]] = []
     data_lb: List[Tuple[str, Token]] = []
@@ -714,6 +710,26 @@ def generate_assembly_linux_x86_64_fasm(
         yield from rodata_lb
 
 
+def generate_assembly_gnulinux_x86_64_fasm(
+    ast: Tuple[Token, ...]
+) -> Generator[Tuple[str, Token], None, None]:
+    yield ("format ELF64 executable 3", NULL_TOKEN)
+    yield from generate_assembly_x86_64_fasm(ast)
+
+
+def generate_assembly_freebsd_x86_64_fasm(
+    ast: Tuple[Token, ...]
+) -> Generator[Tuple[str, Token], None, None]:
+    yield ("format ELF64 executable 9", NULL_TOKEN)
+    yield from generate_assembly_x86_64_fasm(ast)
+
+
+FORMATS: Dict[str, Callable] = {
+    "x86-64-gnulinux": generate_assembly_gnulinux_x86_64_fasm,
+    "x86-64-freebsd": generate_assembly_freebsd_x86_64_fasm,
+}
+
+
 def file_to_ast(file: str, logging: bool = False) -> Generator[Token, None, None]:
     if logging:
         log(f"Generating AST for {file!r}")
@@ -732,7 +748,7 @@ def print_help() -> int:
 
     help_page: Tuple[str, ...] = (
         "Usage:",
-        f"   {sys.argv[0]} <file|-help> [flags...]",
+        f"   {sys.argv[0]} <file> [flags...]",
         "Flags:",
         "   -no-anotate                       Don't anotate the generated assembly",
         "   -asm-flags <flag,flag,flag,...>   Flags to pass to the assembler",
@@ -742,6 +758,9 @@ def print_help() -> int:
         "   -no-logging                       Disable logging",
         "   -dbg <file>                       Where to dump debugging symbols",
         "   -run                              Run binary after compiling",
+        "   -list-formats                     List all formats",
+        "   -format <format>                  What format of assembly to generate",
+        "   -input <file>                     Set input file",
         "",
     )
 
@@ -761,13 +780,20 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
         "stdout": False,
         "logging": True,
         "run": False,
+        "format": "x86-64-gnulinux",
+        "input": None,
     }
 
     if not flags:
-        return flagd
+        sys.exit(print_help())
 
     while ip < len(flags):
         flag: str = flags[ip]
+
+        if not flag.startswith("-"):
+            flagd["input"] = flag
+            ip += 1
+            continue
 
         if flag == "-no-anotate":
             flagd["anotate"] = False
@@ -779,7 +805,8 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
 
             flagd["asm-flags"].extend(flag.split(","))
         elif flag == "-help":
-            sys.exit(print_help())
+            print_help()
+            sys.exit(EXIT_OK)
         elif flag == "-o":
             ip += 1
             ei("Missing output file for -o", NULL_TOKEN, flags, ip)
@@ -800,13 +827,45 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
 
             flag = flags[ip]
 
-            flagd["asm-flags"].extend(("-s", repr(flag)))
+            flagd["asm-flags"].extend(("-s", flag))
         elif flag == "-run":
             flagd["run"] = True
+        elif flag == "-list-formats":
+            log("All available formats:")
+
+            for fmt in FORMATS.keys():
+                sys.stdout.write("    ")
+                sys.stdout.flush()
+
+                if fmt == flagd["format"]:
+                    fmt = f"{fmt} *"
+
+                log(fmt)
+
+            sys.exit(EXIT_OK)
+        elif flag == "-format":
+            ip += 1
+            ei("Missing format specified for -format", NULL_TOKEN, flags, ip)
+
+            flag = flags[ip]
+
+            if flag not in FORMATS:
+                error(f"Unknown format: {flag!r}")
+
+            flagd["format"] = flag
+        elif flag == "-input":
+            ip += 1
+            ei("Missing input file for -input", NULL_TOKEN, flags, ip)
+
+            flag = flags[ip]
+            flagd["input"] = flag
         else:
             error(f"Unknown flag {flag!r}")
 
         ip += 1
+
+    if not os.path.isfile(flagd["input"]):
+        error("No valid input file specified")
 
     return flagd
 
@@ -1403,13 +1462,8 @@ def main() -> int:
 
     if len(sys.argv) < 2:
         return print_help()
-    elif sys.argv[1] == "-help":
-        print_help()
-        return 0
-    elif not os.path.isfile(sys.argv[1]):
-        error(f"{sys.argv[1]!r}: No such file")
 
-    flags: Dict[str, Any] = parse_flags(sys.argv[2:])
+    flags: Dict[str, Any] = parse_flags(sys.argv[1:])
 
     if not flags["anotate"]:
         ANOTATION_CONF["enabled"] = False
@@ -1423,14 +1477,14 @@ def main() -> int:
     log("Generating assembly")
     asm_content: str = "\n".join(
         anotate_assembly(
-            generate_assembly_linux_x86_64_fasm(
+            generate_assembly_gnulinux_x86_64_fasm(
                 tuple(
                     type_check_ast(
                         tuple(
                             finalise_ast(
                                 tuple(
                                     preprocess_ast(
-                                        tuple(file_to_ast(sys.argv[1], True)),
+                                        tuple(file_to_ast(flags["input"], True)),
                                         "fasm-x86_64-linux",
                                         True,
                                     )
