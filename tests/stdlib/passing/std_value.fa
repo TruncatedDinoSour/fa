@@ -1,0 +1,7 @@
+include 'std/std.fa'
+
+%STDIN %STDOUT %STDERR
+%EXIT_SUCCESS %EXIT_FAILURE
+5 drop
+
+%EXIT_SUCCESS %exit

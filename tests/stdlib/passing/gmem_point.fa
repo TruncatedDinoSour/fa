@@ -1,0 +1,13 @@
+include 'std/std.fa'
+include 'std/mem/gmem.fa'
+
+macro SIZE 32 end
+
+%SIZE %malloc as buf
+
+@buf deref 69 point
+1 @buf deref %puts
+
+%SIZE @buf deref %mfree 1 drop
+
+%EXIT_SUCCESS %exit

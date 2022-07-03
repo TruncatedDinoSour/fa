@@ -1,0 +1,5 @@
+include 'std/std.fa'
+
+"ro fputs to stdout\n" ro %STDERR %fputs
+
+%EXIT_SUCCESS %exit

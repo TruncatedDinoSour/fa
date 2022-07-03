@@ -1,0 +1,7 @@
+include 'std/std.fa'
+include 'std/mem/gmem.fa'
+
+10 %malloc as buf
+@buf deref %mfree 1 drop
+
+%EXIT_SUCCESS %exit

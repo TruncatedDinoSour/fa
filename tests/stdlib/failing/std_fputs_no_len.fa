@@ -1,0 +1,5 @@
+include 'std/std.fa'
+
+"Hello world" ro swap 1 drop %STDOUT %fputs
+
+%EXIT_SUCCESS %exit

@@ -113,6 +113,12 @@ main() {
     llog 'Testing low-level examples'
     run_tests 'll_example_tests' ../low-level-examples 'passing' "$_s1" "$_s2"
 
+    llog 'Testing valid stdlib'
+    run_tests 'stdlib_tests' ../tests/stdlib/passing 'passing' "$_s1" "$_s2"
+
+    llog 'Testing invalid stdlib'
+    run_tests 'stdlib_tests' ../tests/stdlib/failing 'failing' "$_s1" "$_s2"
+
     timer "$_s1" "$_s2" "${BGREEN}passed${RESET}"
 }
 

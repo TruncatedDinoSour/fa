@@ -11,17 +11,18 @@ include 'std/syscall.fa'
         INT: *buffer
 >--
 macro malloc
-    as length      -- Element from the stack
+    as __malloc_length -- Element from the stack
 
     34             -- Flags
     0              -- Offset
     1 0 sub        -- Fd
     3              -- Prot
-    @length deref  -- Length
+    @__malloc_length
+    deref          -- Length
     0              -- Addr
     %SYS_mmap sys 7
 
-    unname length
+    unname __malloc_length
 end
 
 

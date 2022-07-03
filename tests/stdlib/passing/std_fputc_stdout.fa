@@ -1,0 +1,6 @@
+include 'std/std.fa'
+
+65 %STDOUT %fputc
+10 %STDOUT %fputc
+
+%EXIT_SUCCESS %exit

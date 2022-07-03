@@ -1,0 +1,5 @@
+include 'std/std.fa'
+include 'std/mem/gmem.fa'
+
+%malloc
+%EXIT_SUCCESS %exit
