@@ -101,11 +101,11 @@ main() {
 
     echo
 
-    llog 'Testing passing tests'
-    run_tests 'passing_tests' ../tests/passing 'passing' "$_s1" "$_s2"
+    llog 'Testing valid stdlib'
+    run_tests 'stdlib_tests' ../tests/stdlib/passing 'passing' "$_s1" "$_s2"
 
-    llog 'Testing failing tests'
-    run_tests 'failing_tests' ../tests/failing 'failing' "$_s1" "$_s2"
+    llog 'Testing invalid stdlib'
+    run_tests 'stdlib_tests' ../tests/stdlib/failing 'failing' "$_s1" "$_s2"
 
     llog 'Testing examples'
     run_tests 'example_tests' ../examples 'passing' "$_s1" "$_s2"
@@ -113,11 +113,11 @@ main() {
     llog 'Testing low-level examples'
     run_tests 'll_example_tests' ../low-level-examples 'passing' "$_s1" "$_s2"
 
-    llog 'Testing valid stdlib'
-    run_tests 'stdlib_tests' ../tests/stdlib/passing 'passing' "$_s1" "$_s2"
+    llog 'Testing passing tests'
+    run_tests 'passing_tests' ../tests/passing 'passing' "$_s1" "$_s2"
 
-    llog 'Testing invalid stdlib'
-    run_tests 'stdlib_tests' ../tests/stdlib/failing 'failing' "$_s1" "$_s2"
+    llog 'Testing failing tests'
+    run_tests 'failing_tests' ../tests/failing 'failing' "$_s1" "$_s2"
 
     timer "$_s1" "$_s2" "${BGREEN}passed${RESET}"
 }
