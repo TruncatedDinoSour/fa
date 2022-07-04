@@ -317,9 +317,10 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             )
 
             word = words[ip].strip()
+            _macro_name: str = f"macro{word}{_position}{ip}"
 
-            SCOPES.append(f"macro.{word}")
-            yield make_token(TokenType.MACRO, word)
+            SCOPES.append(_macro_name)
+            yield make_token(TokenType.MACRO, (word, _macro_name))
         elif word == "end":
             if not SCOPES:
                 error(
@@ -914,7 +915,7 @@ def preprocess_ast(
 
         if token.ttype == TokenType.MACRO:
             macro_body = []
-            macro_name = token.tvalue
+            macro_name, macro_id = token.tvalue
 
             # if macro_name in MACROS:
             #     error(
@@ -925,7 +926,7 @@ def preprocess_ast(
             while True:
                 if (
                     token.ttype == TokenType.END
-                    and token.tvalue == f"macro.{macro_name}"
+                    and token.tvalue == macro_id
                 ):
                     break
 
