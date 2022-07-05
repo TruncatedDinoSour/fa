@@ -924,10 +924,7 @@ def preprocess_ast(
             #     )
 
             while True:
-                if (
-                    token.ttype == TokenType.END
-                    and token.tvalue == macro_id
-                ):
+                if token.ttype == TokenType.END and token.tvalue == macro_id:
                     break
 
                 ip += 1
@@ -996,9 +993,12 @@ def type_check_ast(
     ast: Tuple[Token, ...], assembly_flavour: str, logging: bool = False
 ) -> Generator[Token, None, None]:
     if logging:
-        log("Type checking AST")
+        log("WARNING: Type checking currently has been removed")
 
     GLOBAL_STATES["tc_passes"] += 1
+
+    yield from ast
+    return
 
     ip: int = 0
     type_stack: List[Tuple[TokenType, Any, Token]] = []
