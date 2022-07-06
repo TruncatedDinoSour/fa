@@ -1,0 +1,13 @@
+include 'std/std.fa'
+
+macro main
+    0 1 grt if
+        %EXIT_SUCCESS
+    else
+        %EXIT_FAILURE
+    end
+
+    %exit
+end
+
+%main
