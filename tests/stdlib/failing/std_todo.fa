@@ -1,0 +1,5 @@
+include 'std/std.fa'
+
+"Pass" ro %todo
+
+%EXIT_SUCCESS %exit
