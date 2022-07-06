@@ -54,6 +54,10 @@ macro main
     "0 < 6 = true"  ro 6 0 lst 1 add %fputs
     "\n"            rw %STDERR       %fputs
 
+    -- Bot
+    "4 + ~1 = 2"    ro 1 bot 4 add  %fputs
+    "\n"            rw %STDERR      %fputs
+
     ------------------------------------
 
     -- Copy

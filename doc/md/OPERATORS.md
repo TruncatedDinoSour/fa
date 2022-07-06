@@ -10,3 +10,4 @@
 -   `shl` -- Shift left (`<<`)
 -   `grt` -- Greater than (`>`)
 -   `lst` -- Less than (`<`)
+-   `bot` -- Binary not (`~`)
