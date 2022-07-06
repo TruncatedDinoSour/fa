@@ -1,0 +1,8 @@
+include 'std/std.fa'
+
+macro main
+    0 0 eql 0 eql if "0 should equal to 0" ro %error end
+    %EXIT_SUCCESS %exit
+end
+
+%main

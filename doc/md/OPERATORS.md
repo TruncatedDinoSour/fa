@@ -11,3 +11,4 @@
 -   `grt` -- Greater than (`>`)
 -   `lst` -- Less than (`<`)
 -   `bot` -- Binary not (`~`)
+-   `eql` -- Equals (`==`)

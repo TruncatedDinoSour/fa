@@ -58,6 +58,10 @@ macro main
     "4 + ~1 = 2"    ro 1 bot 4 add  %fputs
     "\n"            rw %STDERR      %fputs
 
+    -- Eql
+    "0 == 0 = true"  ro 0 0 eql 1 add  %fputs
+    "\n"             rw %STDERR        %fputs
+
     ------------------------------------
 
     -- Copy
