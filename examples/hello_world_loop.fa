@@ -4,8 +4,18 @@ macro main
     --<
         This basically translates to:
 
-        int i = 0;
-        while (i < 6) puts("Hello, world!");
+        #include <stdio.h>
+
+        int main(void) {
+            int i = 0;
+
+            while (i < 6) {
+                puts("Hello, world!");
+                i++;
+            }
+
+            return 0;
+        }
     >--
 
     0  -- i = 0
