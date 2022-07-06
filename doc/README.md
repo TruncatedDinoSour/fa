@@ -1,5 +1,6 @@
 # Fa documentation index
 - [Comments in fa](/doc/md/COMMENTS.md)
+- [Conditionals in fa programming language](/doc/md/CONDITIONALS.md)
 - [Copy keyword in fa](/doc/md/COPY.md)
 - [Drop keyword in fa](/doc/md/DROP.md)
 - [End keyword in fa](/doc/md/END.md)

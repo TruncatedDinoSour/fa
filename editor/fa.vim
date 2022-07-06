@@ -19,7 +19,7 @@ syntax keyword faTodo TODO XXX FIXME NOTE
 
 
 " Language keywords
-syntax keyword faKeyword sys drop swap copy nop as deref point
+syntax keyword faKeyword sys drop swap copy nop as deref point if else
 
 
 " Escapes
@@ -55,7 +55,7 @@ syntax region faString start=/\W'/ skip=/\v\\./ end=/\v'/ contained
 
 
 " Operators
-syntax keyword faOperator add sub mul bor ban xor shr shl
+syntax keyword faOperator add sub mul bor ban xor shr shl grt lst
 
 
 " Deprecated keywords

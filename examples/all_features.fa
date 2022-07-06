@@ -46,6 +46,14 @@ macro main
     "1 << 1 = 2" ro 1 1 shl %fputs
     "\n"         rw %STDERR %fputs
 
+    -- Grt
+    "77 > 0 = true" ro 0 77 grt 1 add %fputs
+    "\n"            rw %STDERR %fputs
+
+    -- Lst
+    "0 < 6 = true"  ro 6 0 lst 1 add %fputs
+    "\n"            rw %STDERR       %fputs
+
     ------------------------------------
 
     -- Copy
@@ -92,7 +100,16 @@ macro main
 
     1 %d sub @bye deref add --< Macro expansion with math >-- 1 add copy drop
 
-    %EXIT_SUCCESS %exit
+    -- If
+    1 if
+        "One is true" ro %puts
+        %EXIT_SUCCESS
+    else
+        "One is not false!\n" ro %STDERR %fputs
+        %EXIT_FAILURE
+    end
+
+    %exit
 end
 
 %main

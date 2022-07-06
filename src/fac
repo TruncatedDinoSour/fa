@@ -32,6 +32,9 @@ class TokenType(Enum):
     POINT = auto()
     UNNAME = auto()
     SHIFT = auto()
+    IF = auto()
+    END_IF = auto()
+    ELSE = auto()
 
 
 class Mutability(Enum):
@@ -48,6 +51,8 @@ class Operator(Enum):
     XOR = auto()
     SHR = auto()
     SHL = auto()
+    GRT = auto()
+    LST = auto()
 
 
 @dataclass
@@ -108,6 +113,7 @@ GLOBAL_STATES: Dict[str, Any] = {
     "tc_passes": 0,
     "pp_passes": 0,
     "fin_passes": 0,
+    "if": 0,
 }
 
 
@@ -189,9 +195,9 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
         ip += 1
 
 
-assert len(TokenType) == 20, "Unhandled token types in AST generation"
+assert len(TokenType) == 23, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
-assert len(Operator) == 8, "Unhandled operators in AST generation"
+assert len(Operator) == 10, "Unhandled operators in AST generation"
 
 
 def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None]:
@@ -378,6 +384,10 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.OPERATOR, Operator.SHR)
         elif word == "shl":
             yield make_token(TokenType.OPERATOR, Operator.SHL)
+        elif word == "grt":
+            yield make_token(TokenType.OPERATOR, Operator.GRT)
+        elif word == "lst":
+            yield make_token(TokenType.OPERATOR, Operator.LST)
         elif word == "undefine":
             ip += 1
             msg = f"No macro name for undefinition supplied at position {_position}"
@@ -427,6 +437,14 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.UNNAME, word)
         elif word == "shift":
             yield make_token(TokenType.SHIFT, None)
+        elif word == "if":
+            if_name: str = f"if_{GLOBAL_STATES['if']}"
+
+            SCOPES.append(if_name)
+            yield make_token(TokenType.IF, if_name)
+            GLOBAL_STATES["if"] += 1
+        elif word == "else":
+            yield make_token(TokenType.ELSE, SCOPES[-1])
         else:
             error(
                 f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
@@ -435,12 +453,12 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
         ip += 1
 
 
-assert len(TokenType) == 20, "Unhandled token types in x86_64 fasm assembly generation"
+assert len(TokenType) == 23, "Unhandled token types in x86_64 fasm assembly generation"
 assert (
     len(Mutability) == 2
 ), "Unhandled mutability contexts in x86_64 fasm assembly generation generation"
 assert (
-    len(Operator) == 8
+    len(Operator) == 10
 ), "Unhandled operators in x86_64 fasm assembly generation generation"
 
 
@@ -632,6 +650,30 @@ def generate_assembly_x86_64_fasm(
                         ("push rbx", token),
                     )
                 )
+            elif token.tvalue == Operator.GRT:
+                start_lb.extend(
+                    (
+                        ("mov rcx, 0", token),
+                        ("mov rdx, 1", token),
+                        ("pop rax", token),
+                        ("pop rbx", token),
+                        ("cmp rax, rbx", token),
+                        ("cmovg rcx, rdx", token),
+                        ("push rcx", token),
+                    )
+                )
+            elif token.tvalue == Operator.LST:
+                start_lb.extend(
+                    (
+                        ("mov rcx, 0", token),
+                        ("mov rdx, 1", token),
+                        ("pop rax", token),
+                        ("pop rbx", token),
+                        ("cmp rax, rbx", token),
+                        ("cmovl rcx, rdx", token),
+                        ("push rcx", token),
+                    )
+                )
             else:
                 error(f"Unknown operator {token}", token)
         elif token.ttype == TokenType.COPY:
@@ -690,6 +732,23 @@ def generate_assembly_x86_64_fasm(
             error(
                 "Shift should not be parsed outside of processing context, this is most likely a bug in the (pre-)processor",
                 token,
+            )
+        elif token.ttype == TokenType.IF:
+            start_lb.extend(
+                (
+                    ("pop rax", token),
+                    ("test rax, rax", token),
+                    (f"jz {token.tvalue}", token),
+                )
+            )
+        elif token.ttype == TokenType.END_IF:
+            start_lb.append((f"{token.tvalue}:", NULL_TOKEN))
+        elif token.ttype == TokenType.ELSE:
+            start_lb.extend(
+                (
+                    (f"jmp {token.tvalue}", token),
+                    (f"else_{token.tvalue}:", NULL_TOKEN),
+                )
             )
         else:
             error(f"Unexpected {token}", token)
@@ -895,9 +954,9 @@ def run_command_log(cmd: Tuple[str, ...]) -> None:
             sys.exit(EXIT_ER)
 
 
-assert len(TokenType) == 20, "Unhandled token types in processing"
+assert len(TokenType) == 23, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
-assert len(Operator) == 8, "Unhandled operators in processing"
+assert len(Operator) == 10, "Unhandled operators in processing"
 
 
 def preprocess_ast(
@@ -978,15 +1037,17 @@ def preprocess_ast(
         elif token.ttype == TokenType.SHIFT:
             yield Token(TokenType.PUSH_INT, GLOBAL_STATES["shift"], token.tpos)
             GLOBAL_STATES["shift"] += 1
+        elif token.ttype == TokenType.INCLUDE:
+            pass
         else:
             yield token
 
         ip += 1
 
 
-assert len(TokenType) == 20, "Unhandled token types in type checking"
-assert len(Mutability) == 2, "Unhandled mutability contexts in type checking"
-assert len(Operator) == 8, "Unhandled operators in type checking"
+# assert len(TokenType) == 20, "Unhandled token types in type checking"
+# assert len(Mutability) == 2, "Unhandled mutability contexts in type checking"
+# assert len(Operator) == 8, "Unhandled operators in type checking"
 
 
 def type_check_ast(
@@ -1413,12 +1474,12 @@ items onto the stack",
     yield from ast
 
 
-assert len(TokenType) == 20, "Unhandled token types in AST validation"
+assert len(TokenType) == 23, "Unhandled token types in AST validation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST validation"
-assert len(Operator) == 8, "Unhandled operators in AST validation"
+assert len(Operator) == 10, "Unhandled operators in AST validation"
 
 
-def finalise_ast(ast: Tuple[Token, ...]) -> Generator[Token, None, None]:
+def finalise_ast(ast: Tuple[Token, ...], /, in_if: bool = False) -> Generator[Token, None, None]:
     log("Finalising the AST")
     GLOBAL_STATES["fin_passes"] += 1
 
@@ -1452,6 +1513,36 @@ def finalise_ast(ast: Tuple[Token, ...]) -> Generator[Token, None, None]:
                 )
 
             NAMES.remove(token.tvalue)
+        elif token.ttype == TokenType.IF:
+            if_body = []
+            if_token = token
+            if_jmp = token.tvalue
+
+            while True:
+                if token.ttype == TokenType.END and token.tvalue == if_token.tvalue:
+                    break
+
+                if token.ttype == TokenType.ELSE and token.tvalue == if_token.tvalue:
+                    if_jmp = f"else_{token.tvalue}"
+
+                ip += 1
+                ei(
+                    "If conditional overflow, did you forget to `end` it/all nested scopes?",
+                    token,
+                    ast,
+                    ip,
+                )
+
+                token = ast[ip]
+                if_body.append(token)
+
+            if_body.pop()  # Removes 'end'
+
+            yield Token(TokenType.IF, if_jmp, if_token.tpos)
+            yield from finalise_ast(tuple(if_body), in_if=True)
+            yield Token(TokenType.END_IF, if_token.tvalue, if_token.tpos)
+        elif token.ttype == TokenType.ELSE and not in_if:
+            error(f"Token {token} should not be parsed outside an if block", token)
         else:
             yield token
 

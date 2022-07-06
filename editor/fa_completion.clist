@@ -19,6 +19,8 @@ ban
 xor
 shr
 shl
+grt
+lst
 
 copy
 
@@ -32,6 +34,8 @@ deref
 point
 unname
 shift
+if
+else
 
 --
 --<
