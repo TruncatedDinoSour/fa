@@ -38,6 +38,8 @@ unname
 shift
 if
 else
+label
+goto
 
 --
 --<

@@ -35,6 +35,8 @@ class TokenType(Enum):
     IF = auto()
     END_IF = auto()
     ELSE = auto()
+    LABEL = auto()
+    GOTO = auto()
 
 
 class Mutability(Enum):
@@ -96,6 +98,7 @@ ASM_SNIPPETS: Dict[str, Dict[str, Tuple[str, ...]]] = {
 }
 
 MACROS: Dict[str, List[Token]] = {}
+LABELS: Dict[str, str] = {}
 CTX: Set[str] = set()
 INCLUDE_RESOLVE_ORDER: Tuple[str, ...] = (
     ".",
@@ -197,7 +200,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
         ip += 1
 
 
-assert len(TokenType) == 23, "Unhandled token types in AST generation"
+assert len(TokenType) == 25, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
 assert len(Operator) == 12, "Unhandled operators in AST generation"
 
@@ -451,6 +454,31 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             GLOBAL_STATES["if"] += 1
         elif word == "else":
             yield make_token(TokenType.ELSE, SCOPES[-1])
+        elif word == "label":
+            ip += 1
+            ei(
+                f"No label name supplied for definition at position {_position}, try `label name`",
+                NULL_TOKEN,
+                words,
+                ip,
+            )
+            word = words[ip].strip()
+            label_name: str = word
+
+            yield make_token(TokenType.LABEL, f"label_{label_name}")
+        elif word == "goto":
+            ip += 1
+            ei(
+                f"No label name supplied to goto at position {_position}, add one after",
+                NULL_TOKEN,
+                words,
+                ip,
+            )
+            word = words[ip].strip()
+
+            goto_label_name: str = word
+
+            yield make_token(TokenType.GOTO, f"label_{goto_label_name}")
         else:
             error(
                 f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
@@ -459,7 +487,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
         ip += 1
 
 
-assert len(TokenType) == 23, "Unhandled token types in x86_64 fasm assembly generation"
+assert len(TokenType) == 25, "Unhandled token types in x86_64 fasm assembly generation"
 assert (
     len(Mutability) == 2
 ), "Unhandled mutability contexts in x86_64 fasm assembly generation generation"
@@ -776,6 +804,10 @@ def generate_assembly_x86_64_fasm(
                     (f"else_{token.tvalue}:", NULL_TOKEN),
                 )
             )
+        elif token.ttype == TokenType.LABEL:
+            start_lb.append((f"{token.tvalue}:", NULL_TOKEN))
+        elif token.ttype == TokenType.GOTO:
+            start_lb.append((f"jmp {token.tvalue}", token))
         else:
             error(f"Unexpected {token}", token)
 
@@ -980,7 +1012,7 @@ def run_command_log(cmd: Tuple[str, ...]) -> None:
             sys.exit(EXIT_ER)
 
 
-assert len(TokenType) == 23, "Unhandled token types in processing"
+assert len(TokenType) == 25, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
 assert len(Operator) == 12, "Unhandled operators in processing"
 
@@ -1500,12 +1532,14 @@ items onto the stack",
     yield from ast
 
 
-assert len(TokenType) == 23, "Unhandled token types in AST validation"
+assert len(TokenType) == 25, "Unhandled token types in AST validation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST validation"
 assert len(Operator) == 12, "Unhandled operators in AST validation"
 
 
-def finalise_ast(ast: Tuple[Token, ...], /, in_if: bool = False) -> Generator[Token, None, None]:
+def finalise_ast(
+    ast: Tuple[Token, ...], /, in_if: bool = False
+) -> Generator[Token, None, None]:
     log("Finalising the AST")
     GLOBAL_STATES["fin_passes"] += 1
 

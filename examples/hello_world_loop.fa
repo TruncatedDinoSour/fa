@@ -1,0 +1,29 @@
+include 'std/std.fa'
+
+macro main
+    --<
+        This basically translates to:
+
+        int i = 0;
+        while (i < 6) puts("Hello, world!");
+    >--
+
+    0  -- i = 0
+
+    label hello_world
+        "Hello, world!" ro %puts
+
+        copy 1 add 6 grt if  -- i < 6
+            1 add            -- i++
+            goto hello_world
+        end
+
+        goto exit
+
+    goto hello_world
+
+    label exit
+        %EXIT_SUCCESS %exit
+end
+
+%main
