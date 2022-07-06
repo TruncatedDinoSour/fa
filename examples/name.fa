@@ -12,6 +12,10 @@ macro main
     %NAME_LEN @name deref %STDIN
     %SYS_read sys 4                 -- read(STDIN, *name, NAME_LEN) => <bytes_read>
 
+    copy 2 grt if
+        "Empty names are not allowed" ro %error
+    end
+
     "Your name is " ro %STDOUT
     %fputs                          -- fputs("...", stdout) => null
 
@@ -22,8 +26,6 @@ macro main
     %mfree 1 drop                   -- free(name) => null
 
     %EXIT_SUCCESS %exit
-
-    -- TODO: Add a check for name using conditionals
 end
 
 %main
