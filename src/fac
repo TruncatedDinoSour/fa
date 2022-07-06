@@ -879,6 +879,7 @@ def print_help() -> int:
         "   -list-formats                     List all formats",
         "   -format <format>                  What format of assembly to generate",
         "   -input <file>                     Set input file",
+        "   -output <file>                    Set output file",
         "",
     )
 
@@ -925,9 +926,9 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
         elif flag == "-help":
             print_help()
             sys.exit(EXIT_OK)
-        elif flag == "-o":
+        elif flag == "-output":
             ip += 1
-            ei("Missing output file for -o", NULL_TOKEN, flags, ip)
+            ei("Missing output file for -output", NULL_TOKEN, flags, ip)
 
             flag = flags[ip]
 
