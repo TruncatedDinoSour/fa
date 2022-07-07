@@ -1,0 +1,25 @@
+include 'std/std.fa'
+include 'std/mem/gmem.fa'
+
+macro LONG_SZ     8              end
+macro TIMESPEC_SZ %LONG_SZ 2 mul end
+
+macro main
+    %TIMESPEC_SZ %malloc as timespec    -- Allocate a structure called timespec
+
+    "I will sleep for 5 seconds and 0 nanoseconds" ro
+    %puts
+
+    @timespec deref 5              set  -- long timespec.time_t  = 5
+    @timespec deref %LONG_SZ add 0 set  -- long timespec.tv_nsec = 0
+
+    0 @timespec    deref
+    %SYS_nanosleep sys 3                -- nanosleep(*timespec, NULL)
+
+    %TIMESPEC_SZ @timespec deref
+    %mfree       1         drop         -- Free the structure
+
+    %EXIT_SUCCESS %exit
+end
+
+%main

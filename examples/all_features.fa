@@ -1,5 +1,6 @@
 -- Include
 include 'std/std.fa'
+include 'std/mem/gmem.fa'
 
 -- Macro and end
 macro hi 0 end
@@ -116,6 +117,11 @@ macro main
         "One is not false!\n" ro %STDERR %fputs
         %EXIT_FAILURE
     end
+
+    -- Set
+    8 %malloc  as somemem
+    @somemem   deref 0 set
+    8 @somemem deref %mfree 1 drop
 
     %exit
 end

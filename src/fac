@@ -37,6 +37,7 @@ class TokenType(Enum):
     ELSE = auto()
     LABEL = auto()
     GOTO = auto()
+    SET = auto()
 
 
 class Mutability(Enum):
@@ -200,7 +201,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
         ip += 1
 
 
-assert len(TokenType) == 25, "Unhandled token types in AST generation"
+assert len(TokenType) == 26, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
 assert len(Operator) == 12, "Unhandled operators in AST generation"
 
@@ -479,6 +480,8 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             goto_label_name: str = word
 
             yield make_token(TokenType.GOTO, f"label_{goto_label_name}")
+        elif word == "set":
+            yield make_token(TokenType.SET, None)
         else:
             error(
                 f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
@@ -487,7 +490,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
         ip += 1
 
 
-assert len(TokenType) == 25, "Unhandled token types in x86_64 fasm assembly generation"
+assert len(TokenType) == 26, "Unhandled token types in x86_64 fasm assembly generation"
 assert (
     len(Mutability) == 2
 ), "Unhandled mutability contexts in x86_64 fasm assembly generation generation"
@@ -808,6 +811,14 @@ def generate_assembly_x86_64_fasm(
             start_lb.append((f"{token.tvalue}:", NULL_TOKEN))
         elif token.ttype == TokenType.GOTO:
             start_lb.append((f"jmp {token.tvalue}", token))
+        elif token.ttype == TokenType.SET:
+            start_lb.extend(
+                (
+                    ("pop rax", token),
+                    ("pop rdi", token),
+                    ("mov qword [rdi], rax", token),
+                )
+            )
         else:
             error(f"Unexpected {token}", token)
 
@@ -1013,7 +1024,7 @@ def run_command_log(cmd: Tuple[str, ...]) -> None:
             sys.exit(EXIT_ER)
 
 
-assert len(TokenType) == 25, "Unhandled token types in processing"
+assert len(TokenType) == 26, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
 assert len(Operator) == 12, "Unhandled operators in processing"
 
@@ -1533,7 +1544,7 @@ items onto the stack",
     yield from ast
 
 
-assert len(TokenType) == 25, "Unhandled token types in AST validation"
+assert len(TokenType) == 26, "Unhandled token types in AST validation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST validation"
 assert len(Operator) == 12, "Unhandled operators in AST validation"
 

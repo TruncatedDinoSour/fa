@@ -19,7 +19,7 @@ syntax keyword faTodo TODO XXX FIXME NOTE
 
 
 " Language keywords
-syntax keyword faKeyword sys drop swap copy nop as deref point if else label goto
+syntax keyword faKeyword sys drop swap copy nop as deref point if else label goto set
 
 
 " Escapes
