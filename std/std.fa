@@ -6,8 +6,19 @@ macro STDOUT 1 end
 macro STDERR 2 end
 
 
-macro EXIT_SUCCESS  0 end
-macro EXIT_FAILURE  1 end
+macro EXIT_SUCCESS 0 end
+macro EXIT_FAILURE 1 end
+
+
+macro CHAR_SZ    1  end
+macro INT_SZ     4  end
+
+macro SHORT_SZ   2  end
+macro LONG_SZ    8  end
+
+macro FLOAT_SZ   4  end
+macro DOUBLE_SZ  8  end
+macro LDOUBLE_SZ 10 end
 
 
 --<

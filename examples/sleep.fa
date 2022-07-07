@@ -1,7 +1,6 @@
 include 'std/std.fa'
 include 'std/mem/gmem.fa'
 
-macro LONG_SZ     8              end
 macro TIMESPEC_SZ %LONG_SZ 2 mul end
 
 macro main
