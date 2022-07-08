@@ -1,5 +1,11 @@
 # [Fa](<https://en.wikipedia.org/wiki/Fa_(letter)>) programming language
 
+<p align="center">
+    <img src="/logo/fa.png" alt="Logo by @usernameeReal" />
+</p>
+
+^^^ This logo is by [@usernameeReal](https://github.com/usernameeReal)
+
 > A rys-like stack based, reverse polish notation low-level programming
 > language that transpiles down to assembly
 
