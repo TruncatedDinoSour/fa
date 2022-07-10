@@ -1562,9 +1562,11 @@ assert len(Operator) == 12, "Unhandled operators in AST validation"
 
 
 def finalise_ast(
-    ast: Tuple[Token, ...], /, in_if: bool = False
+    ast: Tuple[Token, ...], /, in_if: bool = False, do_log: bool = True
 ) -> Generator[Token, None, None]:
-    log("Finalising the AST")
+    if do_log:
+        log("Finalising the AST")
+
     GLOBAL_STATES["fin_passes"] += 1
 
     ip: int = 0
@@ -1623,7 +1625,7 @@ def finalise_ast(
             if_body.pop()  # Removes 'end'
 
             yield Token(TokenType.IF, if_jmp, if_token.tpos)
-            yield from finalise_ast(tuple(if_body), in_if=True)
+            yield from finalise_ast(tuple(if_body), in_if=True, do_log=False)
             yield Token(TokenType.END_IF, if_token.tvalue, if_token.tpos)
         elif token.ttype == TokenType.ELSE and not in_if:
             error(f"Token {token} should not be parsed outside an if block", token)
