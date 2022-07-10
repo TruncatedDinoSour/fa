@@ -38,6 +38,7 @@ class TokenType(Enum):
     LABEL = auto()
     GOTO = auto()
     SET = auto()
+    RESET = auto()
 
 
 class Mutability(Enum):
@@ -163,12 +164,14 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
 
             char = string[ip]
 
-            if char == "n":
-                yield 10
-            elif char == "t":
-                yield 9
+            if char == "0":
+                yield 0
             elif char == "b":
                 yield 8
+            elif char == "t":
+                yield 9
+            elif char == "n":
+                yield 10
             elif char == "f":
                 yield 12
             elif char == "r":
@@ -201,7 +204,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
         ip += 1
 
 
-assert len(TokenType) == 26, "Unhandled token types in AST generation"
+assert len(TokenType) == 27, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
 assert len(Operator) == 12, "Unhandled operators in AST generation"
 
@@ -482,6 +485,8 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.GOTO, f"label_{goto_label_name}")
         elif word == "set":
             yield make_token(TokenType.SET, None)
+        elif word == "reset":
+            yield make_token(TokenType.RESET, None)
         else:
             error(
                 f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
@@ -490,7 +495,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
         ip += 1
 
 
-assert len(TokenType) == 26, "Unhandled token types in x86_64 fasm assembly generation"
+assert len(TokenType) == 27, "Unhandled token types in x86_64 fasm assembly generation"
 assert (
     len(Mutability) == 2
 ), "Unhandled mutability contexts in x86_64 fasm assembly generation generation"
@@ -819,6 +824,11 @@ def generate_assembly_x86_64_fasm(
                     ("mov qword [rdi], rax", token),
                 )
             )
+        elif token.ttype == TokenType.RESET:
+            error(
+                "Reset should not be parsed outside of processing context, this is most likely a bug in the (pre-)processor",
+                token,
+            )
         else:
             error(f"Unexpected {token}", token)
 
@@ -1024,7 +1034,7 @@ def run_command_log(cmd: Tuple[str, ...]) -> None:
             sys.exit(EXIT_ER)
 
 
-assert len(TokenType) == 26, "Unhandled token types in processing"
+assert len(TokenType) == 27, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
 assert len(Operator) == 12, "Unhandled operators in processing"
 
@@ -1109,6 +1119,8 @@ def preprocess_ast(
             GLOBAL_STATES["shift"] += 1
         elif token.ttype == TokenType.INCLUDE:
             pass
+        elif token.ttype == TokenType.RESET:
+            GLOBAL_STATES["shift"] = 0
         else:
             yield token
 
@@ -1544,7 +1556,7 @@ items onto the stack",
     yield from ast
 
 
-assert len(TokenType) == 26, "Unhandled token types in AST validation"
+assert len(TokenType) == 27, "Unhandled token types in AST validation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST validation"
 assert len(Operator) == 12, "Unhandled operators in AST validation"
 

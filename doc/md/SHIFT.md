@@ -3,7 +3,7 @@
 `Shift` keyword will push an incremental integer
 on the stack, useful for enums
 
-`Drop` takes no arguments
+`Shift` takes no arguments
 
 Example of the `shift` keyword:
 

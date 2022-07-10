@@ -11,6 +11,7 @@
 - [Fa mutability](/doc/md/MUTABILITY.md)
 - [Nop keyword in fa](/doc/md/NOP.md)
 - [Fa operators](/doc/md/OPERATORS.md)
+- [Reset keyword in fa](/doc/md/RESET.md)
 - [Set keyword in fa](/doc/md/SET.md)
 - [Shift keyword in fa](/doc/md/SHIFT.md)
 - [Fa strings](/doc/md/STRINGS.md)

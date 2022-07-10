@@ -23,7 +23,7 @@ syntax keyword faKeyword sys drop swap copy nop as deref point if else label got
 
 
 " Escapes
-syntax match faEscape +\\[ntbrf'"\\]+ contained
+syntax match faEscape +\\[0ntbrf'"\\]+ contained
 syntax match faEscape "\\{\d*}" contained
 
 
@@ -45,7 +45,7 @@ syntax keyword faMutability ro rw
 
 
 " Macros/definitions
-syntax keyword faMacro macro end undefine unname shift
+syntax keyword faMacro macro end undefine unname shift reset
 syntax match faMacro "%\S*"
 
 

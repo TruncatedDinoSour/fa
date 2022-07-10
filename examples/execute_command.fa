@@ -1,0 +1,58 @@
+include 'std/std.fa'
+include 'std/mem/gmem.fa'
+
+macro main
+    -- Save envp while discarding argv and argc
+    1 add drop as envp
+
+    -- pid = fork()
+    %SYS_fork sys 1 as pid
+    macro pid @pid deref end
+
+    0 %pid lst if  -- Failed to fork a child
+        "Failed to fork()" ro %error
+    else %pid 0 eql if  -- We successfully forked a child
+        "Child process" ro %puts
+
+        -- Set the arguments (must be NULL terminated)
+        "/bin/ls\0" ro swap 1 drop as a1 shift
+        "/\0"       ro swap 1 drop as a2 shift
+
+        -- Allocate the buffer (no need to change)
+        1 shift sub %LONG_SZ mul as argv_buf_len    -- Buffer size is LONG_SZ * arg count
+        macro argv_buf_len @argv_buf_len deref end
+
+        %argv_buf_len %malloc as argv_buf
+        macro argv_buf @argv_buf deref end          -- Allocate buffer size buffer
+
+        reset  -- Set the count to 0
+
+        -- Fill up the argv buffer (if you add more args, change this)
+        shift %LONG_SZ mul %argv_buf add @a1 deref set
+        shift %LONG_SZ mul %argv_buf add @a2 deref set
+
+        -- Call execve(*a1, *argv_buf, envp)
+        @envp
+        @argv_buf deref
+        @a1       deref
+        %SYS_execve sys 4
+
+        -- Free the argv buffer
+        %argv_buf_len %argv_buf %mfree  -- free(*argv_buf)
+        1 drop
+
+        -- Checks if return value of execve is less than 0
+        0 swap lst if "execve() failed" ro %error end
+    else  -- We're in the parent
+        "Parent process" ro %puts
+
+        0 0 0 %pid %SYS_wait4 sys 5
+        0 swap lst if "wait4() failed" ro %error end
+
+        %EXIT_SUCCESS %exit
+    end end
+
+    %EXIT_SUCCESS %exit
+end
+
+%main
