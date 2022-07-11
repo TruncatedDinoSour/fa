@@ -100,7 +100,7 @@ ASM_SNIPPETS: Dict[str, Dict[str, Tuple[str, ...]]] = {
 }
 
 MACROS: Dict[str, List[Token]] = {}
-LABELS: Dict[str, str] = {}
+UNSAFE_CHARS: str = "`~!@#$^&*()+{}[];:|\\<>?/'\""
 CTX: Set[str] = set()
 INCLUDE_RESOLVE_ORDER: Tuple[str, ...] = (
     ".",
@@ -121,6 +121,7 @@ GLOBAL_STATES: Dict[str, Any] = {
     "pp_passes": 0,
     "fin_passes": 0,
     "if": 0,
+    "icc": 0,
 }
 
 
@@ -136,6 +137,17 @@ def ei(msg: str, token: Token, ast: Sized, ip: int) -> None:
 
 def make_usable_asm(asm: Iterable[str]) -> Generator[Tuple[str, Token], None, None]:
     yield from ((line, NULL_TOKEN) for line in asm)
+
+
+def check_name(name: str, position: str) -> None:
+    GLOBAL_STATES["icc"] += 1
+
+    for name_chr_idx, name_chr in enumerate(name):
+        if name_chr in UNSAFE_CHARS:
+            error(
+                f"Illegal char at index {name_chr_idx} in name {name!r} at position {position!r}: {name_chr!r}",
+                NULL_TOKEN,
+            )
 
 
 def anotate_assembly(
@@ -332,6 +344,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             )
 
             word = words[ip].strip()
+            check_name(word, _position)
             _macro_name: str = f"macro{word}{_position}{ip}"
 
             SCOPES.append(_macro_name)
@@ -416,6 +429,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             )
 
             word = words[ip].strip()
+            check_name(word, _position)
 
             yield make_token(TokenType.UNDEFINE, word)
         elif word == "nop":
@@ -430,6 +444,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             )
 
             word = words[ip].strip()
+            check_name(word, _position)
 
             yield make_token(TokenType.AS, word)
         elif word == "deref":
@@ -446,6 +461,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             )
 
             word = words[ip].strip()
+            check_name(word, _position)
 
             yield make_token(TokenType.UNNAME, word)
         elif word == "shift":
@@ -466,8 +482,10 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
                 words,
                 ip,
             )
+
             word = words[ip].strip()
             label_name: str = word
+            check_name(label_name, _position)
 
             yield make_token(TokenType.LABEL, f"label_{label_name}")
         elif word == "goto":
@@ -481,6 +499,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             word = words[ip].strip()
 
             goto_label_name: str = word
+            check_name(goto_label_name, _position)
 
             yield make_token(TokenType.GOTO, f"label_{goto_label_name}")
         elif word == "set":
@@ -1700,6 +1719,7 @@ def main() -> int:
     log(f"Type checking passes              {GLOBAL_STATES['tc_passes']}", " ")
     log(f"Preprocessing passes              {GLOBAL_STATES['pp_passes']}", " ")
     log(f"Finalising passes                 {GLOBAL_STATES['fin_passes']}", " ")
+    log(f"Illegal character checking        {GLOBAL_STATES['icc']}", " ")
 
     if flags["run"]:
         log("", "")
