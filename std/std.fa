@@ -110,7 +110,7 @@ end
 >--
 macro error
     "ERROR: " ro %STDERR %fputs
-    %STDERR             %fputs
+    %STDERR              %fputs
     "\n"      ro %STDERR %fputs
 
     %EXIT_FAILURE %exit

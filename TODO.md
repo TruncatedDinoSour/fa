@@ -10,7 +10,7 @@
     -   **Problem:** Both mmap and brk confused me
     -   **Potential solution:** Use `brk()` or `mmap()` syscalls
     -   **Solution:** Used `brk()` syscall
--   [ ] Macro scope
+-   [ ] Scope
     -   **Problem:** No scope tracking
     -   **Potential solution:** Keep track of the current scope using strings
         and concantination so for e.g. `macro a macro b 0 end end`
@@ -33,4 +33,8 @@
 -   [ ] Type checking for names
     -   **Problem:** Not checking the types of the value, only the pointers
     -   **Potential solution:**
+    -   **Solution:**
+-   [ ] Better type checking
+    -   **Problem:** Type checking is a mess currently as is disabled
+    -   **Potential solution:** Well.. to type check the AST
     -   **Solution:**

@@ -39,6 +39,9 @@ class TokenType(Enum):
     GOTO = auto()
     SET = auto()
     RESET = auto()
+    FUN = auto()
+    FUN_END = auto()
+    FUN_CALL = auto()
 
 
 class Mutability(Enum):
@@ -100,6 +103,7 @@ ASM_SNIPPETS: Dict[str, Dict[str, Tuple[str, ...]]] = {
 }
 
 MACROS: Dict[str, List[Token]] = {}
+FUNCTIONS: List[str] = []
 UNSAFE_CHARS: str = "`~!@#$^&*()+{}[];:|\\<>?/'\""
 CTX: Set[str] = set()
 INCLUDE_RESOLVE_ORDER: Tuple[str, ...] = (
@@ -122,6 +126,7 @@ GLOBAL_STATES: Dict[str, Any] = {
     "fin_passes": 0,
     "if": 0,
     "icc": 0,
+    "rstack-size": 8096,
 }
 
 
@@ -216,7 +221,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
         ip += 1
 
 
-assert len(TokenType) == 27, "Unhandled token types in AST generation"
+assert len(TokenType) == 30, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
 assert len(Operator) == 12, "Unhandled operators in AST generation"
 
@@ -306,9 +311,14 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
 
             yield make_token(TokenType.PUSH_INT, int(word))
         elif word.startswith("%"):
+            check_name(word[1:], _position)
             yield make_token(TokenType.EXPAND_MACRO, word[1:])
         elif word.startswith("@"):
+            check_name(word[1:], _position)
             yield make_token(TokenType.PUSH_NAME, word[1:])
+        elif word.startswith("#"):
+            check_name(word[1:], _position)
+            yield make_token(TokenType.FUN_CALL, f"fun_{word[1:]}")
         elif word == "rw":
             yield make_token(TokenType.MUTABILITY, Mutability.RW)
         elif word == "ro":
@@ -506,6 +516,21 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.SET, None)
         elif word == "reset":
             yield make_token(TokenType.RESET, None)
+        elif word == "fun":
+            ip += 1
+            ei(
+                f"No function name for definition supplied at position {_position}",
+                NULL_TOKEN,
+                words,
+                ip,
+            )
+
+            word = words[ip].strip()
+            check_name(word, _position)
+            _fun_name: str = f"fun{word}{_position}{ip}"
+
+            SCOPES.append(_fun_name)
+            yield make_token(TokenType.FUN, (word, _fun_name))
         else:
             error(
                 f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
@@ -514,7 +539,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
         ip += 1
 
 
-assert len(TokenType) == 27, "Unhandled token types in x86_64 fasm assembly generation"
+assert len(TokenType) == 30, "Unhandled token types in x86_64 fasm assembly generation"
 assert (
     len(Mutability) == 2
 ), "Unhandled mutability contexts in x86_64 fasm assembly generation generation"
@@ -848,6 +873,47 @@ def generate_assembly_x86_64_fasm(
                 "Reset should not be parsed outside of processing context, this is most likely a bug in the (pre-)processor",
                 token,
             )
+        elif token.ttype == TokenType.FUN:
+            if "fun_data" not in CTX:
+                start_lb.insert(0, ("mov [rstack_rsp], rax", token))
+                start_lb.insert(0, ("mov rax, rstack_end", token))
+
+                data_lb.extend(
+                    (
+                        ("rstack_rsp: rq 1", token),
+                        (f"rstack: rb {GLOBAL_STATES['rstack-size']}", token),
+                        ("rstack_end:", token),
+                    )
+                )
+                CTX.add("fun_data")
+
+            start_lb.extend(
+                (
+                    (f"jmp {token.tvalue[1]}", token),
+                    (f"{token.tvalue[0]}:", NULL_TOKEN),
+                    ("mov [rstack_rsp], rsp", token),
+                    ("mov rsp, rax", token),
+                )
+            )
+        elif token.ttype == TokenType.FUN_END:
+            start_lb.extend(
+                (
+                    ("mov rax, rsp", token),
+                    ("mov rsp, [rstack_rsp]", token),
+                    ("ret", token),
+                    (f"{token.tvalue}:", NULL_TOKEN),
+                )
+            )
+        elif token.ttype == TokenType.FUN_CALL:
+            start_lb.extend(
+                (
+                    ("mov rax, rsp", token),
+                    ("mov rsp, [rstack_rsp]", token),
+                    (f"call {token.tvalue}", token),
+                    ("mov [rstack_rsp], rsp", token),
+                    ("mov rsp, rax", token),
+                )
+            )
         else:
             error(f"Unexpected {token}", token)
 
@@ -920,6 +986,7 @@ def print_help() -> int:
         "   -format <format>                  What format of assembly to generate",
         "   -input <file>                     Set input file",
         "   -output <file>                    Set output file",
+        "   -rstack-size <size>               Set return stack size in bytes",
         "",
     )
 
@@ -1018,6 +1085,16 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
 
             flag = flags[ip]
             flagd["input"] = flag
+        elif flag == "-rstack-size":
+            ip += 1
+            ei("Missing return stack size for -rstack-size", NULL_TOKEN, flags, ip)
+
+            flag = flags[ip]
+
+            if not flag.isnumeric():
+                error("Invalid return stack size in bytes for -rstack-size: {flag!r}")
+
+            GLOBAL_STATES["rstack-size"] = int(flag)
         else:
             error(f"Unknown flag {flag!r}")
 
@@ -1053,7 +1130,7 @@ def run_command_log(cmd: Tuple[str, ...]) -> None:
             sys.exit(EXIT_ER)
 
 
-assert len(TokenType) == 27, "Unhandled token types in processing"
+assert len(TokenType) == 30, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
 assert len(Operator) == 12, "Unhandled operators in processing"
 
@@ -1140,6 +1217,40 @@ def preprocess_ast(
             pass
         elif token.ttype == TokenType.RESET:
             GLOBAL_STATES["shift"] = 0
+        elif token.ttype == TokenType.FUN:
+            fun_body = []
+            fun_token: Token = token
+            fun_name, fun_id = fun_token.tvalue
+
+            if fun_name in FUNCTIONS:
+                error(f"Function {fun_name!r} is already defined", token)
+
+            while True:
+                if token.ttype == TokenType.END and token.tvalue == fun_id:
+                    break
+
+                ip += 1
+                ei(
+                    "Function definition overflow, did you forget to `end` it/all nested scopes?",
+                    token,
+                    ast,
+                    ip,
+                )
+
+                token = ast[ip]
+                fun_body.append(token)
+
+            fun_body.pop()  # Removes 'end'
+
+            FUNCTIONS.append(fun_name)
+
+            yield Token(
+                TokenType.FUN,
+                (f"fun_{fun_name}", f"end_fun_{fun_name}"),
+                fun_token.tpos,
+            )
+            yield from preprocess_ast(tuple(fun_body), assembly_flavour, False)
+            yield Token(TokenType.FUN_END, f"end_fun_{fun_name}", fun_token.tpos)
         else:
             yield token
 
@@ -1575,7 +1686,7 @@ items onto the stack",
     yield from ast
 
 
-assert len(TokenType) == 27, "Unhandled token types in AST validation"
+assert len(TokenType) == 30, "Unhandled token types in AST validation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST validation"
 assert len(Operator) == 12, "Unhandled operators in AST validation"
 

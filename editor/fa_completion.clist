@@ -41,6 +41,10 @@ else
 label
 goto
 set
+reset
+fun
+
+#
 
 --
 --<

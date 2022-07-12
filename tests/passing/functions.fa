@@ -1,0 +1,6 @@
+fun exit
+    fun whats_sys_exit 60 end
+    #whats_sys_exit sys 2 1 drop
+end
+
+0 #exit

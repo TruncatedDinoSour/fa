@@ -45,7 +45,7 @@ syntax keyword faMutability ro rw
 
 
 " Macros/definitions
-syntax keyword faMacro macro end undefine unname shift reset
+syntax keyword faMacro macro undefine unname shift reset
 syntax match faMacro "%\S*"
 
 
@@ -66,6 +66,14 @@ syntax keyword faDeprecated buffer
 syntax match faName "@\S*"
 
 
+" Statements
+syntax keyword faStatement fun end
+
+
+" Functions
+syntax match faFuncCall "#\S*"
+
+
 " Set highlights
 highlight default link faTodo        Todo
 highlight default link faKeyword     Keyword
@@ -79,6 +87,8 @@ highlight default link faInclude     Include
 highlight default link faOperator    Operator
 highlight default link faDeprecated  Error
 highlight default link faName        Type
+highlight default link faStatement   Statement
+highlight default link faFuncCall    Statement
 
 
 " Set syntax

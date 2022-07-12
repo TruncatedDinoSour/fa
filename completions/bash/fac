@@ -10,11 +10,14 @@ _fac() {
         if [[ $flag == -* ]]; then
             if [ "$flag" = '-format' ]; then
                 COMPREPLY=($(compgen -W "x86-64-gnulinux x86-64-freebsd" -- "$cur"))
-            elif [ "$flag" = '-input' ]; then
-                :
             else
-                COMPREPLY=($(compgen -W "-no-anotate -asm-flags -help \
-                -no-compile -stdout -no-logging -dbg -run -list-formats -format -input" -- "$cur"))
+                case "$flag" in
+                -input | -output | -rstack-size) ;;
+
+                *) COMPREPLY=($(compgen -W "-no-anotate -asm-flags -help \
+                -no-compile -stdout -no-logging -dbg -run -list-formats -format -input
+                -rstack-size" -- "$cur")) ;;
+                esac
             fi
         fi
     done

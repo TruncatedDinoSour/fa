@@ -5,6 +5,10 @@ include 'std/mem/gmem.fa'
 -- Macro and end
 macro hi 0 end
 
+fun some_function_hello
+    %exit
+end
+
 macro main
     -- Mutability and strings
     "R/W string\n" ro %STDERR %fputs
@@ -123,7 +127,7 @@ macro main
     @somemem   deref 0 set
     8 @somemem deref %mfree 1 drop
 
-    %exit
+    #some_function_hello
 end
 
 %main
