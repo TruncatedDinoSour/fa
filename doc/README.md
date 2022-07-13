@@ -16,6 +16,7 @@
 - [Set keyword in fa](/doc/md/SET.md)
 - [Shift keyword in fa](/doc/md/SHIFT.md)
 - [Fa strings](/doc/md/STRINGS.md)
+- [Suggestions on how to style your code](/doc/md/STYLING.md)
 - [Swap keyword in fa](/doc/md/SWAP.md)
 - [Sys keyword in fa](/doc/md/SYS.md)
 - [Fa data types](/doc/md/TYPES.md)
