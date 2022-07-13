@@ -1,0 +1,72 @@
+include 'std/std.fa'
+include 'std/math.fa'
+include 'std/logic.fa'
+include 'std/mem/gmem.fa'
+
+macro MAX_PRINT_INT 100 end
+
+fun num_to_ascii 48 add end
+
+fun print_num
+    as __print_num_fd as __print_num_n
+
+    @__print_num_n deref 0 eql if
+        "0" ro %puts
+    end
+
+    %MAX_PRINT_INT
+    %malloc as __print_num_arr
+    0       as __print_num_idx
+    0       as __print_num_return
+
+    label __print_num_resolve
+        @__print_num_n deref 0 eql if
+            @__print_num_idx deref as __print_num_idx_old
+
+            label __print_num_resolve_rev
+                @__print_num_idx deref
+                0 eql if
+                    @__print_num_idx_old deref
+                    @__print_num_arr     deref
+                    %mfree             1 drop
+
+                    ret
+                end
+
+                @__print_num_idx
+                1 @__print_num_idx deref sub
+                point
+
+                @__print_num_arr deref @__print_num_idx deref add
+                deref
+                @__print_num_fd  deref %fputc
+
+                goto __print_num_resolve_rev
+        end
+
+        @__print_num_return
+        10 @__print_num_n deref #mod
+        point
+
+        @__print_num_arr deref
+        @__print_num_idx deref
+        add
+        @__print_num_return deref #num_to_ascii
+        set
+
+        @__print_num_idx @__print_num_idx deref 1 add point
+
+        @__print_num_n @__print_num_n deref #div10 point
+
+        goto __print_num_resolve
+end
+
+
+fun main
+    69420 %STDOUT #print_num
+    10    %STDOUT %fputc
+
+    %EXIT_SUCCESS %exit
+end
+
+#main

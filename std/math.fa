@@ -1,0 +1,93 @@
+--<
+    Modulo (%) operator
+
+    Takes:
+        INT: n
+        INT: d
+
+    Returns:
+        INT: result
+>--
+fun mod
+    as __mod_n as __mod_d
+
+    label __calculate_mod
+        @__mod_n deref 0 grt if
+            @__mod_n deref @__mod_d deref add
+            ret
+        end
+
+        @__mod_n @__mod_d deref @__mod_n deref sub point
+
+        goto __calculate_mod
+end
+
+
+--<
+    Division by 10
+
+    SRC=C:
+        unsigned q, r;
+        q = (n >> 1) + (n >> 2);
+        q = q + (q >> 4);
+        q = q + (q >> 8);
+        q = q + (q >> 16);
+        q = q >> 3;
+        r = n - (((q << 2) + q) << 1);
+        return q + (r > 9);
+
+    Takes:
+        INT: Input
+
+    Returns:
+        INT: Input / 10
+>--
+fun div10
+    as __div10_n
+    0 as __div10_q
+
+    @__div10_q
+    1 @__div10_n deref shr
+    2 @__div10_n deref shr
+    add
+    point
+
+    @__div10_q
+    @__div10_q   deref
+    4 @__div10_q deref shr
+    add
+    point
+
+    @__div10_q
+    @__div10_q   deref
+    8 @__div10_q deref shr
+    add
+    point
+
+    @__div10_q
+    @__div10_q   deref
+    16 @__div10_q deref shr
+    add
+    point
+
+    @__div10_q
+    3 @__div10_q deref shr
+    point
+
+    -- 2 @__div10_q deref shl            as ___r1
+    -- @___r1 deref @__div10_q deref add as ___r2
+    -- 1 @___r2 deref shl                as ___r3
+    -- @___r3 deref @__div10_n deref sub as ___r4
+
+    1
+    2 @__div10_q deref shl
+    @__div10_q deref add
+    shl
+    @__div10_n deref sub
+    as __div10_r
+
+    @__div10_q deref
+    9
+    @__div10_r deref
+    grt add
+end
