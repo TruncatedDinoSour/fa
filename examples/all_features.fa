@@ -6,8 +6,13 @@ include 'std/mem/gmem.fa'
 macro hi 0 end
 
 fun some_function_hello
-    %exit
+    -- Nested Functions
+    fun ex %exit end
+    #ex
 end
+
+-- Ret
+fun i_will_return ret end
 
 macro main
     -- Mutability and strings
@@ -127,6 +132,9 @@ macro main
     @somemem   deref 0 set
     8 @somemem deref %mfree 1 drop
 
+    #i_will_return
+
+    -- Functions
     #some_function_hello
 end
 

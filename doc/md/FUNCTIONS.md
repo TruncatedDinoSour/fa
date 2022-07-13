@@ -70,3 +70,13 @@ ERROR: a.fa:6:1: Function 'exit' is already defined
 As long as dead code elimination is not implemented all
 functions will stay in your code so for smaller pieces of
 code I'd suggest using macros
+
+Functions can also `ret`urn, that just means they stop execution:
+
+```fa
+fun return
+    ret
+end
+```
+
+This is a useless function which won't do anything

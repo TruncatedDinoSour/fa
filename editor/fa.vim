@@ -67,7 +67,7 @@ syntax match faName "@\S*"
 
 
 " Statements
-syntax keyword faStatement fun end
+syntax keyword faStatement fun end ret
 
 
 " Functions

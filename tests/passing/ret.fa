@@ -1,0 +1,15 @@
+include 'std/std.fa'
+
+fun hello
+    1 eql if
+        ret
+    else
+        %EXIT_SUCCESS
+    end
+end
+
+fun main
+    69 #hello %exit
+end
+
+#main
