@@ -1,3 +1,0 @@
-include 'std/std.fa'
-"invalid args" ro xor
-%EXIT_SUCCESS %exit

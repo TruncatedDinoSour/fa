@@ -1,3 +1,0 @@
-include 'std/std.fa'
-include ''
-%EXIT_SUCCESS %exit

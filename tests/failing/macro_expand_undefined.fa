@@ -1,3 +1,0 @@
-include 'std/std.fa'
-%non_existant_macro
-%EXIT_SUCCESS %exit

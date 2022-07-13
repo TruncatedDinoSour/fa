@@ -1,3 +1,0 @@
-include 'std/std.fa'
-ban
-%EXIT_SUCCESS %exit

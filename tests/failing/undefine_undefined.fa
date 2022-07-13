@@ -1,3 +1,0 @@
-include 'std/std.fa'
-undefine undefined_macro123
-%EXIT_SUCCESS %exit

@@ -1,4 +1,0 @@
-include 'std/std.fa'
-0 as defined_name
-0 as defined_name
-%EXIT_SUCCESS %exit

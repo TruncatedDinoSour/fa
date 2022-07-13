@@ -1,5 +1,0 @@
-include 'std/std.fa'
-
-"Pass" ro %error
-
-%EXIT_SUCCESS %exit

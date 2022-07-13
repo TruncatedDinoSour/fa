@@ -1,3 +1,0 @@
-include 'std/std.fa'
-"Invalid pointer" ro swap 1 drop 0 point
-%EXIT_SUCCESS %exit

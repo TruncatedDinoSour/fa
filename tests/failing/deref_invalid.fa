@@ -1,3 +1,0 @@
-include 'std/std.fa'
-"Hello" ro swap 1 drop deref
-%EXIT_SUCCESS %exit

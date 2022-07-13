@@ -1,3 +1,0 @@
-include 'std/std.fa'
-1 "a" ro swap 1 drop drop
-%EXIT_SUCCESS %exit

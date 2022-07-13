@@ -1,5 +1,0 @@
-include 'std/std.fa'
-
-"Hello world" ro %fputs
-
-%EXIT_SUCCESS %exit

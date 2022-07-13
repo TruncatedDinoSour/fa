@@ -1,3 +1,0 @@
-include 'std/std.fa'
-copy
-%EXIT_SUCCESS %exit

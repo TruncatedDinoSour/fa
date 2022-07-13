@@ -1,3 +1,0 @@
-include 'std/std.fa'
-"invalid args" ro swap shl
-%EXIT_SUCCESS %exit

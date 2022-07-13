@@ -1,5 +1,0 @@
-include 'std/std.fa'
-include 'std/mem/gmem.fa'
-
-10 %mfree 1 drop
-%EXIT_SUCCESS %exit

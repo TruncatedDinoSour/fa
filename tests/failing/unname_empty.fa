@@ -1,3 +1,0 @@
-include 'std/std.fa'
-unname
-%EXIT_SUCCESS %exit

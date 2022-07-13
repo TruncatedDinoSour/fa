@@ -1,4 +1,0 @@
-include 'std/syscall.fa'
-0 %SYS_exit sys 2
-
-%EXIT_SUCCESS %exit

@@ -63,7 +63,6 @@ class Operator(Enum):
     LST = auto()
     BOT = auto()
     EQL = auto()
-    NOT = auto()
 
 
 @dataclass
@@ -225,7 +224,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
 
 assert len(TokenType) == 31, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
-assert len(Operator) == 13, "Unhandled operators in AST generation"
+assert len(Operator) == 12, "Unhandled operators in AST generation"
 
 
 def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None]:
@@ -426,8 +425,6 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.OPERATOR, Operator.BOT)
         elif word == "eql":
             yield make_token(TokenType.OPERATOR, Operator.EQL)
-        elif word == "not":
-            yield make_token(TokenType.OPERATOR, Operator.NOT)
         elif word == "undefine":
             ip += 1
             msg = f"No macro name for undefinition supplied at position {_position}"
@@ -550,7 +547,7 @@ assert (
     len(Mutability) == 2
 ), "Unhandled mutability contexts in x86_64 fasm assembly generation generation"
 assert (
-    len(Operator) == 13
+    len(Operator) == 12
 ), "Unhandled operators in x86_64 fasm assembly generation generation"
 
 
@@ -784,18 +781,6 @@ def generate_assembly_x86_64_fasm(
                         ("pop rax", token),
                         ("not rax", token),
                         ("push rax", token),
-                    )
-                )
-            elif token.tvalue == Operator.NOT:
-                start_lb.extend(
-                    (
-                        ("mov rbx, 1", token),
-                        ("mov rcx, 0", token),
-                        ("mov rdx, 1", token),
-                        ("pop rax", token),
-                        ("cmp rax, rbx", token),
-                        ("cmovl rcx, rdx", token),
-                        ("push rcx", token),
                     )
                 )
             else:
@@ -1153,7 +1138,7 @@ def run_command_log(cmd: Tuple[str, ...]) -> None:
 
 assert len(TokenType) == 31, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
-assert len(Operator) == 13, "Unhandled operators in processing"
+assert len(Operator) == 12, "Unhandled operators in processing"
 
 
 def preprocess_ast(
@@ -1710,7 +1695,7 @@ items onto the stack",
 
 assert len(TokenType) == 31, "Unhandled token types in AST validation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST validation"
-assert len(Operator) == 13, "Unhandled operators in AST validation"
+assert len(Operator) == 12, "Unhandled operators in AST validation"
 
 
 def finalise_ast(

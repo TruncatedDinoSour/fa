@@ -12,4 +12,3 @@
 -   `lst` -- Less than (`<`)
 -   `bot` -- Binary not (`~`)
 -   `eql` -- Equals (`==`)
--   `not` -- Logical not (`!`)

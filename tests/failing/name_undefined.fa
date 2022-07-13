@@ -1,3 +1,0 @@
-include 'std/std.fa'
-@not_existant_variable
-%EXIT_SUCCESS %exit

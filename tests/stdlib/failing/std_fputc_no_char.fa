@@ -1,5 +1,0 @@
-include 'std/std.fa'
-
-%STDOUT %fputc
-
-%EXIT_SUCCESS %exit

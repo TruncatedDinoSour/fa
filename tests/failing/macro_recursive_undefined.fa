@@ -1,3 +1,0 @@
-include 'std/std.fa'
-macro a %a end
-%EXIT_SUCCESS %exit

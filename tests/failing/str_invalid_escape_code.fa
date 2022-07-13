@@ -1,3 +1,0 @@
-include 'std/std.fa'
-"\{invalid_code_123}" ro
-%EXIT_SUCCESS %exit

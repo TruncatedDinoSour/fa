@@ -1,3 +1,0 @@
-include 'std/std.fa'
-"invalid args" ro sub
-%EXIT_SUCCESS %exit

@@ -1,0 +1,31 @@
+--<
+    Logical not
+
+    Takes:
+        BOOL: The value
+
+    Returns:
+        BOOL: !value
+>--
+fun not 1 grt end
+
+
+--<
+    Logical and
+
+    Takes:
+        BOOL: The 1st value
+        BOOL: The 2nd value
+
+    Returns:
+        BOOL: 2nd && 1st
+>--
+fun and
+    -- Convert the values to booleans
+    #not #not
+    swap
+    #not #not
+
+    -- Binary and
+    ban
+end
