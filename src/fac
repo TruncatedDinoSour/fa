@@ -903,6 +903,19 @@ def generate_assembly_x86_64_fasm(
                 (f"{token.tvalue}:", NULL_TOKEN),
             )
         elif token.ttype == TokenType.RET:
+            if "fun_data" not in CTX:
+                start_lb.insert(0, ("mov [rstack_rsp], rax", token))
+                start_lb.insert(0, ("mov rax, rstack_end", token))
+
+                data_lb.extend(
+                    (
+                        ("rstack_rsp: rq 1", token),
+                        (f"rstack: rb {GLOBAL_STATES['rstack-size']}", token),
+                        ("rstack_end:", token),
+                    )
+                )
+                CTX.add("fun_data")
+
             start_lb.extend(
                 (
                     ("mov rax, rsp", token),
@@ -911,6 +924,19 @@ def generate_assembly_x86_64_fasm(
                 )
             )
         elif token.ttype == TokenType.FUN_CALL:
+            if "fun_data" not in CTX:
+                start_lb.insert(0, ("mov [rstack_rsp], rax", token))
+                start_lb.insert(0, ("mov rax, rstack_end", token))
+
+                data_lb.extend(
+                    (
+                        ("rstack_rsp: rq 1", token),
+                        (f"rstack: rb {GLOBAL_STATES['rstack-size']}", token),
+                        ("rstack_end:", token),
+                    )
+                )
+                CTX.add("fun_data")
+
             start_lb.extend(
                 (
                     ("mov rax, rsp", token),
