@@ -72,6 +72,10 @@ macro main
     "0 == 0 = true"  ro 0 0 eql 1 add  %fputs
     "\n"             rw %STDERR        %fputs
 
+    -- Not
+    "!0 = true"      ro 0 not 1 add %fputs
+    "\n"             rw %STDERR     %fputs
+
     ------------------------------------
 
     -- Copy

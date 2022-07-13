@@ -1,0 +1,7 @@
+include 'std/std.fa'
+
+1 not if
+    "Logical not did not return false" ro %error
+end
+
+%EXIT_SUCCESS %exit
