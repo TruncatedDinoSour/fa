@@ -1,0 +1,34 @@
+include 'std/std.fa'
+
+fun recurse
+    "Hello" ro %puts
+
+    copy   -- (arg; arg)
+    1 sub  -- (arg - 1; arg)
+    0      -- (0; arg - 1; arg)
+    eql    -- (?(0 == arg - 1); arg)
+
+    if     -- return arg
+        ret
+    else   -- return hello(arg - 1)
+        1 swap sub #recurse
+    end
+end
+
+fun main
+    3 #recurse
+
+    copy
+
+    1 eql if
+        "Recursion passed, nice" ro %puts
+
+        1 drop
+        %EXIT_SUCCESS %exit
+    else
+        "Recursion is being weird..." ro %error
+        %exit
+    end
+end
+
+#main
