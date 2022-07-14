@@ -43,6 +43,7 @@ class TokenType(Enum):
     FUN_END = auto()
     FUN_CALL = auto()
     RET = auto()
+    ELIPSIS = auto()
 
 
 class Mutability(Enum):
@@ -223,7 +224,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
         ip += 1
 
 
-assert len(TokenType) == 31, "Unhandled token types in AST generation"
+assert len(TokenType) == 32, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
 assert len(Operator) == 12, "Unhandled operators in AST generation"
 
@@ -535,6 +536,8 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.FUN, (word, _fun_name))
         elif word == "ret":
             yield make_token(TokenType.RET, None)
+        elif word == "...":
+            yield make_token(TokenType.ELIPSIS, None)
         else:
             error(
                 f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
@@ -543,7 +546,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
         ip += 1
 
 
-assert len(TokenType) == 31, "Unhandled token types in x86_64 fasm assembly generation"
+assert len(TokenType) == 32, "Unhandled token types in x86_64 fasm assembly generation"
 assert (
     len(Mutability) == 2
 ), "Unhandled mutability contexts in x86_64 fasm assembly generation generation"
@@ -947,6 +950,11 @@ def generate_assembly_x86_64_fasm(
                     ("mov rsp, rax", token),
                 )
             )
+        elif token.ttype == TokenType.ELIPSIS:
+            error(
+                "Elipsis should not be parsed outside of processing context, this is most likely a bug in the (pre-)processor",
+                token,
+            )
         else:
             error(f"Unexpected {token}", token)
 
@@ -1163,7 +1171,7 @@ def run_command_log(cmd: Tuple[str, ...]) -> None:
             sys.exit(EXIT_ER)
 
 
-assert len(TokenType) == 31, "Unhandled token types in processing"
+assert len(TokenType) == 32, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
 assert len(Operator) == 12, "Unhandled operators in processing"
 
@@ -1293,6 +1301,8 @@ def preprocess_ast(
             yield from preprocess_ast(tuple(fun_body), assembly_flavour, False)
             yield Token(TokenType.RET, None, fun_token.tpos)
             yield Token(TokenType.FUN_END, f"end_fun_{fun_name}", fun_token.tpos)
+        elif token.ttype == TokenType.ELIPSIS:
+            pass
         else:
             yield token
 
@@ -1728,7 +1738,7 @@ items onto the stack",
     yield from ast
 
 
-assert len(TokenType) == 31, "Unhandled token types in AST validation"
+assert len(TokenType) == 32, "Unhandled token types in AST validation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST validation"
 assert len(Operator) == 12, "Unhandled operators in AST validation"
 

@@ -3,6 +3,7 @@
 - [Conditionals in fa programming language](/doc/md/CONDITIONALS.md)
 - [Copy keyword in fa](/doc/md/COPY.md)
 - [Drop keyword in fa](/doc/md/DROP.md)
+- [Elipsis (...) in fa](/doc/md/ELIPSIS.md)
 - [End keyword in fa](/doc/md/END.md)
 - [Functions in fa](/doc/md/FUNCTIONS.md)
 - [Label keyword in fa](/doc/md/GOTO.md)

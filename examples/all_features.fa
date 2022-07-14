@@ -132,7 +132,11 @@ macro main
     @somemem   deref 0 set
     8 @somemem deref %mfree 1 drop
 
+    -- Ret
     #i_will_return
+
+    -- Elipsis
+    ...
 
     -- Functions
     #some_function_hello

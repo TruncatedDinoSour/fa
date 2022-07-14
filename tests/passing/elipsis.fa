@@ -1,0 +1,8 @@
+include 'std/std.fa'
+
+fun main
+    ...
+    %EXIT_SUCCESS %exit
+end
+
+#main
