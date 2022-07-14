@@ -129,6 +129,7 @@ GLOBAL_STATES: Dict[str, Any] = {
     "icc": 0,
     "rstack-size": 8096,
 }
+INCLUDED_FILES: Set[str] = set()
 
 
 def error(msg: str, token: Token = NULL_TOKEN) -> None:
@@ -1227,8 +1228,16 @@ def preprocess_ast(
                         file = include_file
                         break
 
+            file = os.path.abspath(file)
+
             if not os.path.exists(file):
                 error(f"Cannot include a non-existant file {file!r}", token)
+
+            if file in INCLUDED_FILES:
+                ip += 1
+                continue
+
+            INCLUDED_FILES.add(file)
 
             yield from type_check_ast(
                 tuple(preprocess_ast(tuple(file_to_ast(file)), assembly_flavour)),
