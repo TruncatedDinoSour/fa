@@ -19,7 +19,7 @@ syntax keyword faTodo    TODO XXX FIXME NOTE
 
 
 " Language keywords
-syntax keyword faKeyword sys drop swap copy nop as deref point label goto set
+syntax keyword faKeyword sys drop swap copy nop as deref point label goto set ret
 
 
 " Escapes
@@ -67,7 +67,7 @@ syntax match faName "@\S*"
 
 
 " Statements
-syntax keyword faStatement fun ret if else macro
+syntax keyword faStatement fun if else macro
 
 
 " Functions
