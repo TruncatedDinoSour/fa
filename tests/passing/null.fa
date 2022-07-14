@@ -1,0 +1,12 @@
+include 'std/std.fa'
+
+
+fun main
+    null if
+        "Null is not truthy lmao" ro %error
+    end
+
+    %EXIT_SUCCESS %exit
+end
+
+#main

@@ -1,4 +1,5 @@
 # Fa documentation index
+- [Fa booleans](/doc/md/BOOLEANS.md)
 - [Comments in fa](/doc/md/COMMENTS.md)
 - [Conditionals in fa programming language](/doc/md/CONDITIONALS.md)
 - [Copy keyword in fa](/doc/md/COPY.md)
@@ -12,6 +13,7 @@
 - [Fa macros](/doc/md/MACROS.md)
 - [Fa mutability](/doc/md/MUTABILITY.md)
 - [Nop keyword in fa](/doc/md/NOP.md)
+- [Null in fa](/doc/md/NULL.md)
 - [Fa operators](/doc/md/OPERATORS.md)
 - [Reset keyword in fa](/doc/md/RESET.md)
 - [Set keyword in fa](/doc/md/SET.md)

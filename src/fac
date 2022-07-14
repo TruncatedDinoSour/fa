@@ -44,6 +44,9 @@ class TokenType(Enum):
     FUN_CALL = auto()
     RET = auto()
     ELIPSIS = auto()
+    TYPE = auto()
+    BOOL = auto()
+    NULL = auto()
 
 
 class Mutability(Enum):
@@ -64,6 +67,19 @@ class Operator(Enum):
     LST = auto()
     BOT = auto()
     EQL = auto()
+
+
+class Type(Enum):
+    INT = auto()
+    STR = auto()
+    PTR = auto()
+    BUL = auto()
+    NUL = auto()
+
+
+class Bool(Enum):
+    TRUE = auto()
+    FALSE = auto()
 
 
 @dataclass
@@ -224,9 +240,11 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
         ip += 1
 
 
-assert len(TokenType) == 32, "Unhandled token types in AST generation"
+assert len(TokenType) == 35, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
 assert len(Operator) == 12, "Unhandled operators in AST generation"
+assert len(Type) == 5, "Unhandled types in AST generation"
+assert len(Bool) == 2, "Unhandled booleans in AST generation"
 
 
 def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None]:
@@ -538,6 +556,22 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.RET, None)
         elif word == "...":
             yield make_token(TokenType.ELIPSIS, None)
+        elif word == "int":
+            yield make_token(TokenType.TYPE, Type.INT)
+        elif word == "str":
+            yield make_token(TokenType.TYPE, Type.STR)
+        elif word == "ptr":
+            yield make_token(TokenType.TYPE, Type.PTR)
+        elif word == "bul":
+            yield make_token(TokenType.TYPE, Type.BUL)
+        elif word == "nul":
+            yield make_token(TokenType.TYPE, Type.NUL)
+        elif word == "true":
+            yield make_token(TokenType.BOOL, Bool.TRUE)
+        elif word == "false":
+            yield make_token(TokenType.BOOL, Bool.FALSE)
+        elif word == "null":
+            yield make_token(TokenType.NULL, None)
         else:
             error(
                 f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
@@ -546,13 +580,15 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
         ip += 1
 
 
-assert len(TokenType) == 32, "Unhandled token types in x86_64 fasm assembly generation"
+assert len(TokenType) == 35, "Unhandled token types in x86_64 fasm assembly generation"
 assert (
     len(Mutability) == 2
 ), "Unhandled mutability contexts in x86_64 fasm assembly generation generation"
 assert (
     len(Operator) == 12
 ), "Unhandled operators in x86_64 fasm assembly generation generation"
+assert len(Type) == 5, "Unhandled types in x86_64 fasm assembly generation"
+assert len(Bool) == 2, "Unhandled booleans in x86_64 fasm assembly generation"
 
 
 def generate_assembly_x86_64_fasm(
@@ -955,6 +991,20 @@ def generate_assembly_x86_64_fasm(
                 "Elipsis should not be parsed outside of processing context, this is most likely a bug in the (pre-)processor",
                 token,
             )
+        elif token.ttype == TokenType.TYPE:
+            error(
+                "Types should not be parsed outside of type checking context, this is most likely a bug in the type checker",
+                token,
+            )
+        elif token.ttype == TokenType.BOOL:
+            if token.tvalue == Bool.TRUE:
+                start_lb.append(("push 1", token))
+            elif token.tvalue == Bool.FALSE:
+                start_lb.append(("push 0", token))
+            else:
+                error(f"Unknown boolean: {token}", token)
+        elif token.ttype == TokenType.NULL:
+            start_lb.append(("push 0", token))
         else:
             error(f"Unexpected {token}", token)
 
@@ -1171,9 +1221,11 @@ def run_command_log(cmd: Tuple[str, ...]) -> None:
             sys.exit(EXIT_ER)
 
 
-assert len(TokenType) == 32, "Unhandled token types in processing"
+assert len(TokenType) == 35, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
 assert len(Operator) == 12, "Unhandled operators in processing"
+assert len(Type) == 5, "Unhandled types in processing"
+assert len(Bool) == 2, "Unhandled booleans in processing"
 
 
 def preprocess_ast(
@@ -1302,6 +1354,10 @@ def preprocess_ast(
             yield Token(TokenType.RET, None, fun_token.tpos)
             yield Token(TokenType.FUN_END, f"end_fun_{fun_name}", fun_token.tpos)
         elif token.ttype == TokenType.ELIPSIS:
+            pass
+        elif token.ttype == TokenType.TYPE:
+            # TODO: Move this to type checking
+            log(f"WARNING: Ignoring type token as type checking is disabled: {token}")
             pass
         else:
             yield token
@@ -1738,9 +1794,11 @@ items onto the stack",
     yield from ast
 
 
-assert len(TokenType) == 32, "Unhandled token types in AST validation"
+assert len(TokenType) == 35, "Unhandled token types in AST validation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST validation"
 assert len(Operator) == 12, "Unhandled operators in AST validation"
+assert len(Type) == 5, "Unhandled types in AST validation"
+assert len(Bool) == 2, "Unhandled booleans in AST validation"
 
 
 def finalise_ast(

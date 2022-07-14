@@ -1,0 +1,12 @@
+include 'std/std.fa'
+
+
+fun main
+    false if
+        "How is false truthy what" ro %error
+    end
+
+    %EXIT_SUCCESS %exit
+end
+
+#main

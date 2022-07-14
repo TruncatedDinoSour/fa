@@ -138,6 +138,15 @@ macro main
     -- Elipsis
     ...
 
+    -- Booleans
+    true false 2 drop
+
+    -- Null
+    null 1 drop
+
+    -- Type keywords TODO: Probably make them context specific
+    int ptr str bul nul
+
     -- Functions
     #some_function_hello
 end

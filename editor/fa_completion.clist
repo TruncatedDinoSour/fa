@@ -47,6 +47,15 @@ fun
 #
 ...
 
+int
+str
+ptr
+bul
+nul
+true
+false
+null
+
 --
 --<
 >--

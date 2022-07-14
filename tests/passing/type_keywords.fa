@@ -1,0 +1,9 @@
+include 'std/std.fa'
+
+
+fun main
+    int ptr str bul nul
+    %EXIT_SUCCESS %exit
+end
+
+#main

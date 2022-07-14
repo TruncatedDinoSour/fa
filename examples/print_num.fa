@@ -3,6 +3,7 @@ include 'std/math.fa'
 include 'std/logic.fa'
 include 'std/mem/gmem.fa'
 
+
 macro MAX_PRINT_INT 100 end
 
 fun num_to_ascii 48 add end

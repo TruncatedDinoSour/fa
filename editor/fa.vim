@@ -19,7 +19,7 @@ syntax keyword faTodo    TODO XXX FIXME NOTE
 
 
 " Language keywords
-syntax keyword faKeyword sys drop swap copy nop as deref point label goto set ret
+syntax keyword faKeyword sys drop swap copy nop as deref point label goto set ret null
 
 
 " Escapes
@@ -79,6 +79,14 @@ syntax keyword faDelimeter end
 syntax match   faDelimeter "\(\.\.\.\)"
 
 
+" Booleans
+syntax keyword faBoolean true false
+
+
+" Types
+syntax keyword faType int str ptr bul nul
+
+
 " Set highlights
 highlight default link faTodo        Todo
 highlight default link faKeyword     Keyword
@@ -95,6 +103,8 @@ highlight default link faName        Type
 highlight default link faStatement   Statement
 highlight default link faFuncCall    Statement
 highlight default link faDelimeter   Statement
+highlight default link faBoolean     Boolean
+highlight default link faType        Type
 
 
 " Set syntax
