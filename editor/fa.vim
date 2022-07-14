@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:     Fa
 " Maintainer:   Ari Archer <ari.web.xyz@gmail.com>
-" Last Change:  2022 Jun 30
+" Last Change:  2022 Jul 14
 
 " Usage Instructions
 " Put this file in ~/.vim/syntax/fa.vim and
