@@ -15,16 +15,16 @@ endif
 
 
 " TODOs
-syntax keyword faTodo TODO XXX FIXME NOTE
+syntax keyword faTodo    TODO XXX FIXME NOTE
 
 
 " Language keywords
-syntax keyword faKeyword sys drop swap copy nop as deref point if else label goto set
+syntax keyword faKeyword sys drop swap copy nop as deref point label goto set
 
 
 " Escapes
 syntax match faEscape +\\[0ntbrf'"\\]+ contained
-syntax match faEscape "\\{\d*}" contained
+syntax match faEscape "\\{\d*}"        contained
 
 
 " Numbers
@@ -32,7 +32,7 @@ syntax match faNumber "\<\d*\>"
 
 
 " Comments
-syntax region faCommentLine start="--" end="$" contains=faTodo
+syntax region faCommentLine start="--" end="$"    contains=faTodo
 syntax region faCommentLine start="--<" end=">--" contains=faTodo
 
 
@@ -45,13 +45,13 @@ syntax keyword faMutability ro rw
 
 
 " Macros/definitions
-syntax keyword faMacro macro undefine unname shift reset
-syntax match faMacro "%\S*"
+syntax keyword faMacro undefine unname shift reset
+syntax match   faMacro "%\S*"
 
 
 " Includes
-syntax keyword faInclude include nextgroup=faString skipwhite
-syntax region faString start=/\W'/ skip=/\v\\./ end=/\v'/ contained
+syntax keyword faInclude include        nextgroup=faString skipwhite
+syntax region  faString start=/\W'/ skip=/\v\\./ end=/\v'/ contained
 
 
 " Operators
@@ -67,11 +67,16 @@ syntax match faName "@\S*"
 
 
 " Statements
-syntax keyword faStatement fun end ret
+syntax keyword faStatement fun ret if else macro
 
 
 " Functions
 syntax match faFuncCall "#\S*"
+
+
+" Compile time delimeters
+syntax keyword faDelimeter end
+syntax match   faDelimeter "\(\.\.\.\)"
 
 
 " Set highlights
@@ -89,6 +94,7 @@ highlight default link faDeprecated  Error
 highlight default link faName        Type
 highlight default link faStatement   Statement
 highlight default link faFuncCall    Statement
+highlight default link faDelimeter   Statement
 
 
 " Set syntax
