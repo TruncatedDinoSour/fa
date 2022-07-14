@@ -1,14 +1,23 @@
 --<
-    Modulo (%) operator
+    Naming:
+        (nothing) -- Signed
+        u         -- Unsigned
+        a         -- Absolute
+        s         -- Semi-(un)signed
+>--
+
+
+--<
+    Semi-unsigned modulo (%) operator
 
     Takes:
-        INT: n
+        INT: n >0
         INT: d
 
     Returns:
         INT: result
 >--
-fun mod
+fun smod
     as __mod_n as __mod_d
 
     label __calculate_mod
@@ -24,7 +33,7 @@ end
 
 
 --<
-    Division by 10
+    Unsigned absolute division by 10
 
     SRC=C:
         unsigned q, r;
@@ -42,7 +51,7 @@ end
     Returns:
         INT: Input / 10
 >--
-fun div10
+fun uadiv10
     as __div10_n
     0 as __div10_q
 
@@ -90,4 +99,34 @@ fun div10
     9
     @__div10_r deref
     grt add
+end
+
+
+--<
+    Unsigned absolute division
+
+    Takes:
+        INT: A >=0
+        INT: B >0
+
+    Returns:
+        INT: A / B
+>--
+fun uadiv
+    as __udiv_a as __udiv_b
+    0 as __udiv_c
+
+    label __udiv_resolve
+        @__udiv_a deref
+        @__udiv_b deref
+        grt if
+            @__udiv_c deref
+            ret
+        end
+
+        @__udiv_c @__udiv_c deref 1 add point
+        @__udiv_a @__udiv_b deref @__udiv_a deref sub
+        point
+
+        goto __udiv_resolve
 end

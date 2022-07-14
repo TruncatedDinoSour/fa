@@ -12,7 +12,13 @@ fun print_num
     as __print_num_fd as __print_num_n
 
     @__print_num_n deref 0 eql if
-        "0" ro %puts
+        "0" ro @__print_num_fd deref %fputs
+    end
+
+    0 @__print_num_n deref
+    lst if
+        "-" ro @__print_num_fd deref %fputs
+        @__print_num_n @__print_num_n deref 0 sub point
     end
 
     %MAX_PRINT_INT
@@ -46,7 +52,7 @@ fun print_num
         end
 
         @__print_num_return
-        10 @__print_num_n deref #mod
+        10 @__print_num_n deref #smod
         point
 
         @__print_num_arr deref
@@ -57,15 +63,18 @@ fun print_num
 
         @__print_num_idx @__print_num_idx deref 1 add point
 
-        @__print_num_n @__print_num_n deref #div10 point
+        @__print_num_n @__print_num_n deref #uadiv10 point
 
         goto __print_num_resolve
 end
 
 
 fun main
-    69420 %STDOUT #print_num
-    10    %STDOUT %fputc
+    69420       %STDOUT #print_num
+    10          %STDOUT %fputc
+
+    69420 0 sub %STDOUT #print_num
+    10          %STDOUT %fputc
 
     %EXIT_SUCCESS %exit
 end

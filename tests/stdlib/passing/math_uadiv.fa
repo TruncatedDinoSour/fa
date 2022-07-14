@@ -2,9 +2,10 @@ include 'std/std.fa'
 include 'std/math.fa'
 include 'std/logic.fa'
 
+
 fun main
-    1234 #div10 123 eql #not if
-        "1234 // 10 is supposed to return 123" ro %error
+    2 10 #uadiv 5 eql #not if
+        "10 // 2 is supposed to return 5" ro %error
     end
 
     %EXIT_SUCCESS %exit
