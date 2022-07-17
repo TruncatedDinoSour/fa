@@ -1,7 +1,6 @@
 " Vim syntax file
 " Language:     Fa
 " Maintainer:   Ari Archer <ari.web.xyz@gmail.com>
-" Last Change:  2022 Jul 14
 
 " Usage Instructions
 " Put this file in ~/.vim/syntax/fa.vim and
@@ -23,8 +22,9 @@ syntax keyword faKeyword sys drop swap copy nop as deref point label goto set re
 
 
 " Escapes
-syntax match faEscape +\\[0ntbrf'"\\]+ contained
-syntax match faEscape "\\{\d*}"        contained
+syntax match  faEscape +\\.+                                    contained
+syntax region faEscape start=/\v\\\{/ skip=/\v\\./ end=/\v\}/   contained
+syntax region faEscape start=/\v\\\[/ skip=/\v\\./ end=/\v\]/   contained
 
 
 " Numbers

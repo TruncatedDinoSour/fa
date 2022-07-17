@@ -157,10 +157,37 @@ GLOBAL_STATES: Dict[str, Any] = {
 }
 INCLUDED_FILES: Set[str] = set()
 
+COLOURS: Dict[str, str] = {
+    "red": "31m",
+    "yellow": "33m",
+    "reset": "0m",
+}
+
+
+def log(msg: str, header: str = "\033[1m::\033[0m", file=sys.stdout) -> None:
+    if "flags.nolog" in CTX:
+        return
+
+    print(f" {header} {msg}", file=file)
+
+
+def make_log(
+    header: str, position: tuple[str, int, int], msg: str, colour: str, file
+) -> None:
+    log(
+        f"{header.upper()}:\033[{COLOURS['reset']} {':'.join(map(str, position))}: {msg}",
+        f"\033[1m\033[{COLOURS.get(colour)}::",
+        file=file,
+    )
+
 
 def error(msg: str, token: Token = NULL_TOKEN) -> None:
-    print(f"ERROR: {':'.join(map(str, token.tpos))}: {msg}", file=sys.stderr)
+    make_log("ERROR", token.tpos, msg, "red", sys.stderr)
     sys.exit(EXIT_ER)
+
+
+def warning(msg: str, token: Token = NULL_TOKEN) -> None:
+    make_log("WARNING", token.tpos, msg, "yellow", sys.stderr)
 
 
 def ei(msg: str, token: Token, ast: Sized, ip: int) -> None:
@@ -224,23 +251,53 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
             elif char == "{":
                 _code: str = ""
 
-                ip += 1
-                ei("No closing } in \\{ escape", token, string, ip)
-
-                char = string[ip]
-
                 while char != "}":
-                    _code += char
                     ip += 1
+                    ei("Unterminated \\{ escape sequence", token, string, ip)
                     char = string[ip]
 
-                if not _code:
-                    error("Empty escape code", token)
+                    if char == "}":
+                        break
 
-                try:
-                    yield int(_code)
-                except ValueError:
-                    error(f"Invalid escape code at IP {ip}", token)
+                    _code += char
+
+                    if not char.isnumeric():
+                        error(
+                            f"Invalid character {char!r} in \\{{ escape sequence", token
+                        )
+
+                if not _code:
+                    error("No escape code provided", token)
+
+                yield int(_code)
+            elif char == "[":
+                yield from (27, 91)
+
+                _escape: str = ""
+
+                while char != "]":
+                    ip += 1
+                    ei("Unterminated ANSI escape sequence", token, string, ip)
+                    char = string[ip]
+
+                    if char == "]":
+                        break
+
+                    if char == ";" and not _escape:
+                        error("; cannot be a stand-alone escape character", token)
+
+                    _escape += char
+
+                    if not char.isnumeric() and char != ";":
+                        error(
+                            f"Invalid character {char!r} in ANSI escape sequence", token
+                        )
+
+                if not _escape:
+                    error("No escape code provided", token)
+
+                yield from map(ord, _escape)
+                yield 109
             else:
                 yield ord(char)
         else:
@@ -1109,6 +1166,7 @@ def print_help() -> int:
         "   -input <file>                     Set input file",
         "   -output <file>                    Set output file",
         "   -rstack-size <size>               Set return stack size in bytes",
+        "   -flags <flag,flag,flag>           The arguments to pass to the binary when -run is specified",
         "",
     )
 
@@ -1130,6 +1188,7 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
         "run": False,
         "format": "x86-64-gnulinux",
         "input": None,
+        "flags": [],
     }
 
     if not flags:
@@ -1217,6 +1276,13 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
                 error("Invalid return stack size in bytes for -rstack-size: {flag!r}")
 
             GLOBAL_STATES["rstack-size"] = int(flag)
+        elif flag == "-flags":
+            ip += 1
+            ei("Missing comma-seperated flags to -flags", NULL_TOKEN, flags, ip)
+
+            flag = flags[ip]
+
+            flagd["flags"].extend(flag.split(","))
         else:
             error(f"Unknown flag {flag!r}")
 
@@ -1226,13 +1292,6 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
         error("No valid input file specified")
 
     return flagd
-
-
-def log(msg: str, header: str = "::") -> None:
-    if "flags.nolog" in CTX:
-        return
-
-    print(f" {header} {msg}", file=sys.stderr)
 
 
 def run_command_log(cmd: Tuple[str, ...]) -> None:
@@ -1435,433 +1494,16 @@ def preprocess_ast(
         ip += 1
 
 
-# assert len(TokenType) == 20, "Unhandled token types in type checking"
-# assert len(Mutability) == 2, "Unhandled mutability contexts in type checking"
-# assert len(Operator) == 8, "Unhandled operators in type checking"
-
-
 def type_check_ast(
     ast: Tuple[Token, ...], assembly_flavour: str, logging: bool = False
 ) -> Generator[Token, None, None]:
     if logging:
-        log("WARNING: Type checking currently has been removed")
+        warning("Type checking currently has been removed")
 
     GLOBAL_STATES["tc_passes"] += 1
-
     yield from ast
-    return
 
-    ip: int = 0
-    type_stack: List[Tuple[TokenType, Any, Token]] = []
-    ast_len: int = len(ast)
-
-    while ip < ast_len:
-        token: Token = ast[ip]
-
-        if token.ttype == TokenType.PUSH_INT:
-            type_stack.append((token.ttype, token.tvalue, token))
-        elif token.ttype == TokenType.PUSH_STR:
-            ip += 1
-            ei(
-                "Missing mutability while trying to push string, did you forget to add `ro`/`rw` after the string?",
-                token,
-                ast,
-                ip,
-            )
-
-            old_token = token
-            token = ast[ip]
-
-            if token.ttype == TokenType.MUTABILITY:
-                if token.tvalue not in (Mutability.RO, Mutability.RW):
-                    error(
-                        f"Unknown mutability context: {token}, valid ones are: ro, rw",
-                        old_token,
-                    )
-            else:
-                error(
-                    "Unspecified mutability while tring to push a string, did you put anything than `ro` or `rw` after the string?",
-                    old_token,
-                )
-
-            tmp_str: str = "".join(
-                chr(charcode) for charcode in parse_string(old_token.tvalue, old_token)
-            )
-            type_stack.extend(
-                (
-                    (TokenType.PUSH_INT, len(tmp_str), token),
-                    (TokenType.PUSH_STR, tmp_str, token),
-                )
-            )
-        elif token.ttype == TokenType.SYS:
-            asm_registers_len: int = len(ASM_SNIPPETS[assembly_flavour]["registers"])
-
-            if token.tvalue > asm_registers_len:
-                error(
-                    f"Cannot use {token.tvalue} registers when there's only {asm_registers_len} available, \
-you can at maximum only use `sys {asm_registers_len}`",
-                    token,
-                )
-
-            if token.tvalue < 1:
-                error("Cannot use less than 1 register", token)
-
-            sys_type_stack_len: int = len(type_stack)
-
-            if token.tvalue > sys_type_stack_len:
-                error(
-                    f"Cannot use more than {sys_type_stack_len} register values, you're trying to use {token.tvalue!r} registers, \
-did you try to push more items onto the stack?",
-                    token,
-                )
-
-            for _ in range(token.tvalue):
-                type_stack.pop()
-
-            type_stack.append((TokenType.PUSH_INT, 1, token))
-        elif token.ttype == TokenType.DROP:
-            if not len(type_stack):
-                error(
-                    "No drop ammount supplied on the stack for `drop`, try `1 drop`",
-                    token,
-                )
-
-            drop_ammount: Tuple[TokenType, Any, Token] = type_stack.pop()
-            drop_type_stack_len: int = len(type_stack)
-
-            if not drop_type_stack_len:
-                error("No items to drop off the stack, did you try pushing any?", token)
-
-            if drop_ammount[0] != TokenType.PUSH_INT:
-                error(
-                    f"Drop expected integer as the drop ammount, did you try for e.g. `{drop_type_stack_len} drop`",
-                    token,
-                )
-
-            if drop_ammount[1] > drop_type_stack_len:
-                error(
-                    f"Cannot drop more than {drop_type_stack_len} (I.e. the whole stack) items from the stack",
-                    token,
-                )
-
-            for _ in range(drop_ammount[1]):
-                type_stack.pop()
-        elif token.ttype == TokenType.SWAP:
-            if len(type_stack) < 2:
-                error("No items to swap", token)
-
-            a = type_stack.pop()
-            b = type_stack.pop()
-
-            type_stack.extend((a, b))
-        elif token.ttype == TokenType.MACRO:
-            error(
-                "Macro should not be parsed outside processing, this is most likely a bug in the (pre-)processor",
-                token,
-            )
-        elif token.ttype == TokenType.END:
-            error(
-                "End should not be parsed outside processing, this is most likely a bug in the (pre-)processor",
-                token,
-            )
-        elif token.ttype == TokenType.EXPAND_MACRO:
-            error(
-                "Macro expansion should not be parsed outside processing, this is most likely a bug in the (pre-)processor",
-                token,
-            )
-        elif token.ttype == TokenType.INCLUDE:
-            error(
-                "Include should not be parsed outside processing, this is most likely a bug in the (pre-)processor",
-                token,
-            )
-        elif token.ttype == TokenType.OPERATOR:
-            if token.tvalue == Operator.ADD:
-                if len(type_stack) < 2:
-                    error(
-                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack, try pushing more \
-items onto the stack",
-                        token,
-                    )
-
-                add_a: Tuple[TokenType, Any, Token] = type_stack.pop()
-                add_b: Tuple[TokenType, Any, Token] = type_stack.pop()
-
-                if add_a[0] != TokenType.PUSH_INT:
-                    error(
-                        f"First argument of operator {token.tvalue.name!r} should be an integer",
-                        token,
-                    )
-
-                if add_b[0] != TokenType.PUSH_INT:
-                    error(
-                        f"Second argument of operator {token.tvalue.name!r} should be an integer",
-                        token,
-                    )
-
-                type_stack.append((TokenType.PUSH_INT, add_a[1] + add_b[1], token))
-            elif token.tvalue == Operator.SUB:
-                if len(type_stack) < 2:
-                    error(
-                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack, try pushing more \
-items onto the stack",
-                        token,
-                    )
-
-                sub_a: Tuple[TokenType, Any, Token] = type_stack.pop()
-                sub_b: Tuple[TokenType, Any, Token] = type_stack.pop()
-
-                if sub_a[0] != TokenType.PUSH_INT:
-                    error(
-                        f"First argument of operator {token.tvalue.name!r} should be an integer",
-                        token,
-                    )
-
-                if sub_b[0] != TokenType.PUSH_INT:
-                    error(
-                        f"Second argument of operator {token.tvalue.name!r} should be an integer",
-                        token,
-                    )
-
-                type_stack.append((TokenType.PUSH_INT, sub_a[1] - sub_b[1], token))
-            elif token.tvalue == Operator.MUL:
-                if len(type_stack) < 2:
-                    error(
-                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack, try pushing more \
-items onto the stack",
-                        token,
-                    )
-
-                mul_a: Tuple[TokenType, Any, Token] = type_stack.pop()
-                mul_b: Tuple[TokenType, Any, Token] = type_stack.pop()
-
-                if mul_a[0] != TokenType.PUSH_INT:
-                    error(
-                        f"First argument of operator {token.tvalue.name!r} should be an integer",
-                        token,
-                    )
-
-                if mul_b[0] != TokenType.PUSH_INT:
-                    error(
-                        f"Second argument of operator {token.tvalue.name!r} should be an integer",
-                        token,
-                    )
-
-                type_stack.append((TokenType.PUSH_INT, mul_a[1] * mul_b[1], token))
-            elif token.tvalue == Operator.BOR:
-                if len(type_stack) < 2:
-                    error(
-                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack, try pushing more \
-items onto the stack",
-                        token,
-                    )
-
-                bor_a: Tuple[TokenType, Any, Token] = type_stack.pop()
-                bor_b: Tuple[TokenType, Any, Token] = type_stack.pop()
-
-                if bor_a[0] != TokenType.PUSH_INT:
-                    error(
-                        f"First argument of operator {token.tvalue.name!r} should be an integer, try pushing more \
-items onto the stack",
-                        token,
-                    )
-
-                if bor_b[0] != TokenType.PUSH_INT:
-                    error(
-                        f"Second argument of operator {token.tvalue.name!r} should be an integer",
-                        token,
-                    )
-
-                type_stack.append((TokenType.PUSH_INT, bor_a[1] | bor_b[1], token))
-            elif token.tvalue == Operator.BAN:
-                if len(type_stack) < 2:
-                    error(
-                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack, try pushing more \
-items onto the stack",
-                        token,
-                    )
-
-                ban_a: Tuple[TokenType, Any, Token] = type_stack.pop()
-                ban_b: Tuple[TokenType, Any, Token] = type_stack.pop()
-
-                if ban_a[0] != TokenType.PUSH_INT:
-                    error(
-                        f"First argument of operator {token.tvalue.name!r} should be an integer",
-                        token,
-                    )
-
-                if ban_b[0] != TokenType.PUSH_INT:
-                    error(
-                        f"Second argument of operator {token.tvalue.name!r} should be an integer",
-                        token,
-                    )
-
-                type_stack.append((TokenType.PUSH_INT, ban_a[1] & ban_b[1], token))
-            elif token.tvalue == Operator.XOR:
-                if len(type_stack) < 2:
-                    error(
-                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack, try pushing more \
-items onto the stack",
-                        token,
-                    )
-
-                xor_a: Tuple[TokenType, Any, Token] = type_stack.pop()
-                xor_b: Tuple[TokenType, Any, Token] = type_stack.pop()
-
-                if xor_a[0] != TokenType.PUSH_INT:
-                    error(
-                        f"First argument of operator {token.tvalue.name!r} should be an integer",
-                        token,
-                    )
-
-                if xor_b[0] != TokenType.PUSH_INT:
-                    error(
-                        f"Second argument of operator {token.tvalue.name!r} should be an integer",
-                        token,
-                    )
-
-                type_stack.append((TokenType.PUSH_INT, xor_a[1] ^ xor_b[1], token))
-            elif token.tvalue == Operator.SHR:
-                if len(type_stack) < 2:
-                    error(
-                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack, try pushing more \
-items onto the stack",
-                        token,
-                    )
-
-                shr_b: Tuple[TokenType, Any, Token] = type_stack.pop()
-                shr_a: Tuple[TokenType, Any, Token] = type_stack.pop()
-
-                if shr_a[0] != TokenType.PUSH_INT:
-                    error(
-                        f"First argument of operator {token.tvalue.name!r} should be an integer, try pushing more \
-items onto the stack",
-                        token,
-                    )
-
-                if shr_b[0] != TokenType.PUSH_INT:
-                    error(
-                        f"Second argument of operator {token.tvalue.name!r} should be an integer",
-                        token,
-                    )
-
-                type_stack.append((TokenType.PUSH_INT, shr_a[1] >> shr_b[1], token))
-            elif token.tvalue == Operator.SHL:
-                if len(type_stack) < 2:
-                    error(
-                        f"Operator {token.tvalue.name!r} requires at least two arguments on the stack, try pushing more \
-items onto the stack",
-                        token,
-                    )
-
-                shl_b: Tuple[TokenType, Any, Token] = type_stack.pop()
-                shl_a: Tuple[TokenType, Any, Token] = type_stack.pop()
-
-                if shl_a[0] != TokenType.PUSH_INT:
-                    error(
-                        f"First argument of operator {token.tvalue.name!r} should be an integer, try pushing more \
-items onto the stack",
-                        token,
-                    )
-
-                if shl_b[0] != TokenType.PUSH_INT:
-                    error(
-                        f"Second argument of operator {token.tvalue.name!r} should be an integer",
-                        token,
-                    )
-
-                type_stack.append((TokenType.PUSH_INT, shl_a[1] << shl_b[1], token))
-            else:
-                error(
-                    f"Unknown operator while type checking: {token.tvalue.name!r}, this is probably a bug in the AST generator",
-                    token,
-                )
-        elif token.ttype == TokenType.COPY:
-            if not len(type_stack):
-                error(
-                    "Cannot copy any elements from an empty stack, try pushing something on it",
-                    token,
-                )
-
-            copy_element: Tuple[TokenType, Any, Token] = type_stack.pop()
-            type_stack.extend((copy_element, copy_element))
-        elif token.ttype == TokenType.UNDEFINE:
-            error(
-                "Undefine should not be parsed outside processing, this is most likely a bug in the (pre-)processor",
-                token,
-            )
-        elif token.ttype == TokenType.NOP:
-            pass
-        elif token.ttype == TokenType.AS:
-            if not len(type_stack):
-                error(
-                    "Please initialise the name before declaring it, did you try using `0` as the value?",
-                    token,
-                )
-
-            type_stack.pop()
-        elif token.ttype == TokenType.PUSH_NAME:
-            type_stack.append((TokenType.PUSH_INT, 1, token))
-        elif token.ttype == TokenType.DEREF:
-            if not len(type_stack):
-                error(
-                    "No pointers to dereference on the stack, try pushing some", token
-                )
-
-            ptr_t, _, ptr_token = type_stack.pop()
-
-            if ptr_t != TokenType.PUSH_INT:
-                error(
-                    "No valid pointer type found, are you sure it's an integer?",
-                    ptr_token,
-                )
-
-            type_stack.append((TokenType.PUSH_INT, 1, token))
-        elif token.ttype == TokenType.POINT:
-            if len(type_stack) < 2:
-                error(
-                    "Point requires at least two arguments on the stack: a pointer and a value",
-                    token,
-                )
-
-            type_stack.pop()
-            new_ptr_value_t, _, new_ptr_token = type_stack.pop()
-
-            if new_ptr_value_t != TokenType.PUSH_INT:
-                error(
-                    "No valid pointer type found, are you sure it's an integer?", token
-                )
-        elif token.ttype == TokenType.UNNAME:
-            error(
-                "Unname should not be parsed outside of processing context, this is most likely a bug in the preprocessor",
-                token,
-            )
-        elif token.ttype == TokenType.SHIFT:
-            error(
-                "Shift should not be parsed outside processing, this is most likely a bug in the (pre-)processor",
-                token,
-            )
-        else:
-            if token.ttype == TokenType.MUTABILITY:
-                error("Nothing has consumed the mutability context provided", token)
-
-            error(
-                f"Unknown token while type checking: {token}, this is probably a bug in the AST generator",
-                token,
-            )
-
-        ip += 1
-
-    if type_stack:
-        err_type_stack_len: int = len(type_stack)
-        log(f"{err_type_stack_len} orphaned items on the stack")
-
-        for item in type_stack:
-            sys.stderr.write("    ")
-            log(f"{item[0].name:30s}{item[1]!r} @ {item[2]}")
-
-        error(f"Try using: {err_type_stack_len} drop")
-
-    yield from ast
+    # Yes there used to be code here, but I removed it
 
 
 assert len(TokenType) == 38, "Unhandled token types in AST validation"
@@ -2017,7 +1659,7 @@ def main() -> int:
         log("Executing the binary (replacing current process)")
         log("", "")
 
-        os.execv(bin_name, (bin_name,))
+        os.execv(bin_name, (bin_name, *flags["flags"]))
 
     return EXIT_OK
 
