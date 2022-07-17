@@ -1,0 +1,16 @@
+include 'std/std.fa'
+
+--<
+    Function bindings for stdlib macros, this
+    include does increase the size of the output
+    but for the long-run this might be a nicer solution
+    so you wouldn't need to expand many macros
+>--
+
+fun fputs [ str int int ] eo %fputs end
+fun puts  [ str int     ] eo %puts  end
+fun fputc [ int int     ] eo %fputc end
+fun putc  [ int         ] eo %putc  end
+fun exit  [ int         ] eo %exit  end
+fun todo  [ str int     ] eo %todo  end
+fun error [ str int     ] eo %error end

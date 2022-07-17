@@ -1,0 +1,5 @@
+include 'std/lstd.fa'
+
+"rw fputs to stdout\n" rw %STDERR #fputs
+
+%EXIT_SUCCESS #exit

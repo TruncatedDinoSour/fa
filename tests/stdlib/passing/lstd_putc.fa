@@ -1,0 +1,5 @@
+include 'std/lstd.fa'
+
+67 #putc
+
+%EXIT_SUCCESS #exit

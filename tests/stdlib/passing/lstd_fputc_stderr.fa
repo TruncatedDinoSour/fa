@@ -1,0 +1,6 @@
+include 'std/lstd.fa'
+
+65 %STDERR #fputc
+10 %STDERR #fputc
+
+%EXIT_SUCCESS #exit
