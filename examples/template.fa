@@ -1,0 +1,9 @@
+include 'std/lstd.fa'  -- or std.fa
+
+
+fun main [ int str str ] int eo
+    -- Your code...
+    %EXIT_SUCCESS
+end
+
+#main #exit  -- or %exit

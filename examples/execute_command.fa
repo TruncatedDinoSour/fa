@@ -1,7 +1,7 @@
 include 'std/std.fa'
 include 'std/mem/gmem.fa'
 
-macro main
+fun main [ int str str ] eo
     -- Save envp while discarding argv and argc
     1 add drop as envp
 
@@ -22,7 +22,7 @@ macro main
         1 shift sub %LONG_SZ mul as argv_buf_len    -- Buffer size is LONG_SZ * arg count
         macro argv_buf_len @argv_buf_len deref end
 
-        %argv_buf_len %malloc as argv_buf
+        %argv_buf_len #malloc as argv_buf
         macro argv_buf @argv_buf deref end          -- Allocate buffer size buffer
 
         reset  -- Set the count to 0
@@ -38,7 +38,7 @@ macro main
         %SYS_execve sys 4
 
         -- Free the argv buffer
-        %argv_buf_len %argv_buf %mfree  -- free(*argv_buf)
+        %argv_buf_len %argv_buf #mfree  -- free(*argv_buf)
         1 drop
 
         -- Checks if return value of execve is less than 0
@@ -55,4 +55,4 @@ macro main
     %EXIT_SUCCESS %exit
 end
 
-%main
+#main

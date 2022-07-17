@@ -1,10 +1,10 @@
-include 'std/mem/gmem.fa'
 include 'std/std.fa'
+include 'std/mem/gmem.fa'
 
 macro SIZE 2 128 mul end
 
-macro main
-    %SIZE %malloc  -- Allocate SIZE ammount of bytes
+fun main [ int str str ] eo
+    %SIZE #malloc  -- Allocate SIZE ammount of bytes
     as string      -- Store buffer as a pointer
 
     "What do I repeat? " ro %STDOUT %fputs
@@ -15,10 +15,10 @@ macro main
     1 swap sub @string deref
     %puts                       -- puts(string) => null
 
-    %SIZE @string deref %mfree
+    %SIZE @string deref #mfree
     1 drop                      -- free(string) => null
 
     0 %exit
 end
 
-%main
+#main

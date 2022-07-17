@@ -10,7 +10,7 @@ include 'std/syscall.fa'
     Returns:
         INT: *buffer
 >--
-macro malloc
+fun malloc [ int ] int eo
     as __malloc_length -- Element from the stack
 
     34             -- Flags
@@ -36,7 +36,7 @@ end
     Returns:
         INT: ?error
 >--
-macro mfree
+fun mfree [ int int ] int eo
     %SYS_munmap sys 3
 end
 

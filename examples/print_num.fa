@@ -22,7 +22,7 @@ fun print_num [ int int ] eo
     end
 
     %MAX_PRINT_INT
-    %malloc as __print_num_arr
+    #malloc as __print_num_arr
     0       as __print_num_idx
     0       as __print_num_return
 
@@ -35,7 +35,7 @@ fun print_num [ int int ] eo
                 0 eql if
                     @__print_num_idx_old deref
                     @__print_num_arr     deref
-                    %mfree             1 drop
+                    #mfree             1 drop
 
                     ret
                 end

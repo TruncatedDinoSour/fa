@@ -1,6 +1,6 @@
 include 'std/std.fa'
 
-macro main
+fun main [ int str str ] eo
     --<
         This basically translates to:
 
@@ -36,4 +36,4 @@ macro main
         %EXIT_SUCCESS %exit
 end
 
-%main
+#main

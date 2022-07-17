@@ -128,9 +128,9 @@ macro main
     end
 
     -- Set
-    8 %malloc  as somemem
+    8 #malloc  as somemem
     @somemem   deref 0 set
-    8 @somemem deref %mfree 1 drop
+    8 @somemem deref #mfree 1 drop
 
     -- Ret
     #i_will_return
@@ -148,4 +148,7 @@ macro main
     #some_function_hello
 end
 
-%main
+%main  --<
+            XXX: Macro main is an old convension,
+            it's only shown as an exampkle here
+       >--

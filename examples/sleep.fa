@@ -3,8 +3,8 @@ include 'std/mem/gmem.fa'
 
 macro TIMESPEC_SZ %LONG_SZ 2 mul end
 
-macro main
-    %TIMESPEC_SZ %malloc as timespec    -- Allocate a structure called timespec
+fun main [ int str str ] eo
+    %TIMESPEC_SZ #malloc as timespec    -- Allocate a structure called timespec
 
     "I will sleep for 5 seconds and 0 nanoseconds" ro
     %puts
@@ -16,9 +16,9 @@ macro main
     %SYS_nanosleep sys 3                -- nanosleep(*timespec, NULL)
 
     %TIMESPEC_SZ @timespec deref
-    %mfree       1         drop         -- Free the structure
+    #mfree       1         drop         -- Free the structure
 
     %EXIT_SUCCESS %exit
 end
 
-%main
+#main

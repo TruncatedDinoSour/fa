@@ -4,11 +4,11 @@ include 'std/mem/gmem.fa'
 macro SZ 8 end
 
 macro main
-    %SZ %malloc as test
+    %SZ #malloc as test
 
     @test deref 0 set
 
-    %SZ @test deref %mfree 1 drop
+    %SZ @test deref #mfree 1 drop
 
     %EXIT_SUCCESS %exit
 end

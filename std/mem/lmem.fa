@@ -25,7 +25,7 @@ end
         INT: The pointer to the new .data
         INT: The pointer to the old .data
 >--
-macro balloc
+fun balloc [ int ] int int eo
     %cdptr add         -- Takes the argument on the stack
     %SYS_brk sys 2     --< Extend the .data section
                            Also returns the new .data size >--
@@ -38,7 +38,7 @@ end
     Takes:
         INT: The buffer size
 >--
-macro bfree
+fun bfree [ int ] eo
     %cdptr   sub       -- Takes the argument on the stack
     %SYS_brk sys 2     -- Shrink .data
     1        drop      -- Drop the current .data

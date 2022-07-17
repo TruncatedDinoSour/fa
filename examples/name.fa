@@ -1,10 +1,10 @@
-include 'std/mem/gmem.fa'
 include 'std/std.fa'
+include 'std/mem/gmem.fa'
 
 macro NAME_LEN 256 end
 
-macro main
-    %NAME_LEN %malloc as name       -- Allocate NAME_LEN buffer
+fun main [ int str str ] eo
+    %NAME_LEN #malloc as name       -- Allocate NAME_LEN buffer
 
     "Enter your name: " ro %STDOUT
     %fputs                          -- fputs("...", stdout) => null
@@ -23,9 +23,9 @@ macro main
     %puts                           -- puts(string) => null
 
     %NAME_LEN @name deref
-    %mfree 1 drop                   -- free(name) => null
+    #mfree 1 drop                   -- free(name) => null
 
     %EXIT_SUCCESS %exit
 end
 
-%main
+#main
