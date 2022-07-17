@@ -17,7 +17,7 @@
     Returns:
         INT: result
 >--
-fun smod
+fun smod [ int int ] int eo
     as __mod_n as __mod_d
 
     label __calculate_mod
@@ -51,7 +51,7 @@ end
     Returns:
         INT: Input / 10
 >--
-fun uadiv10
+fun uadiv10 [ int ] int eo
     as __div10_n
     0 as __div10_q
 
@@ -112,7 +112,7 @@ end
     Returns:
         INT: A / B
 >--
-fun uadiv
+fun uadiv [ int int ] int eo
     as __udiv_a as __udiv_b
     0 as __udiv_c
 

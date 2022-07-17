@@ -1,7 +1,7 @@
 include 'std/std.fa'
 include 'std/logic.fa'
 
-fun main
+fun main [ int str str ] eo
     1 0 #and if "0 && 1 is not truthy" ro %error end
     0 0 #and if "0 && 0 is not truthy" ro %error end
     0 1 #and if "1 && 0 is not truthy" ro %error end

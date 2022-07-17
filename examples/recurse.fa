@@ -1,6 +1,6 @@
 include 'std/std.fa'
 
-fun recurse
+fun recurse [ int ] int eo
     "Hello" ro %puts
 
     copy   -- (arg; arg)
@@ -15,7 +15,7 @@ fun recurse
     end
 end
 
-fun main
+fun main [ int str str ] eo
     3 #recurse
 
     copy

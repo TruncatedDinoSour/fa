@@ -7,7 +7,7 @@
     Returns:
         BOOL: !value
 >--
-fun not 1 grt end
+fun not [ bul ] bul eo 1 grt end
 
 
 --<
@@ -20,7 +20,7 @@ fun not 1 grt end
     Returns:
         BOOL: 2nd && 1st
 >--
-fun and
+fun and [ bul bul ] bul eo
     -- Convert the values to booleans
     #not #not
     swap

@@ -2,7 +2,7 @@ include 'std/std.fa'
 include 'std/logic.fa'
 
 
-fun main
+fun main [ int str str ] eo
     true #not if
         "How is true not truthy what" ro %error
     end

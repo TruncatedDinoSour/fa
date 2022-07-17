@@ -3,7 +3,7 @@ include 'std/math.fa'
 include 'std/logic.fa'
 
 
-fun main
+fun main [ int str str ] eo
     2 10 #uadiv 5 eql #not if
         "10 // 2 is supposed to return 5" ro %error
     end

@@ -1,5 +1,5 @@
-fun exit
-    fun whats_sys_exit 60 end
+fun exit [ int ] eo
+    fun whats_sys_exit eo 60 end
     #whats_sys_exit sys 2 1 drop
 end
 

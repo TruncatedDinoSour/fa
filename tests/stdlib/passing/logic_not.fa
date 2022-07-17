@@ -1,7 +1,7 @@
 include 'std/std.fa'
 include 'std/logic.fa'
 
-fun main
+fun main [ int str str ] eo
     1  #not if "!1 is supposed to be false" ro %error end
     69 #not if "!69 is supposed to be false" ro %error end
 

@@ -5,14 +5,14 @@ include 'std/mem/gmem.fa'
 -- Macro and end
 macro hi 0 end
 
-fun some_function_hello
+fun some_function_hello [ int ] eo
     -- Nested Functions
-    fun ex %exit end
+    fun ex [ int ] eo %exit end
     #ex
 end
 
 -- Ret
-fun i_will_return ret end
+fun i_will_return eo ret end
 
 macro main
     -- Mutability and strings
@@ -143,9 +143,6 @@ macro main
 
     -- Null
     null 1 drop
-
-    -- Type keywords TODO: Probably make them context specific
-    int ptr str bul nul
 
     -- Functions
     #some_function_hello

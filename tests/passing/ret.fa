@@ -1,6 +1,6 @@
 include 'std/std.fa'
 
-fun hello
+fun hello [ int ] int eo
     1 eql if
         ret
     else
@@ -8,7 +8,7 @@ fun hello
     end
 end
 
-fun main
+fun main [ int str str ] eo
     69 #hello %exit
 end
 

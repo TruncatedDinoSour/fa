@@ -47,6 +47,9 @@ class TokenType(Enum):
     TYPE = auto()
     BOOL = auto()
     NULL = auto()
+    SIG_START = auto()
+    SIG_END = auto()
+    EO = auto()
 
 
 class Mutability(Enum):
@@ -80,6 +83,12 @@ class Type(Enum):
 class Bool(Enum):
     TRUE = auto()
     FALSE = auto()
+
+
+@dataclass
+class TypeSignature:
+    input_types: list[Type]
+    output_types: list[Type]
 
 
 @dataclass
@@ -240,7 +249,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
         ip += 1
 
 
-assert len(TokenType) == 35, "Unhandled token types in AST generation"
+assert len(TokenType) == 38, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
 assert len(Operator) == 12, "Unhandled operators in AST generation"
 assert len(Type) == 5, "Unhandled types in AST generation"
@@ -572,6 +581,12 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.BOOL, Bool.FALSE)
         elif word == "null":
             yield make_token(TokenType.NULL, None)
+        elif word == "[":
+            yield make_token(TokenType.SIG_START, None)
+        elif word == "]":
+            yield make_token(TokenType.SIG_END, None)
+        elif word == "eo":
+            yield make_token(TokenType.EO, None)
         else:
             error(
                 f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
@@ -580,7 +595,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
         ip += 1
 
 
-assert len(TokenType) == 35, "Unhandled token types in x86_64 fasm assembly generation"
+assert len(TokenType) == 38, "Unhandled token types in x86_64 fasm assembly generation"
 assert (
     len(Mutability) == 2
 ), "Unhandled mutability contexts in x86_64 fasm assembly generation generation"
@@ -932,8 +947,8 @@ def generate_assembly_x86_64_fasm(
 
             start_lb.extend(
                 (
-                    (f"jmp {token.tvalue[1]}", token),
-                    (f"{token.tvalue[0]}:", NULL_TOKEN),
+                    (f"jmp {token.tvalue[2]}", token),
+                    (f"{token.tvalue[1]}:", NULL_TOKEN),
                     ("mov [rstack_rsp], rsp", token),
                     ("mov rsp, rax", token),
                 )
@@ -993,7 +1008,8 @@ def generate_assembly_x86_64_fasm(
             )
         elif token.ttype == TokenType.TYPE:
             error(
-                "Types should not be parsed outside of type checking context, this is most likely a bug in the type checker",
+                "Types are only supposed to be used for type checking, you either placed one outside a valid context \
+or it's a bug in pre-processor and/or type checker",
                 token,
             )
         elif token.ttype == TokenType.BOOL:
@@ -1005,6 +1021,21 @@ def generate_assembly_x86_64_fasm(
                 error(f"Unknown boolean: {token}", token)
         elif token.ttype == TokenType.NULL:
             start_lb.append(("push 0", token))
+        elif token.ttype == TokenType.SIG_START:
+            error(
+                "Type signatures are not supposed to be parsed outside type checking and pre-processing, might be a bug in the type checker",
+                token,
+            )
+        elif token.ttype == TokenType.SIG_END:
+            error(
+                "Stray type signature end found",
+                token,
+            )
+        elif token.ttype == TokenType.EO:
+            error(
+                "EO (End Output) is only supposed to be used as a delimeter, might be a bug in the pre-processor",
+                token,
+            )
         else:
             error(f"Unexpected {token}", token)
 
@@ -1221,7 +1252,7 @@ def run_command_log(cmd: Tuple[str, ...]) -> None:
             sys.exit(EXIT_ER)
 
 
-assert len(TokenType) == 35, "Unhandled token types in processing"
+assert len(TokenType) == 38, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
 assert len(Operator) == 12, "Unhandled operators in processing"
 assert len(Type) == 5, "Unhandled types in processing"
@@ -1320,6 +1351,9 @@ def preprocess_ast(
             GLOBAL_STATES["shift"] = 0
         elif token.ttype == TokenType.FUN:
             fun_body = []
+            signature: Dict[str, list[Type]] = {"in": [], "out": []}
+            signed = False
+            signature_input = False
             fun_token: Token = token
             fun_name, fun_id = fun_token.tvalue
 
@@ -1337,9 +1371,43 @@ def preprocess_ast(
                     ast,
                     ip,
                 )
-
                 token = ast[ip]
-                fun_body.append(token)
+
+                if not signed:
+                    if token.ttype == TokenType.EO:
+                        signed = True
+                        continue
+
+                    if token.ttype == TokenType.SIG_START:
+                        signature_input = True
+                        continue
+
+                    if token.ttype == TokenType.SIG_END:
+                        if not signature_input:
+                            error(
+                                "Trying to end an unstarted input type signature", token
+                            )
+
+                        signature_input = False
+                        continue
+
+                    if token.ttype != TokenType.TYPE:
+                        error(
+                            "Invalid types in funtion type signature, did you maybe forgot to end the type signature ([ or eo)",
+                            token,
+                        )
+
+                    if signature_input:
+                        signature["in"].append(token.tvalue)
+                    else:
+                        signature["out"].append(token.tvalue)
+
+                    continue
+                else:
+                    if signature_input:
+                        error("Unclosed type signature, did you forget ]?", token)
+
+                    fun_body.append(token)
 
             fun_body.pop()  # Removes 'end'
 
@@ -1347,17 +1415,19 @@ def preprocess_ast(
 
             yield Token(
                 TokenType.FUN,
-                (f"fun_{fun_name}", f"end_fun_{fun_name}"),
+                (
+                    TypeSignature(
+                        input_types=signature["in"], output_types=signature["out"]
+                    ),
+                    f"fun_{fun_name}",
+                    f"end_fun_{fun_name}",
+                ),
                 fun_token.tpos,
             )
             yield from preprocess_ast(tuple(fun_body), assembly_flavour, False)
             yield Token(TokenType.RET, None, fun_token.tpos)
             yield Token(TokenType.FUN_END, f"end_fun_{fun_name}", fun_token.tpos)
         elif token.ttype == TokenType.ELIPSIS:
-            pass
-        elif token.ttype == TokenType.TYPE:
-            # TODO: Move this to type checking
-            log(f"WARNING: Ignoring type token as type checking is disabled: {token}")
             pass
         else:
             yield token
@@ -1794,7 +1864,7 @@ items onto the stack",
     yield from ast
 
 
-assert len(TokenType) == 35, "Unhandled token types in AST validation"
+assert len(TokenType) == 38, "Unhandled token types in AST validation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST validation"
 assert len(Operator) == 12, "Unhandled operators in AST validation"
 assert len(Type) == 5, "Unhandled types in AST validation"
@@ -1935,12 +2005,12 @@ def main() -> int:
     log("Compilation finished")
 
     log("", "")
-    log(f"Anotation passes                  {GLOBAL_STATES['anot_passes']}", " ")
-    log(f"Assembly geneneration passes      {GLOBAL_STATES['asm_passes']}", " ")
-    log(f"Type checking passes              {GLOBAL_STATES['tc_passes']}", " ")
-    log(f"Preprocessing passes              {GLOBAL_STATES['pp_passes']}", " ")
-    log(f"Finalising passes                 {GLOBAL_STATES['fin_passes']}", " ")
-    log(f"Illegal character checking        {GLOBAL_STATES['icc']}", " ")
+    log(f"Anotation passes              {GLOBAL_STATES['anot_passes']}", " ")
+    log(f"Assembly geneneration passes  {GLOBAL_STATES['asm_passes']}", " ")
+    log(f"Type checking passes          {GLOBAL_STATES['tc_passes']}", " ")
+    log(f"Preprocessing passes          {GLOBAL_STATES['pp_passes']}", " ")
+    log(f"Finalising passes             {GLOBAL_STATES['fin_passes']}", " ")
+    log(f"Illegal character checking    {GLOBAL_STATES['icc']}", " ")
 
     if flags["run"]:
         log("", "")

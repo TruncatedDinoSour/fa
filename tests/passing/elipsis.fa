@@ -1,6 +1,6 @@
 include 'std/std.fa'
 
-fun main
+fun main [ int str str ] eo
     ...
     %EXIT_SUCCESS %exit
 end
