@@ -288,7 +288,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
 
                     _escape += char
 
-                    if not char.isnumeric() and char != ";":
+                    if False and not char.isnumeric() and char != ";":
                         error(
                             f"Invalid character {char!r} in ANSI escape sequence", token
                         )
@@ -297,7 +297,6 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
                     error("No escape code provided", token)
 
                 yield from map(ord, _escape)
-                yield 109
             else:
                 yield ord(char)
         else:

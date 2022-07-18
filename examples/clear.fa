@@ -1,0 +1,9 @@
+include 'std/lstd.fa'
+
+
+fun main [ int str str ] int eo
+    "\[H]\[J]" ro %STDOUT #fputs
+    %EXIT_SUCCESS
+end
+
+#main #exit
