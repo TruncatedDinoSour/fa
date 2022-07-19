@@ -1,7 +1,7 @@
 include 'std/lstd.fa'  -- or std.fa
 
 
-fun main [ int str str ] int eo
+fun main [ str str int ] int eo
     -- Your code...
     %EXIT_SUCCESS
 end

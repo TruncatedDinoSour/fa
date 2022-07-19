@@ -3,7 +3,7 @@ include 'std/mem/gmem.fa'
 
 macro TIMESPEC_SZ %LONG_SZ 2 mul end
 
-fun main [ int str str ] eo
+fun main [ str str int ] eo
     %TIMESPEC_SZ #malloc as timespec    -- Allocate a structure called timespec
 
     "I will sleep for 5 seconds and 0 nanoseconds" ro

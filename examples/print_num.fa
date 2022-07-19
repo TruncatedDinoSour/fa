@@ -69,7 +69,7 @@ fun print_num [ int int ] eo
 end
 
 
-fun main [ int str str ] eo
+fun main [ str str int ] eo
     69420       %STDOUT #print_num
     10          %STDOUT %fputc
 

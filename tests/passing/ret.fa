@@ -8,7 +8,7 @@ fun hello [ int ] int eo
     end
 end
 
-fun main [ int str str ] eo
+fun main [ str str int ] eo
     69 #hello %exit
 end
 

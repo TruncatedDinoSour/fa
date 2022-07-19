@@ -1,7 +1,7 @@
 include 'std/std.fa'
 include 'std/mem/gmem.fa'
 
-fun main [ int str str ] eo
+fun main [ str str int ] eo
     -- Save envp while discarding argv and argc
     1 add drop as envp
 

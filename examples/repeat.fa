@@ -3,7 +3,7 @@ include 'std/mem/gmem.fa'
 
 macro SIZE 2 128 mul end
 
-fun main [ int str str ] eo
+fun main [ str str int ] eo
     %SIZE #malloc  -- Allocate SIZE ammount of bytes
     as string      -- Store buffer as a pointer
 

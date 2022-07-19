@@ -3,7 +3,7 @@ include 'std/mem/gmem.fa'
 
 macro NAME_LEN 256 end
 
-fun main [ int str str ] eo
+fun main [ str str int ] eo
     %NAME_LEN #malloc as name       -- Allocate NAME_LEN buffer
 
     "Enter your name: " ro %STDOUT

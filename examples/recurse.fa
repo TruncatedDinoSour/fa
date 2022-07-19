@@ -15,7 +15,7 @@ fun recurse [ int ] int eo
     end
 end
 
-fun main [ int str str ] eo
+fun main [ str str int ] eo
     3 #recurse
 
     copy

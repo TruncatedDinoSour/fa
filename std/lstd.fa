@@ -7,7 +7,7 @@ include 'std/std.fa'
     so you wouldn't need to expand many macros
 >--
 
-fun fputs [ str int int ] eo %fputs end
+fun fputs [ int int str ] eo %fputs end
 fun puts  [ str int     ] eo %puts  end
 fun fputc [ int int     ] eo %fputc end
 fun putc  [ int         ] eo %putc  end
