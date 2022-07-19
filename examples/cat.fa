@@ -8,8 +8,25 @@ macro MAX_FILE 2048 end
 
 fun main [ str str int ] int eo
     2 argc lst if
-        "Usage: <files...>" ro #eputs
-        %EXIT_FAILURE ret
+        label print_input
+            %MAX_FILE #malloc as input_buffer
+
+            %MAX_FILE
+            @input_buffer deref
+            %STDOUT
+            %SYS_read sys 4
+
+            copy 0 eql if
+                1 drop
+                %EXIT_SUCCESS ret
+            end
+
+            @input_buffer deref %STDOUT #fputs
+
+            %MAX_FILE @input_buffer deref
+            #mfree 1 drop
+
+            goto print_input
     end
 
     1 argc sub as print_files_idx_max
