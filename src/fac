@@ -133,7 +133,7 @@ ASM_SNIPPETS: Dict[str, Dict[str, Tuple[str, ...]]] = {
 
 MACROS: Dict[str, List[Token]] = {}
 FUNCTIONS: List[str] = []
-UNSAFE_CHARS: str = "`~!@#$^&*()+{}[];:|\\<>?/'\""
+UNSAFE_CHARS: str = "-`~!@#$^&*()+{}[];:|\\<>?/'\""
 CTX: Set[str] = set()
 INCLUDE_RESOLVE_ORDER: Tuple[str, ...] = (
     ".",
