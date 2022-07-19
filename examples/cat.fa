@@ -13,7 +13,7 @@ fun main [ str str int ] int eo
 
             %MAX_FILE
             @input_buffer deref
-            %STDOUT
+            %STDIN
             %SYS_read sys 4
 
             copy 0 eql if
