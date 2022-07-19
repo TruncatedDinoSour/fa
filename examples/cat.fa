@@ -39,8 +39,9 @@ fun main [ str str int ] int eo
         0 @file deref %SYS_open sys 3 as fd
 
         0 @fd deref lst if
-            "Invalid input file: " ro %STDERR #fputs
-            @file deref               %STDERR #fputs
+            "Invalid input file (I was too lazy to calculate the len): " ro %STDERR #fputs
+            10 @file deref %STDERR #fputs
+            10 #putc
             %EXIT_FAILURE ret
         end
 
