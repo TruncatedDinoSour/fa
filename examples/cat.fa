@@ -3,15 +3,15 @@ include 'std/lstd.fa'
 include 'std/mem/gmem.fa'
 
 
-macro MAX_FILE 2048 end
+macro MAX_BUFFER 2048 end
 
 
 fun main [ str str int ] int eo
     2 argc lst if
         label print_input
-            %MAX_FILE #malloc as input_buffer
+            %MAX_BUFFER #malloc as input_buffer
 
-            %MAX_FILE
+            %MAX_BUFFER
             @input_buffer deref
             %STDIN
             %SYS_read sys 4
@@ -23,7 +23,7 @@ fun main [ str str int ] int eo
 
             @input_buffer deref %STDOUT #fputs
 
-            %MAX_FILE @input_buffer deref
+            %MAX_BUFFER @input_buffer deref
             #mfree 1 drop
 
             goto print_input
@@ -45,16 +45,16 @@ fun main [ str str int ] int eo
             %EXIT_FAILURE ret
         end
 
-        %MAX_FILE #malloc as file_buffer
+        %MAX_BUFFER #malloc as file_buffer
 
-        %MAX_FILE
+        %MAX_BUFFER
         @file_buffer deref
         @fd deref
         %SYS_read sys 4
 
         @file_buffer deref %STDOUT #fputs
 
-        %MAX_FILE @file_buffer deref
+        %MAX_BUFFER @file_buffer deref
         #mfree 1 drop
 
         @fd deref %SYS_close sys 2
