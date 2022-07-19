@@ -50,6 +50,8 @@ class TokenType(Enum):
     SIG_START = auto()
     SIG_END = auto()
     EO = auto()
+    ARGC = auto()
+    ARGV = auto()
 
 
 class Mutability(Enum):
@@ -305,7 +307,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
         ip += 1
 
 
-assert len(TokenType) == 38, "Unhandled token types in AST generation"
+assert len(TokenType) == 40, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
 assert len(Operator) == 12, "Unhandled operators in AST generation"
 assert len(Type) == 5, "Unhandled types in AST generation"
@@ -396,6 +398,13 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
                 )
 
             yield make_token(TokenType.PUSH_INT, int(word))
+        elif word.startswith("-"):
+            word = word[1:]
+
+            if not word.isnumeric():
+                error(f"Invalid negative number at position {_position}: {word!r}")
+
+            yield make_token(TokenType.PUSH_INT, -int(word))
         elif word.startswith("%"):
             check_name(word[1:], _position)
             yield make_token(TokenType.EXPAND_MACRO, word[1:])
@@ -643,6 +652,10 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.SIG_END, None)
         elif word == "eo":
             yield make_token(TokenType.EO, None)
+        elif word == "argc":
+            yield make_token(TokenType.ARGC, None)
+        elif word == "argv":
+            yield make_token(TokenType.ARGV, None)
         else:
             error(
                 f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
@@ -651,7 +664,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
         ip += 1
 
 
-assert len(TokenType) == 38, "Unhandled token types in x86_64 fasm assembly generation"
+assert len(TokenType) == 40, "Unhandled token types in x86_64 fasm assembly generation"
 assert (
     len(Mutability) == 2
 ), "Unhandled mutability contexts in x86_64 fasm assembly generation generation"
@@ -1092,6 +1105,34 @@ or it's a bug in pre-processor and/or type checker",
                 "EO (End Output) is only supposed to be used as a delimeter, might be a bug in the pre-processor",
                 token,
             )
+        elif token.ttype == TokenType.ARGV:
+            if "cli_data" not in CTX:
+                start_lb.insert(0, ("mov [cli_ptr], rsp", token))
+                data_lb.append(("cli_ptr: rq 1", token))
+
+                CTX.add("cli_data")
+
+            start_lb.extend(
+                (
+                    ("mov rax, [cli_ptr]", token),
+                    ("add rax, 8", token),
+                    ("push rax", token),
+                )
+            )
+        elif token.ttype == TokenType.ARGC:
+            if "cli_data" not in CTX:
+                start_lb.insert(0, ("mov [cli_ptr], rsp", token))
+                data_lb.append(("cli_ptr: rq 1", token))
+
+                CTX.add("cli_data")
+
+            start_lb.extend(
+                (
+                    ("mov rax, [cli_ptr]", token),
+                    ("mov rax, [rax]", token),
+                    ("push rax", token),
+                )
+            )
         else:
             error(f"Unexpected {token}", token)
 
@@ -1310,7 +1351,7 @@ def run_command_log(cmd: Tuple[str, ...]) -> None:
             sys.exit(EXIT_ER)
 
 
-assert len(TokenType) == 38, "Unhandled token types in processing"
+assert len(TokenType) == 40, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
 assert len(Operator) == 12, "Unhandled operators in processing"
 assert len(Type) == 5, "Unhandled types in processing"
@@ -1505,7 +1546,7 @@ def type_check_ast(
     # Yes there used to be code here, but I removed it
 
 
-assert len(TokenType) == 38, "Unhandled token types in AST validation"
+assert len(TokenType) == 40, "Unhandled token types in AST validation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST validation"
 assert len(Operator) == 12, "Unhandled operators in AST validation"
 assert len(Type) == 5, "Unhandled types in AST validation"

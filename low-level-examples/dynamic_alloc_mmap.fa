@@ -14,7 +14,7 @@ macro main
 
     34          -- Flags
     0           -- Offset
-    1 0 sub     -- Fd
+    -1          -- Fd
     3           -- Prot
     4096        -- Length
     0           -- Addr

@@ -43,7 +43,7 @@ run_tests() {
         log "$(printf "Running test $BOLD#%d$RESET ($BOLD%s$RESET mode): $BOLD%s$RESET... " "$RAN_TESTS" "$3" "$pptest")"
 
         {
-            _cmd="echo $USER | $FAC \"$ptest\" -run"
+            _cmd="echo $USER | $FAC \"$ptest\" -run -flags '$ptest'"
 
             case "$3" in
             passing) eval "$_cmd" || touch "$_ex" ;;

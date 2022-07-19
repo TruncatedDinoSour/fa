@@ -1,4 +1,5 @@
 # Fa documentation index
+- [Arguments in fa](/doc/md/ARGUMENTS.md)
 - [Fa booleans](/doc/md/BOOLEANS.md)
 - [Comments in fa](/doc/md/COMMENTS.md)
 - [Conditionals in fa programming language](/doc/md/CONDITIONALS.md)

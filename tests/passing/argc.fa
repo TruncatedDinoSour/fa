@@ -1,0 +1,13 @@
+include 'std/lstd.fa'
+include 'std/logic.fa'
+
+
+fun main [ str str int ] int eo
+    argc #not if
+        "There should always be passed at least 1 argument, that is the filename" ro #error
+    end
+
+    %EXIT_SUCCESS
+end
+
+#main #exit

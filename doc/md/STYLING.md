@@ -73,11 +73,13 @@ end
 #main
 ```
 
-Includes should not go on the same line even though it's allowed and no I won't
-disallow it as it does make it easier to minify the code if you want to ship it
-as source but also don't want to have a huge file size
+Includes should not go on the same line even though it's allowed and
+no I won't disallow it as it does make it easier to minify the
+code if you want to ship it as source but also don't want
+to have a huge file size
 
-Same nesting levels should be ordered by the path length
+Same nesting levels should be ordered by the path length, same
+length files -- alphabetically
 
 -   Doc comments
 

@@ -1,0 +1,12 @@
+--<
+    Get nth argument
+
+    Takes:
+        INT: The argument (as an index of argv)
+
+    Returns:
+        STR: The argument
+>--
+fun get_arg [ int ] str eo
+    8 mul argv add deref
+end

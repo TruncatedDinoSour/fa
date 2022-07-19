@@ -15,7 +15,7 @@ fun malloc [ int ] int eo
 
     34             -- Flags
     0              -- Offset
-    1 0 sub        -- Fd
+    -1             -- Fd
     3              -- Prot
     @__malloc_length
     deref          -- Length

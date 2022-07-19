@@ -1,0 +1,13 @@
+include 'std/lstd.fa'
+include 'std/logic.fa'
+
+
+fun main [ str str int ] int eo
+    -1 1 0 sub eql #not if
+        "-1 = 1 - 0, but is not" ro #error
+    end
+
+    %EXIT_SUCCESS
+end
+
+#main #exit

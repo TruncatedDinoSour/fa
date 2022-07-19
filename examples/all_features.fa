@@ -144,6 +144,15 @@ macro main
     -- Null
     null 1 drop
 
+    -- Argc
+    argc 1 drop
+
+    -- Argv
+    argv 1 drop
+
+    -- Negative numbers
+    -1 1 add
+
     -- Functions
     #some_function_hello
 end

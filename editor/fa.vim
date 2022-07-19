@@ -19,6 +19,7 @@ syntax keyword faTodo    TODO XXX FIXME NOTE
 
 " Language keywords
 syntax keyword faKeyword sys drop swap copy nop as deref point label goto set ret null
+syntax keyword faKeyword argv argc
 
 
 " Escapes
@@ -28,7 +29,9 @@ syntax region faEscape start=/\v\\\[/ skip=/\v\\./ end=/\v\]/   contained
 
 
 " Numbers
-syntax match faNumber "\<\d*\>"
+syntax match faNumber /\d*/
+" ViM seems to hate '/-?\d*/'
+syntax match faNumber /-\d*/
 
 
 " Comments
