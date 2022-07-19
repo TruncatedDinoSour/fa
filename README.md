@@ -16,6 +16,13 @@ fixing a lot of issues it has, the initial name for fa was
 rys++ but I ended up on fa, this language is going to be self-hosted
 some time
 
+# Try it online
+
+Please don't be an ass on them, don't do stuff that
+might break these compilers :)
+
+-   Online compiler by @usernameeReal (<https://github.com/usernameeReal>) <http://usernamee.duckdns.org:34353/>
+
 # Operating systems fa works on
 
 -   GNU/Linux
