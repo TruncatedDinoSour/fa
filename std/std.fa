@@ -47,6 +47,18 @@ end
 
 
 --<
+    Print a string and then a newline (to stderr)
+
+    Takes:
+        STR: The string
+>--
+macro eputs
+    %STDERR         %fputs  -- The string
+    "\n" ro %STDOUT %fputs  -- Newline
+end
+
+
+--<
     Print a character from its charcode to
     a specified file descriptor
 

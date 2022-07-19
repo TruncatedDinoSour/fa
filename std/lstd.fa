@@ -9,6 +9,7 @@ include 'std/std.fa'
 
 fun fputs [ int int str ] eo %fputs end
 fun puts  [ str int     ] eo %puts  end
+fun eputs [ str int     ] eo %eputs end
 fun fputc [ int int     ] eo %fputc end
 fun putc  [ int         ] eo %putc  end
 fun exit  [ int         ] eo %exit  end

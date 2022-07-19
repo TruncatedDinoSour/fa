@@ -1,0 +1,55 @@
+include 'std/args.fa'
+include 'std/lstd.fa'
+include 'std/mem/gmem.fa'
+
+
+macro MAX_FILE 2048 end
+
+
+fun main [ str str int ] int eo
+    2 argc lst if
+        "Usage: <files...>" ro #eputs
+        %EXIT_FAILURE ret
+    end
+
+    1 argc sub as print_files_idx_max
+    1 as print_files_idx
+
+    @print_files_idx deref
+
+    label print_files
+        @print_files_idx deref #get_arg as file
+        0 @file deref %SYS_open sys 3 as fd
+
+        0 @fd deref lst if
+            "Invalid input file: " ro %STDERR #fputs
+            @file deref               %STDERR #fputs
+            %EXIT_FAILURE ret
+        end
+
+        %MAX_FILE #malloc as file_buffer
+
+        %MAX_FILE
+        @file_buffer deref
+        @fd deref
+        %SYS_read sys 4
+
+        @file_buffer deref %STDOUT #fputs
+
+        %MAX_FILE @file_buffer deref
+        #mfree 1 drop
+
+        @fd deref %SYS_close sys 2
+
+        @print_files_idx     deref
+        @print_files_idx_max deref grt if
+            @print_files_idx 1 @print_files_idx deref add point
+            goto print_files
+        end
+
+    10 #putc
+
+    %EXIT_SUCCESS
+end
+
+#main #exit
