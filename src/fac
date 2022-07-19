@@ -156,6 +156,7 @@ GLOBAL_STATES: Dict[str, Any] = {
     "if": 0,
     "icc": 0,
     "rstack-size": 8096,
+    "colour": True,
 }
 INCLUDED_FILES: Set[str] = set()
 
@@ -176,9 +177,16 @@ def log(msg: str, header: str = "\033[1m::\033[0m", file=sys.stdout) -> None:
 def make_log(
     header: str, position: tuple[str, int, int], msg: str, colour: str, file
 ) -> None:
+    log_header: str = "::"
+    after_header: str = header.upper()
+
+    if GLOBAL_STATES["colour"]:
+        log_header = f"\033[1m\033[{COLOURS.get(colour)}{log_header}"
+        after_header = f"{after_header}\033[{COLOURS['reset']}"
+
     log(
-        f"{header.upper()}:\033[{COLOURS['reset']} {':'.join(map(str, position))}: {msg}",
-        f"\033[1m\033[{COLOURS.get(colour)}::",
+        f"{after_header} {':'.join(map(str, position))}: {msg}",
+        log_header,
         file=file,
     )
 
@@ -1207,6 +1215,7 @@ def print_help() -> int:
         "   -output <file>                    Set output file",
         "   -rstack-size <size>               Set return stack size in bytes",
         "   -flags <flag,flag,flag>           The arguments to pass to the binary when -run is specified",
+        "   -no-ansi                          Don't use colour",
         "",
     )
 
@@ -1323,6 +1332,8 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
             flag = flags[ip]
 
             flagd["flags"].extend(flag.split(","))
+        elif flag == "-no-ansi":
+            GLOBAL_STATES["colour"] = False
         else:
             error(f"Unknown flag {flag!r}")
 

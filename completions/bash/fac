@@ -12,11 +12,11 @@ _fac() {
                 COMPREPLY=($(compgen -W "x86-64-gnulinux x86-64-freebsd" -- "$cur"))
             else
                 case "$flag" in
-                -input | -output | -rstack-size) ;;
+                -input | -output | -rstack-size | -flags) ;;
 
                 *) COMPREPLY=($(compgen -W "-no-anotate -asm-flags -help \
                 -no-compile -stdout -no-logging -dbg -run -list-formats -format -input
-                -rstack-size" -- "$cur")) ;;
+                -rstack-size -flags -no-ansi" -- "$cur")) ;;
                 esac
             fi
         fi
