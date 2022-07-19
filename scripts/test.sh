@@ -3,15 +3,22 @@
 set -e
 
 RAN_TESTS=0
-BOLD='\033[1m'
-RESET='\033[0m'
-BGREEN='\033[1;32m'
-BRED='\033[1;31m'
+
+if [ ! "$NO_ANSI" ]; then
+    BOLD='\033[1m'
+    RESET='\033[0m'
+    BGREEN='\033[1;32m'
+    BRED='\033[1;31m'
+
+    PASS="\u2713"
+    FAIL="\u2717"
+fi
+
 FAC="${FAC:-fac}"
 
 log() { printf " $BOLD*$RESET %s" "$1"; }
-pass() { printf "${BGREEN}passed \u2713${RESET}\n"; }
-fail() { printf "${BRED}failed \u2717${RESET}\n"; }
+pass() { printf "${BGREEN}passed ${PASS}${RESET}\n"; }
+fail() { printf "${BRED}failed ${FAIL}${RESET}\n"; }
 
 mmkdir() { mkdir -p -- "$1"; }
 
@@ -43,7 +50,7 @@ run_tests() {
         log "$(printf "Running test $BOLD#%d$RESET ($BOLD%s$RESET mode): $BOLD%s$RESET... " "$RAN_TESTS" "$3" "$pptest")"
 
         {
-            _cmd="echo $USER | $FAC \"$ptest\" -run -flags '$ptest'"
+            _cmd="echo $USER | $FAC \"$ptest\" -run -flags '$ptest' -no-ansi"
 
             case "$3" in
             passing) eval "$_cmd" || touch "$_ex" ;;
