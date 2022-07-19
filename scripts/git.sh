@@ -19,6 +19,8 @@ main() {
     sh ./scripts/docindex.sh
     bash ./scripts/test.sh
 
+    git diff >/tmp/fa.diff
+
     git add -A
     git commit -sa
     git push -u origin "$(git rev-parse --abbrev-ref HEAD)"
