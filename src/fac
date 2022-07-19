@@ -167,9 +167,15 @@ COLOURS: Dict[str, str] = {
 }
 
 
-def log(msg: str, header: str = "\033[1m::\033[0m", file=sys.stdout) -> None:
+def log(msg: str, header: Optional[str] = None, file=sys.stdout) -> None:
     if "flags.nolog" in CTX:
         return
+
+    if header is None:
+        header = "::"
+
+        if GLOBAL_STATES["colour"]:
+            header = f"\033[1m{header}\033[0m"
 
     print(f" {header} {msg}", file=file)
 
