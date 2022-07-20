@@ -158,6 +158,10 @@ macro main
     -- Negative numbers
     -1 1 add
 
+    -- Turn
+    1 1 turn turn turn
+    2 drop
+
     -- Functions
     #some_function_hello
 end

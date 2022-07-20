@@ -52,6 +52,7 @@ class TokenType(Enum):
     EO = auto()
     ARGC = auto()
     ARGV = auto()
+    TURN = auto()
 
 
 class Mutability(Enum):
@@ -322,7 +323,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
         ip += 1
 
 
-assert len(TokenType) == 40, "Unhandled token types in AST generation"
+assert len(TokenType) == 41, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
 assert len(Operator) == 13, "Unhandled operators in AST generation"
 assert len(Type) == 5, "Unhandled types in AST generation"
@@ -673,6 +674,8 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.ARGC, None)
         elif word == "argv":
             yield make_token(TokenType.ARGV, None)
+        elif word == "turn":
+            yield make_token(TokenType.TURN, None)
         else:
             error(
                 f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
@@ -681,7 +684,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
         ip += 1
 
 
-assert len(TokenType) == 40, "Unhandled token types in x86_64 fasm assembly generation"
+assert len(TokenType) == 41, "Unhandled token types in x86_64 fasm assembly generation"
 assert (
     len(Mutability) == 2
 ), "Unhandled mutability contexts in x86_64 fasm assembly generation generation"
@@ -1161,6 +1164,17 @@ or it's a bug in pre-processor and/or type checker",
                     ("push rax", token),
                 )
             )
+        elif token.ttype == TokenType.TURN:
+            start_lb.extend(
+                (
+                    ("pop rax", token),
+                    ("pop rbx", token),
+                    ("pop rcx", token),
+                    ("push rbx", token),
+                    ("push rax", token),
+                    ("push rcx", token),
+                )
+            )
         else:
             error(f"Unexpected {token}", token)
 
@@ -1382,7 +1396,7 @@ def run_command_log(cmd: Tuple[str, ...]) -> None:
             sys.exit(EXIT_ER)
 
 
-assert len(TokenType) == 40, "Unhandled token types in processing"
+assert len(TokenType) == 41, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
 assert len(Operator) == 13, "Unhandled operators in processing"
 assert len(Type) == 5, "Unhandled types in processing"
@@ -1577,7 +1591,7 @@ def type_check_ast(
     # Yes there used to be code here, but I removed it
 
 
-assert len(TokenType) == 40, "Unhandled token types in AST validation"
+assert len(TokenType) == 41, "Unhandled token types in AST validation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST validation"
 assert len(Operator) == 13, "Unhandled operators in AST validation"
 assert len(Type) == 5, "Unhandled types in AST validation"

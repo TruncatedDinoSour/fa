@@ -60,7 +60,7 @@ run_tests() {
                 touch "$_ex"
                 ;;
             esac 2>&1
-        } >"$pptest.log" 2>&1
+        } >"$pptest.log"
 
         if [ -f "$_ex" ]; then
             rm -f -- "$_ex"
