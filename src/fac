@@ -54,6 +54,7 @@ class TokenType(Enum):
     ARGV = auto()
     TURN = auto()
     HOP = auto()
+    PUSH_CHAR = auto()
 
 
 class Mutability(Enum):
@@ -83,6 +84,7 @@ class Type(Enum):
     PTR = auto()
     BUL = auto()
     NUL = auto()
+    CHR = auto()
 
 
 class Bool(Enum):
@@ -324,10 +326,10 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
         ip += 1
 
 
-assert len(TokenType) == 42, "Unhandled token types in AST generation"
+assert len(TokenType) == 43, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
 assert len(Operator) == 13, "Unhandled operators in AST generation"
-assert len(Type) == 5, "Unhandled types in AST generation"
+assert len(Type) == 6, "Unhandled types in AST generation"
 assert len(Bool) == 2, "Unhandled booleans in AST generation"
 
 
@@ -659,6 +661,8 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.TYPE, Type.BUL)
         elif word == "nul":
             yield make_token(TokenType.TYPE, Type.NUL)
+        elif word == "chr":
+            yield make_token(TokenType.TYPE, Type.CHR)
         elif word == "true":
             yield make_token(TokenType.BOOL, Bool.TRUE)
         elif word == "false":
@@ -679,6 +683,20 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.TURN, None)
         elif word == "hop":
             yield make_token(TokenType.HOP, None)
+        elif word.startswith("'") and word.endswith("'"):
+            _tmp_char_token: Token = make_token(TokenType.PUSH_CHAR, 0)
+
+            char_code = tuple(parse_string(word[1:-1], NULL_TOKEN))
+
+            if len(char_code) > 1:
+                error(
+                    "Character length must not exceed one characer or one byte",
+                    _tmp_char_token,
+                )
+
+            _tmp_char_token.tvalue = char_code[0]
+
+            yield _tmp_char_token
         else:
             error(
                 f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
@@ -687,14 +705,14 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
         ip += 1
 
 
-assert len(TokenType) == 42, "Unhandled token types in x86_64 fasm assembly generation"
+assert len(TokenType) == 43, "Unhandled token types in x86_64 fasm assembly generation"
 assert (
     len(Mutability) == 2
 ), "Unhandled mutability contexts in x86_64 fasm assembly generation generation"
 assert (
     len(Operator) == 13
 ), "Unhandled operators in x86_64 fasm assembly generation generation"
-assert len(Type) == 5, "Unhandled types in x86_64 fasm assembly generation"
+assert len(Type) == 6, "Unhandled types in x86_64 fasm assembly generation"
 assert len(Bool) == 2, "Unhandled booleans in x86_64 fasm assembly generation"
 
 
@@ -1188,6 +1206,13 @@ or it's a bug in pre-processor and/or type checker",
                     ("push rax", token),
                 )
             )
+        elif token.ttype == TokenType.PUSH_CHAR:
+            start_lb.extend(
+                (
+                    (f"mov ax, {token.tvalue}", token),
+                    ("push ax", token),
+                )
+            )
         else:
             error(f"Unexpected {token}", token)
 
@@ -1409,10 +1434,10 @@ def run_command_log(cmd: Tuple[str, ...]) -> None:
             sys.exit(EXIT_ER)
 
 
-assert len(TokenType) == 42, "Unhandled token types in processing"
+assert len(TokenType) == 43, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
 assert len(Operator) == 13, "Unhandled operators in processing"
-assert len(Type) == 5, "Unhandled types in processing"
+assert len(Type) == 6, "Unhandled types in processing"
 assert len(Bool) == 2, "Unhandled booleans in processing"
 
 
@@ -1604,10 +1629,10 @@ def type_check_ast(
     # Yes there used to be code here, but I removed it
 
 
-assert len(TokenType) == 42, "Unhandled token types in AST validation"
+assert len(TokenType) == 43, "Unhandled token types in AST validation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST validation"
 assert len(Operator) == 13, "Unhandled operators in AST validation"
-assert len(Type) == 5, "Unhandled types in AST validation"
+assert len(Type) == 6, "Unhandled types in AST validation"
 assert len(Bool) == 2, "Unhandled booleans in AST validation"
 
 

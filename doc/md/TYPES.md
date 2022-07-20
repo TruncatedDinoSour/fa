@@ -28,6 +28,11 @@ programming language:
     -   it pushes ... onto the stack: `0`
     -   it compiles down to: `push 0`
     -   example: `null`
+-   String
+    -   It's invoked by: `Writting any data in ''`
+    -   It pushes ... onto the stack: `The charcode`
+    -   It compiles down to: `The byte being moved to ax and ax being pushed`
+    -   Example: `'\0'`
 
 There are also type keywords used in type checking:
 
@@ -36,3 +41,4 @@ There are also type keywords used in type checking:
 -   `str` -- String type
 -   `bul` -- Boolean type
 -   `nul` -- Null type
+-   `chr` -- Character type

@@ -165,6 +165,9 @@ macro main
     -- Hop
     1 swap hop 2 drop
 
+    -- Char
+    '\0' add
+
     -- Functions
     #some_function_hello
 end

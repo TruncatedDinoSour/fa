@@ -53,6 +53,7 @@ str
 ptr
 bul
 nul
+chr
 true
 false
 null

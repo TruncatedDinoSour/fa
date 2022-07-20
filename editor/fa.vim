@@ -88,12 +88,16 @@ syntax keyword faBoolean true false
 
 
 " Types
-syntax keyword faType int str ptr bul nul
+syntax keyword faType int str ptr bul nul chr
 
 
 " Type signatures
 syntax match faTypeSig "\(\[\)"
 syntax match faTypeSig "\(\]\)"
+
+
+" Characters
+syntax match faCharacter "'.*'" contains=faEscape
 
 
 " Set highlights
@@ -115,6 +119,7 @@ highlight default link faDelimeter   Statement
 highlight default link faBoolean     Boolean
 highlight default link faType        Type
 highlight default link faTypeSig     Special
+highlight default link faCharacter   Character
 
 
 " Set syntax

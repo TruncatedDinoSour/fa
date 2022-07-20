@@ -1,0 +1,8 @@
+include 'std/lstd.fa'
+
+
+fun main [ str str int ] chr eo
+    '\0'
+end
+
+#main #exit
