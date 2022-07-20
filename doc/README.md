@@ -9,6 +9,7 @@
 - [End keyword in fa](/doc/md/END.md)
 - [Functions in fa](/doc/md/FUNCTIONS.md)
 - [Label keyword in fa](/doc/md/GOTO.md)
+- [Hop keyword in fa](/doc/md/HOP.md)
 - [Include keyword in fa](/doc/md/INCLUDE.md)
 - [Label keyword in fa](/doc/md/LABEL.md)
 - [Fa macros](/doc/md/MACROS.md)

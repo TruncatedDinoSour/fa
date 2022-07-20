@@ -162,6 +162,9 @@ macro main
     1 1 turn turn turn
     2 drop
 
+    -- Hop
+    1 swap hop 2 drop
+
     -- Functions
     #some_function_hello
 end

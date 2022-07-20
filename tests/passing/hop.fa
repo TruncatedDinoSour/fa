@@ -1,0 +1,9 @@
+include 'std/lstd.fa'
+
+
+fun main [ str str int ] int eo
+    1 %EXIT_SUCCESS hop
+    2 drop
+end
+
+#main #exit
