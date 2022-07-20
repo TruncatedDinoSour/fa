@@ -52,7 +52,7 @@ fun print_num [ int int ] eo
         end
 
         @__print_num_return
-        10 @__print_num_n deref #smod
+        10 @__print_num_n deref #mod
         point
 
         @__print_num_arr deref
@@ -63,7 +63,7 @@ fun print_num [ int int ] eo
 
         @__print_num_idx @__print_num_idx deref 1 add point
 
-        @__print_num_n @__print_num_n deref #uadiv10 point
+        @__print_num_n @__print_num_n deref #div10 point
 
         goto __print_num_resolve
 end
