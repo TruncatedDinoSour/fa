@@ -14,6 +14,7 @@ main() {
         yn 'Did you add both failing and passing tests for it'
         yn 'Did you add documentation for it'
         yn 'Did you add an entry to fa.vim'
+        yn 'Did you add an entry to fa_completion.clist'
     fi
 
     sh ./scripts/docindex.sh

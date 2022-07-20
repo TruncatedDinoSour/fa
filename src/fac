@@ -72,6 +72,7 @@ class Operator(Enum):
     LST = auto()
     BOT = auto()
     EQL = auto()
+    DVM = auto()
 
 
 class Type(Enum):
@@ -323,7 +324,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
 
 assert len(TokenType) == 40, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
-assert len(Operator) == 12, "Unhandled operators in AST generation"
+assert len(Operator) == 13, "Unhandled operators in AST generation"
 assert len(Type) == 5, "Unhandled types in AST generation"
 assert len(Bool) == 2, "Unhandled booleans in AST generation"
 
@@ -533,6 +534,8 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.OPERATOR, Operator.BOT)
         elif word == "eql":
             yield make_token(TokenType.OPERATOR, Operator.EQL)
+        elif word == "dvm":
+            yield make_token(TokenType.OPERATOR, Operator.DVM)
         elif word == "undefine":
             ip += 1
             msg = f"No macro name for undefinition supplied at position {_position}"
@@ -683,7 +686,7 @@ assert (
     len(Mutability) == 2
 ), "Unhandled mutability contexts in x86_64 fasm assembly generation generation"
 assert (
-    len(Operator) == 12
+    len(Operator) == 13
 ), "Unhandled operators in x86_64 fasm assembly generation generation"
 assert len(Type) == 5, "Unhandled types in x86_64 fasm assembly generation"
 assert len(Bool) == 2, "Unhandled booleans in x86_64 fasm assembly generation"
@@ -919,6 +922,17 @@ def generate_assembly_x86_64_fasm(
                         ("pop rax", token),
                         ("not rax", token),
                         ("push rax", token),
+                    )
+                )
+            elif token.tvalue == Operator.DVM:
+                start_lb.extend(
+                    (
+                        ("xor rdx, rdx", token),
+                        ("pop rax", token),
+                        ("pop rbx", token),
+                        ("div rbx", token),
+                        ("push rax", token),
+                        ("push rdx", token),
                     )
                 )
             else:
@@ -1370,7 +1384,7 @@ def run_command_log(cmd: Tuple[str, ...]) -> None:
 
 assert len(TokenType) == 40, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
-assert len(Operator) == 12, "Unhandled operators in processing"
+assert len(Operator) == 13, "Unhandled operators in processing"
 assert len(Type) == 5, "Unhandled types in processing"
 assert len(Bool) == 2, "Unhandled booleans in processing"
 
@@ -1565,7 +1579,7 @@ def type_check_ast(
 
 assert len(TokenType) == 40, "Unhandled token types in AST validation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST validation"
-assert len(Operator) == 12, "Unhandled operators in AST validation"
+assert len(Operator) == 13, "Unhandled operators in AST validation"
 assert len(Type) == 5, "Unhandled types in AST validation"
 assert len(Bool) == 2, "Unhandled booleans in AST validation"
 

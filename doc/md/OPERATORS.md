@@ -12,3 +12,4 @@
 -   `lst` -- Less than (`<`)
 -   `bot` -- Binary not (`~`)
 -   `eql` -- Equals (`==`)
+-   `dvm` -- Divmod (`/%`)

@@ -23,6 +23,7 @@ grt
 lst
 bot
 eql
+dvm
 
 copy
 
@@ -55,6 +56,13 @@ nul
 true
 false
 null
+
+[
+]
+
+eo
+argc
+argv
 
 --
 --<
