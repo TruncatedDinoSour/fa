@@ -19,7 +19,7 @@ syntax keyword faTodo    TODO XXX FIXME NOTE
 
 " Language keywords
 syntax keyword faKeyword sys drop swap copy nop as deref point label goto set ret null
-syntax keyword faKeyword argv argc turn hop
+syntax keyword faKeyword argv argc turn hop to
 
 
 " Escapes

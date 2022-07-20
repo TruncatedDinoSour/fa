@@ -2,7 +2,7 @@ include 'std/lstd.fa'
 
 
 fun main [ str str int ] int eo
-    '\0' to int
+    null to int
 end
 
 #main #exit

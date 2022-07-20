@@ -24,6 +24,7 @@
 - [Suggestions on how to style your code](/doc/md/STYLING.md)
 - [Swap keyword in fa](/doc/md/SWAP.md)
 - [Sys keyword in fa](/doc/md/SYS.md)
+- [To keyword in fa](/doc/md/TO.md)
 - [Turn keyword in fa](/doc/md/TURN.md)
 - [Fa data types](/doc/md/TYPES.md)
 - [Undefine keyword in fa](/doc/md/UNDEFINE.md)

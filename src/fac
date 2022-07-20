@@ -55,6 +55,7 @@ class TokenType(Enum):
     TURN = auto()
     HOP = auto()
     PUSH_CHAR = auto()
+    TO = auto()
 
 
 class Mutability(Enum):
@@ -186,29 +187,53 @@ def log(msg: str, header: Optional[str] = None, file=sys.stdout) -> None:
 
 
 def make_log(
-    header: str, position: tuple[str, int, int], msg: str, colour: str, file
+    header: str,
+    position: tuple[str, int, int],
+    msg: str,
+    colour: str,
+    file,
+    /,
+    show_position: bool = True,
 ) -> None:
+    extra: str = ""
     log_header: str = "::"
-    after_header: str = header.upper()
+    after_header: str = f"{header.upper()}:"
 
     if GLOBAL_STATES["colour"]:
         log_header = f"\033[1m\033[{COLOURS.get(colour)}{log_header}"
         after_header = f"{after_header}\033[{COLOURS['reset']}"
 
+    if show_position:
+        extra = f" {':'.join(map(str, position))}:"
+
     log(
-        f"{after_header} {':'.join(map(str, position))}: {msg}",
+        f"{after_header}{extra} {msg}",
         log_header,
         file=file,
     )
 
 
 def error(msg: str, token: Token = NULL_TOKEN) -> None:
-    make_log("ERROR", token.tpos, msg, "red", sys.stderr)
+    make_log(
+        "ERROR",
+        token.tpos,
+        msg,
+        "red",
+        sys.stderr,
+        show_position=(token is not NULL_TOKEN),
+    )
     sys.exit(EXIT_ER)
 
 
 def warning(msg: str, token: Token = NULL_TOKEN) -> None:
-    make_log("WARNING", token.tpos, msg, "yellow", sys.stderr)
+    make_log(
+        "WARNING",
+        token.tpos,
+        msg,
+        "yellow",
+        sys.stderr,
+        show_position=(token is not NULL_TOKEN),
+    )
 
 
 def ei(msg: str, token: Token, ast: Sized, ip: int) -> None:
@@ -326,7 +351,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
         ip += 1
 
 
-assert len(TokenType) == 43, "Unhandled token types in AST generation"
+assert len(TokenType) == 44, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
 assert len(Operator) == 13, "Unhandled operators in AST generation"
 assert len(Type) == 6, "Unhandled types in AST generation"
@@ -686,17 +711,20 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
         elif word.startswith("'") and word.endswith("'"):
             _tmp_char_token: Token = make_token(TokenType.PUSH_CHAR, 0)
 
-            char_code = tuple(parse_string(word[1:-1], NULL_TOKEN))
+            char_code: tuple[int, ...] = tuple(parse_string(word[1:-1], NULL_TOKEN))
+            char_code_len: int = len(char_code)
 
-            if len(char_code) > 1:
+            if char_code_len > 1:
                 error(
-                    "Character length must not exceed one characer or one byte",
+                    f"Character length must not exceed one characer or one byte, got {char_code_len}",
                     _tmp_char_token,
                 )
 
             _tmp_char_token.tvalue = char_code[0]
 
             yield _tmp_char_token
+        elif word == "to":
+            yield make_token(TokenType.TO, None)
         else:
             error(
                 f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
@@ -705,7 +733,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
         ip += 1
 
 
-assert len(TokenType) == 43, "Unhandled token types in x86_64 fasm assembly generation"
+assert len(TokenType) == 44, "Unhandled token types in x86_64 fasm assembly generation"
 assert (
     len(Mutability) == 2
 ), "Unhandled mutability contexts in x86_64 fasm assembly generation generation"
@@ -1213,6 +1241,12 @@ or it's a bug in pre-processor and/or type checker",
                     ("push ax", token),
                 )
             )
+        elif token.ttype == TokenType.TO:
+            error(
+                "To is only supposed to be used for type checking, you either placed one outside a valid context \
+or it's a bug in pre-processor and/or type checker",
+                token,
+            )
         else:
             error(f"Unexpected {token}", token)
 
@@ -1434,7 +1468,7 @@ def run_command_log(cmd: Tuple[str, ...]) -> None:
             sys.exit(EXIT_ER)
 
 
-assert len(TokenType) == 43, "Unhandled token types in processing"
+assert len(TokenType) == 44, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
 assert len(Operator) == 13, "Unhandled operators in processing"
 assert len(Type) == 6, "Unhandled types in processing"
@@ -1629,7 +1663,7 @@ def type_check_ast(
     # Yes there used to be code here, but I removed it
 
 
-assert len(TokenType) == 43, "Unhandled token types in AST validation"
+assert len(TokenType) == 44, "Unhandled token types in AST validation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST validation"
 assert len(Operator) == 13, "Unhandled operators in AST validation"
 assert len(Type) == 6, "Unhandled types in AST validation"
@@ -1637,7 +1671,11 @@ assert len(Bool) == 2, "Unhandled booleans in AST validation"
 
 
 def finalise_ast(
-    ast: Tuple[Token, ...], /, in_if: bool = False, do_log: bool = True
+    ast: Tuple[Token, ...],
+    /,
+    in_if: bool = False,
+    do_log: bool = True,
+    check: bool = True,
 ) -> Generator[Token, None, None]:
     if do_log:
         log("Finalising the AST")
@@ -1700,14 +1738,38 @@ def finalise_ast(
             if_body.pop()  # Removes 'end'
 
             yield Token(TokenType.IF, if_jmp, if_token.tpos)
-            yield from finalise_ast(tuple(if_body), in_if=True, do_log=False)
+            yield from finalise_ast(
+                tuple(if_body), in_if=True, do_log=False, check=False
+            )
             yield Token(TokenType.END_IF, if_token.tvalue, if_token.tpos)
         elif token.ttype == TokenType.ELSE and not in_if:
             error(f"Token {token} should not be parsed outside an if block", token)
+        elif token.ttype == TokenType.TO:
+            ip += 1
+            ei(
+                "No type specified to which to cast to",
+                token,
+                ast,
+                ip,
+            )
+            to_type: Token = ast[ip]
+
+            if to_type.ttype != TokenType.TYPE:
+                error(f"No valid type token specified, got {to_type.ttype}", token)
+
+            token.tvalue = to_type.tvalue
+            # yield token
         else:
             yield token
 
         ip += 1
+
+    if check:
+        if "main" not in FUNCTIONS:
+            warning("No main() function found which is highly suggested", NULL_TOKEN)
+
+        if "main" in MACROS:
+            warning("Main macro is an old practice, avoid it!", NULL_TOKEN)
 
 
 def main() -> int:
