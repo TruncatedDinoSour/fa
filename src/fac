@@ -1417,6 +1417,7 @@ def print_help() -> int:
         "   -flags <flag,flag,flag>           The arguments to pass to the binary when -run is specified",
         "   -no-ansi                          Don't use colour",
         "   -no-dce                           Disable dead code elimination",
+        "   -no-stats                         Disable statistics table",
         "",
     )
 
@@ -1439,6 +1440,7 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
         "format": "x86-64-gnulinux",
         "input": None,
         "flags": [],
+        "stats": True,
     }
 
     if not flags:
@@ -1537,6 +1539,8 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
             GLOBAL_STATES["colour"] = False
         elif flag == "-no-dce":
             GLOBAL_STATES["do-dead-code-elimination"] = False
+        elif flag == "-no-stats":
+            flagd["stats"] = False
         else:
             error(f"Unknown flag {flag!r}")
 
@@ -1998,23 +2002,27 @@ def main() -> int:
 
     log("Compilation finished")
 
-    log("", "")
-    log(f"Anotation passes              {GLOBAL_STATES['anot_passes']}", " ")
-    log(f"Assembly geneneration passes  {GLOBAL_STATES['asm_passes']}", " ")
-    log(f"Type checking passes          {GLOBAL_STATES['tc_passes']}", " ")
-    log(f"Preprocessing passes          {GLOBAL_STATES['pp_passes']}", " ")
-    log(f"Finalising passes             {GLOBAL_STATES['fin_passes']}", " ")
-    log(f"Illegal character checking    {GLOBAL_STATES['icc']}", " ")
-    log(f"Dead code elimination passes  {GLOBAL_STATES['dce']}", " ")
+    if flags["stats"]:
+        log("", "")
+        log(f"Anotation passes              {GLOBAL_STATES['anot_passes']}", " ")
+        log(f"Assembly geneneration passes  {GLOBAL_STATES['asm_passes']}", " ")
+        log(f"Type checking passes          {GLOBAL_STATES['tc_passes']}", " ")
+        log(f"Preprocessing passes          {GLOBAL_STATES['pp_passes']}", " ")
+        log(f"Finalising passes             {GLOBAL_STATES['fin_passes']}", " ")
+        log(f"Illegal character checking    {GLOBAL_STATES['icc']}", " ")
+        log(f"Dead code elimination passes  {GLOBAL_STATES['dce']}", " ")
 
-    log_with_stats(
-        "    Functions                 ",
-        (len(GLOBAL_STATES["used-functions"]), int(GLOBAL_STATES["functions-count"])),
-    )
-    log_with_stats(
-        "    Names                     ",
-        (len(GLOBAL_STATES["used-names"]), int(GLOBAL_STATES["names-count"])),
-    )
+        log_with_stats(
+            "    Functions                 ",
+            (
+                len(GLOBAL_STATES["used-functions"]),
+                int(GLOBAL_STATES["functions-count"]),
+            ),
+        )
+        log_with_stats(
+            "    Names                     ",
+            (len(GLOBAL_STATES["used-names"]), int(GLOBAL_STATES["names-count"])),
+        )
 
     if flags["run"]:
         log("", "")
