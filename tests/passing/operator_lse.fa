@@ -1,0 +1,13 @@
+include 'std/lstd.fa'
+include 'std/logic.fa'
+
+
+fun main [ str str int ] int eo
+    0 0 lse #not if
+        "0 <= 0 is supposed to be true" ro #error
+    end
+
+    %EXIT_SUCCESS
+end
+
+#main #exit

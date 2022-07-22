@@ -82,6 +82,8 @@ class Operator(Enum):
     BOT = auto()
     EQL = auto()
     DVM = auto()
+    GRE = auto()
+    LSE = auto()
 
 
 class Type(Enum):
@@ -377,7 +379,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
 
 assert len(TokenType) == 49, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
-assert len(Operator) == 13, "Unhandled operators in AST generation"
+assert len(Operator) == 15, "Unhandled operators in AST generation"
 assert len(Type) == 6, "Unhandled types in AST generation"
 assert len(Bool) == 2, "Unhandled booleans in AST generation"
 
@@ -631,6 +633,10 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.OPERATOR, Operator.EQL)
         elif word == "dvm":
             yield make_token(TokenType.OPERATOR, Operator.DVM)
+        elif word == "gre":
+            yield make_token(TokenType.OPERATOR, Operator.GRE)
+        elif word == "lse":
+            yield make_token(TokenType.OPERATOR, Operator.LSE)
         elif word == "undefine":
             ip += 1
             msg = f"No macro name for undefinition supplied at position {_position}"
@@ -821,7 +827,7 @@ assert (
     len(Mutability) == 2
 ), "Unhandled mutability contexts in x86_64 fasm assembly generation generation"
 assert (
-    len(Operator) == 13
+    len(Operator) == 15
 ), "Unhandled operators in x86_64 fasm assembly generation generation"
 assert len(Type) == 6, "Unhandled types in x86_64 fasm assembly generation"
 assert len(Bool) == 2, "Unhandled booleans in x86_64 fasm assembly generation"
@@ -1068,6 +1074,30 @@ def generate_assembly_x86_64_fasm(
                         ("div rbx", token),
                         ("push rax", token),
                         ("push rdx", token),
+                    )
+                )
+            elif token.tvalue == Operator.GRE:
+                start_lb.extend(
+                    (
+                        ("mov rcx, 0", token),
+                        ("mov rdx, 1", token),
+                        ("pop rax", token),
+                        ("pop rbx", token),
+                        ("cmp rax, rbx", token),
+                        ("cmovge rcx, rdx", token),
+                        ("push rcx", token),
+                    )
+                )
+            elif token.tvalue == Operator.LSE:
+                start_lb.extend(
+                    (
+                        ("mov rcx, 0", token),
+                        ("mov rdx, 1", token),
+                        ("pop rax", token),
+                        ("pop rbx", token),
+                        ("cmp rax, rbx", token),
+                        ("cmovle rcx, rdx", token),
+                        ("push rcx", token),
                     )
                 )
             else:
@@ -1604,7 +1634,7 @@ def run_command_log(cmd: Tuple[str, ...]) -> None:
 
 assert len(TokenType) == 49, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
-assert len(Operator) == 13, "Unhandled operators in processing"
+assert len(Operator) == 15, "Unhandled operators in processing"
 assert len(Type) == 6, "Unhandled types in processing"
 assert len(Bool) == 2, "Unhandled booleans in processing"
 
@@ -1824,7 +1854,7 @@ def type_check_ast(
 
 assert len(TokenType) == 49, "Unhandled token types in AST finalization"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST finalization"
-assert len(Operator) == 13, "Unhandled operators in AST finalization"
+assert len(Operator) == 15, "Unhandled operators in AST finalization"
 assert len(Type) == 6, "Unhandled types in AST finalization"
 assert len(Bool) == 2, "Unhandled booleans in AST finalization"
 
@@ -1933,7 +1963,7 @@ def finalise_ast(
 
 assert len(TokenType) == 49, "Unhandled token types in dead code elimination"
 assert len(Mutability) == 2, "Unhandled mutability contexts in dead code elimination"
-assert len(Operator) == 13, "Unhandled operators in dead code elimination"
+assert len(Operator) == 15, "Unhandled operators in dead code elimination"
 assert len(Type) == 6, "Unhandled types in dead code elimination"
 assert len(Bool) == 2, "Unhandled booleans in dead code elimination"
 

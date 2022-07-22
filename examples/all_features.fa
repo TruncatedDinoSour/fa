@@ -77,6 +77,14 @@ macro main
     3 2 10 dvm add sub %fputs
     "\n" rw %STDERR    %fputs
 
+    -- Lse
+    "0 <= 0 = true" ro 0 0 lse 1 add %fputs
+    "\n"            rw %STDERR       %fputs
+
+    -- Gre
+    "0 >= 0 = true" ro 0 0 gre 1 add %fputs
+    "\n"            rw %STDERR       %fputs
+
     ------------------------------------
 
     -- Copy

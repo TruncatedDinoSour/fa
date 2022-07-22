@@ -13,3 +13,5 @@
 -   `bot` -- Binary not (`~`)
 -   `eql` -- Equals (`==`)
 -   `dvm` -- Divmod (`/%`)
+-   `gre` -- Greater than or euqals (`>=`)
+-   `lse` -- Less than or euqals (`<=`)
