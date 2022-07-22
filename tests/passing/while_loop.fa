@@ -1,0 +1,13 @@
+include 'std/lstd.fa'
+
+
+fun main [ str str int ] int eo
+    0 while copy 10 grt do
+        "I am looping" ro #puts
+        1 add
+    end 2 drop
+
+    %EXIT_SUCCESS
+end
+
+#main #exit

@@ -12,6 +12,7 @@
 - [Hop keyword in fa](/doc/md/HOP.md)
 - [Include keyword in fa](/doc/md/INCLUDE.md)
 - [Label keyword in fa](/doc/md/LABEL.md)
+- [Loops in fa](/doc/md/LOOPS.md)
 - [Fa macros](/doc/md/MACROS.md)
 - [Fa mutability](/doc/md/MUTABILITY.md)
 - [Nop keyword in fa](/doc/md/NOP.md)

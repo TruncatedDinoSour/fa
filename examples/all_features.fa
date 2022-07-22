@@ -178,6 +178,12 @@ macro main
     -- Pop
     69 pop
 
+    -- While loop
+    0 while copy 10 grt do
+        "I am looping" ro %puts
+        1 add
+    end 2 drop
+
     -- Functions
     #some_function_hello
 end

@@ -58,6 +58,9 @@ class TokenType(Enum):
     TO = auto()
     POP = auto()
     PUSH_USTR = auto()
+    WHILE = auto()
+    DO = auto()
+    END_WHILE = auto()
 
 
 class Mutability(Enum):
@@ -171,6 +174,7 @@ GLOBAL_STATES: Dict[str, Any] = {
     "names-count": 0,
     "dce": 0,
     "do-dead-code-elimination": True,
+    "while_loops": 0,
 }
 INCLUDED_FILES: Set[str] = set()
 
@@ -371,7 +375,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
         ip += 1
 
 
-assert len(TokenType) == 46, "Unhandled token types in AST generation"
+assert len(TokenType) == 49, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
 assert len(Operator) == 13, "Unhandled operators in AST generation"
 assert len(Type) == 6, "Unhandled types in AST generation"
@@ -792,6 +796,18 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.TO, None)
         elif word == "pop":
             yield make_token(TokenType.POP, None)
+        elif word == "while":
+            while_name: str = f"while_{GLOBAL_STATES['while_loops']}"
+
+            SCOPES.append(while_name)
+            yield make_token(TokenType.WHILE, while_name)
+
+            GLOBAL_STATES["while_loops"] += 1
+        elif word == "do":
+            if not SCOPES or not SCOPES[-1].startswith("while_"):
+                error(f"Do is not after a while loop at position {_position}")
+
+            yield make_token(TokenType.DO, f"end_{SCOPES[-1]}")
         else:
             error(
                 f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
@@ -800,7 +816,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
         ip += 1
 
 
-assert len(TokenType) == 46, "Unhandled token types in x86_64 fasm assembly generation"
+assert len(TokenType) == 49, "Unhandled token types in x86_64 fasm assembly generation"
 assert (
     len(Mutability) == 2
 ), "Unhandled mutability contexts in x86_64 fasm assembly generation generation"
@@ -1341,6 +1357,23 @@ or it's a bug in pre-processor and/or type checker",
             )
 
             start_lb.append((f"push ustr_{tname}", ast[old_ip]))
+        elif token.ttype == TokenType.WHILE:
+            start_lb.append((f"{token.tvalue}:", NULL_TOKEN))
+        elif token.ttype == TokenType.DO:
+            start_lb.extend(
+                (
+                    ("pop rax", token),
+                    ("test rax, rax", token),
+                    (f"jz {token.tvalue}", token),
+                )
+            )
+        elif token.ttype == TokenType.END_WHILE:
+            start_lb.extend(
+                (
+                    (f"jmp {token.tvalue}", token),
+                    (f"end_{token.tvalue}:", NULL_TOKEN),
+                )
+            )
         else:
             error(f"Unexpected {token}", token)
 
@@ -1569,7 +1602,7 @@ def run_command_log(cmd: Tuple[str, ...]) -> None:
             sys.exit(EXIT_ER)
 
 
-assert len(TokenType) == 46, "Unhandled token types in processing"
+assert len(TokenType) == 49, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
 assert len(Operator) == 13, "Unhandled operators in processing"
 assert len(Type) == 6, "Unhandled types in processing"
@@ -1625,7 +1658,7 @@ def preprocess_ast(
                     token,
                 )
 
-            yield from preprocess_ast(tuple(MACROS[token.tvalue]), assembly_flavour)
+            yield from MACROS[token.tvalue]
         elif token.ttype == TokenType.INCLUDE:
             file: str = token.tvalue
 
@@ -1746,6 +1779,31 @@ def preprocess_ast(
             yield Token(TokenType.FUN_END, f"end_fun_{fun_name}", fun_token.tpos)
         elif token.ttype == TokenType.ELIPSIS:
             pass
+        elif token.ttype == TokenType.WHILE:
+            while_body: List[Token] = []
+            while_token: Token = token
+
+            yield while_token
+
+            while True:
+                if token.ttype == TokenType.END and token.tvalue == while_token.tvalue:
+                    break
+
+                ip += 1
+                ei(
+                    "While loop overflow ip, did you forget to `end` it/all nested scopes?",
+                    token,
+                    ast,
+                    ip,
+                )
+                token = ast[ip]
+
+                while_body.append(token)
+
+            while_body.pop()  # Removes 'end'
+
+            yield from preprocess_ast(tuple(while_body), assembly_flavour, False)
+            yield Token(TokenType.END_WHILE, while_token.tvalue, while_token.tpos)
         else:
             yield token
 
@@ -1764,11 +1822,11 @@ def type_check_ast(
     # Yes there used to be code here, but I removed it
 
 
-assert len(TokenType) == 46, "Unhandled token types in AST validation"
-assert len(Mutability) == 2, "Unhandled mutability contexts in AST validation"
-assert len(Operator) == 13, "Unhandled operators in AST validation"
-assert len(Type) == 6, "Unhandled types in AST validation"
-assert len(Bool) == 2, "Unhandled booleans in AST validation"
+assert len(TokenType) == 49, "Unhandled token types in AST finalization"
+assert len(Mutability) == 2, "Unhandled mutability contexts in AST finalization"
+assert len(Operator) == 13, "Unhandled operators in AST finalization"
+assert len(Type) == 6, "Unhandled types in AST finalization"
+assert len(Bool) == 2, "Unhandled booleans in AST finalization"
 
 
 def finalise_ast(
@@ -1873,7 +1931,7 @@ def finalise_ast(
             warning("Main macro is an old practice, avoid it!", NULL_TOKEN)
 
 
-assert len(TokenType) == 46, "Unhandled token types in dead code elimination"
+assert len(TokenType) == 49, "Unhandled token types in dead code elimination"
 assert len(Mutability) == 2, "Unhandled mutability contexts in dead code elimination"
 assert len(Operator) == 13, "Unhandled operators in dead code elimination"
 assert len(Type) == 6, "Unhandled types in dead code elimination"
