@@ -15,8 +15,8 @@ fun main [ str str int ] eo
         "Child process" ro %puts
 
         -- Set the arguments (must be NULL terminated)
-        "/bin/ls\0" ro swap 1 drop as a1 shift
-        "/\0"       ro swap 1 drop as a2 shift
+        u"/bin/ls\0" ro as a1 shift
+        u"/\0"       ro as a2 shift
 
         -- Allocate the buffer (no need to change)
         1 shift sub %LONG_SZ mul as argv_buf_len    -- Buffer size is LONG_SZ * arg count
@@ -39,7 +39,7 @@ fun main [ str str int ] eo
 
         -- Free the argv buffer
         %argv_buf_len %argv_buf #mfree  -- free(*argv_buf)
-        1 drop
+        pop
 
         -- Checks if return value of execve is less than 0
         0 swap lst if "execve() failed" ro %error end

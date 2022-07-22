@@ -8,7 +8,7 @@ macro main
 
     @test deref 0 set
 
-    %SZ @test deref #mfree 1 drop
+    %SZ @test deref #mfree pop
 
     %EXIT_SUCCESS %exit
 end

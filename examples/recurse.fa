@@ -23,7 +23,7 @@ fun main [ str str int ] eo
     1 eql if
         "Recursion passed, nice" ro %puts
 
-        1 drop
+        pop
         %EXIT_SUCCESS %exit
     else
         "Recursion is being weird..." ro %error

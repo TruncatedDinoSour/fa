@@ -13,7 +13,7 @@ The arguments:
 Example of the `drop` keyword:
 
 ```fa
-5 1 drop      -- Drop 1 element from the stack
+5 1 drop  -- Drop 1 element from the stack
 ```
 
 This will drop the `5` that is pushed on the stack

@@ -23,7 +23,7 @@ fun main [ str str int ] eo
     %puts                           -- puts(string) => null
 
     %NAME_LEN @name deref
-    #mfree 1 drop                   -- free(name) => null
+    #mfree pop                   -- free(name) => null
 
     %EXIT_SUCCESS %exit
 end

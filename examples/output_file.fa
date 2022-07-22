@@ -28,7 +28,7 @@ fun main [ str str int ] int eo
     @file_buffer deref %STDOUT #fputs
 
     %MAX_FILE @file_buffer deref
-    #mfree 1 drop
+    #mfree pop
 
     @fd deref %SYS_close sys 2
 

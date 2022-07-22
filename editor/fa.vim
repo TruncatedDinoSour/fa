@@ -19,7 +19,7 @@ syntax keyword faTodo    TODO XXX FIXME NOTE
 
 " Language keywords
 syntax keyword faKeyword sys drop swap copy nop as deref point label goto set ret null
-syntax keyword faKeyword argv argc turn hop to
+syntax keyword faKeyword argv argc turn hop to pop
 
 
 " Escapes
@@ -40,7 +40,7 @@ syntax region faCommentLine start="--<" end=">--" contains=faTodo
 
 
 " Strings
-syntax region faString start=/\v"/ skip=/\v\\./ end=/\v"/ contains=faEscape
+syntax region faString start=/\vu?"/ skip=/\v\\./ end=/\v"/ contains=faEscape
 
 
 " Mutability

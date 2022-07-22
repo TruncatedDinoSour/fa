@@ -1,3 +1,3 @@
-fun mod   [ int int ] int eo    dvm  swap 1 drop end
-fun div   [ int int ] int eo    dvm       1 drop end
-fun div10 [ int     ] int eo 10 swap #div        end
+fun mod   [ int int ] int eo    dvm  swap pop end
+fun div   [ int int ] int eo    dvm       pop end
+fun div10 [ int     ] int eo 10 swap #div     end

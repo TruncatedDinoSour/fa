@@ -23,7 +23,7 @@ To expand a macro just type this:
 Example:
 
 ```fa
-macro exit 60 sys 4 1 drop end
+macro exit 60 sys 4 pop end
 1 %exit
 ```
 

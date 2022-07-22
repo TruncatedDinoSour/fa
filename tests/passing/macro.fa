@@ -1,5 +1,5 @@
 include 'std/std.fa'
 macro hello 0 end
-%hello 1 drop
+%hello pop
 
 %EXIT_SUCCESS %exit

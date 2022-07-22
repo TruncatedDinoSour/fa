@@ -17,14 +17,14 @@ fun main [ str str int ] int eo
             %SYS_read sys 4
 
             copy 0 eql if
-                1 drop
+                pop
                 %EXIT_SUCCESS ret
             end
 
             @input_buffer deref %STDOUT #fputs
 
             %MAX_BUFFER @input_buffer deref
-            #mfree 1 drop
+            #mfree pop
 
             goto print_input
     end
@@ -55,7 +55,7 @@ fun main [ str str int ] int eo
         @file_buffer deref %STDOUT #fputs
 
         %MAX_BUFFER @file_buffer deref
-        #mfree 1 drop
+        #mfree pop
 
         @fd deref %SYS_close sys 2
 

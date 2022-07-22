@@ -26,7 +26,7 @@ macro main
     "\n" ro swap drop
 
     -- Expand macro
-    %hi 1 drop
+    %hi pop
 
     -- This assumes that 2 is stderr --
 
@@ -135,7 +135,7 @@ macro main
     -- Set
     8 #malloc  as somemem
     @somemem   deref 0 set
-    8 @somemem deref #mfree 1 drop
+    8 @somemem deref #mfree pop
 
     -- Ret
     #i_will_return
@@ -147,13 +147,13 @@ macro main
     true false 2 drop
 
     -- Null
-    null 1 drop
+    null pop
 
     -- Argc
-    argc 1 drop
+    argc pop
 
     -- Argv
-    argv 1 drop
+    argv pop
 
     -- Negative numbers
     -1 1 add
@@ -170,6 +170,13 @@ macro main
     -- To
     to int
     add
+
+    -- Unsized string
+    4 u"Ustr" ro %puts
+    4 u"Ustr" rw %puts
+
+    -- Pop
+    69 pop
 
     -- Functions
     #some_function_hello

@@ -35,7 +35,7 @@ So a proper example:
 ```fa
 fun exit [ int ] eo
     fun whats_sys_exit 60 end
-    #whats_sys_exit sys 2 1 drop
+    #whats_sys_exit sys 2 pop
 end
 
 69 #exit
@@ -51,7 +51,7 @@ this would throw a compilation error:
 ```fa
 fun exit [ int ] eo
     fun whats_sys_exit 60 end
-    #whats_sys_exit sys 2 1 drop
+    #whats_sys_exit sys 2 pop
 end
 
 fun exit eo

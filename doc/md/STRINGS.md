@@ -48,3 +48,20 @@ find it so annoying when escapes mix into strings
 
 This would be red bold text, if you feel like it
 [read more about it](https://en.wikipedia.org/wiki/ANSI_escape_code)
+
+There are also unsigned strings, they don't push their size unlike
+normal strings, they're just the string itself, you push one by prefixing
+a normal string with a `u`:
+
+```fa
+u"Hello world"  -- Just the string
+```
+
+They are useful in syscalls, but remember, all unsized strings usually must
+be terminated with a NUL if you're using it in a syscall:
+
+```fa
+u"Hello world\0"
+```
+
+Or it might make you push the length of the string (like `write`)

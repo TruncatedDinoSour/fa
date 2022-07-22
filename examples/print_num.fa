@@ -35,7 +35,7 @@ fun print_num [ int int ] eo
                 0 eql if
                     @__print_num_idx_old deref
                     @__print_num_arr     deref
-                    #mfree             1 drop
+                    #mfree             pop
 
                     ret
                 end

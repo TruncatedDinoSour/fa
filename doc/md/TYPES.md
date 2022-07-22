@@ -16,7 +16,7 @@ programming language:
 -   String
     -   It's invoked by: `Writting any data in "" and then specify a mutability context`
     -   It pushes ... onto the stack: `The string and then length`
-    -   It compiles down to: `The byte array gets created in data/rodata and then both get pushed onto the stack`
+    -   It compiles down to: `The byte array gets created and sized in data/rodata and then both get pushed onto the stack`
     -   Example: `"Hello world" ro`
 -   Boolean
     -   it's invoked by: `using the true/false keywords`
@@ -28,11 +28,16 @@ programming language:
     -   it pushes ... onto the stack: `0`
     -   it compiles down to: `push 0`
     -   example: `null`
--   String
+-   Character
     -   It's invoked by: `Writting any data in ''`
     -   It pushes ... onto the stack: `The charcode`
     -   It compiles down to: `The byte being moved to ax and ax being pushed`
     -   Example: `'\0'`
+-   Unsized string
+    -   It's invoked by: `Writting any data in "" and then specify a mutability context`
+    -   It pushes ... onto the stack: `The string`
+    -   It compiles down to: `The byte array gets created in data/rodata and then it gets pushed onto the stack`
+    -   Example: `u"Hello world" ro`
 
 There are also type keywords used in type checking:
 

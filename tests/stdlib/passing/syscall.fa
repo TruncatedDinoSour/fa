@@ -1,2 +1,2 @@
 include 'std/syscall.fa'
-0 %SYS_exit sys 2 1 drop
+0 %SYS_exit sys 2 pop

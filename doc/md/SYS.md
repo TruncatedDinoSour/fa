@@ -18,7 +18,7 @@ Example of the `sys` keyword:
 ```fa
 1 60 sys 2  -- Exists the program with code 1
             -- Will use 2 registers: rax (60) and rdi (1)
-1 drop      -- Drop the result
+pop      -- Drop the result
 ```
 
 This will call `SYS_exit` (60) syscall with argument `1`,

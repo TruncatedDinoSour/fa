@@ -2,7 +2,7 @@ include 'std/lstd.fa'
 
 
 fun main [ str str int ] int eo
-    argc 1 drop  -- I'm sorry, how do I even test this
+    argc pop  -- I'm sorry, how do I even test this
     %EXIT_SUCCESS
 end
 

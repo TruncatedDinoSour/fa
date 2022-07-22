@@ -56,6 +56,8 @@ class TokenType(Enum):
     HOP = auto()
     PUSH_CHAR = auto()
     TO = auto()
+    POP = auto()
+    PUSH_USTR = auto()
 
 
 class Mutability(Enum):
@@ -163,6 +165,10 @@ GLOBAL_STATES: Dict[str, Any] = {
     "icc": 0,
     "rstack-size": 8096,
     "colour": True,
+    "used-functions": [],
+    "used-names": [],
+    "dce": 0,
+    "do-dead-code-elimination": True,
 }
 INCLUDED_FILES: Set[str] = set()
 
@@ -351,7 +357,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
         ip += 1
 
 
-assert len(TokenType) == 44, "Unhandled token types in AST generation"
+assert len(TokenType) == 46, "Unhandled token types in AST generation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
 assert len(Operator) == 13, "Unhandled operators in AST generation"
 assert len(Type) == 6, "Unhandled types in AST generation"
@@ -435,6 +441,46 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
                 TokenType.PUSH_STR,
                 " ".join(_tmp_str)[1:-1],
             )
+        elif word.startswith('u"'):
+            if word.startswith('u"') and word.endswith('"') and word != 'u"':
+                yield make_token(
+                    TokenType.PUSH_USTR,
+                    word[2:-1],
+                )
+                ip += 1
+                continue
+
+            old_word = word
+
+            ip += 1
+            ei(
+                f'Unclosed ustring at position: {_position}, did you forget to add a " at the end?',
+                NULL_TOKEN,
+                words,
+                ip,
+            )
+            word = words[ip]
+
+            _tmp_ustr: List[str] = [old_word, word]
+
+            while not word.endswith('"'):
+                ip += 1
+
+                try:
+                    word = words[ip].strip()
+                except IndexError:
+                    if len(_tmp_ustr) >= 2 and word != '"':
+                        error(
+                            f'Unclosed ustring at position {_position} at file {file!r} \
+(starting at IP {old_ip}), did you forget to add a " at the end?',
+                        )
+
+                _tmp_ustr.append(word)
+
+            yield make_token(
+                TokenType.PUSH_USTR,
+                " ".join(_tmp_ustr)[2:-1],
+            )
         elif word.isnumeric():
             if word.startswith("0") and len(word) != 1:
                 error(
@@ -454,9 +500,11 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.EXPAND_MACRO, word[1:])
         elif word.startswith("@"):
             check_name(word[1:], _position)
+            GLOBAL_STATES["used-names"].append(word[1:])
             yield make_token(TokenType.PUSH_NAME, word[1:])
         elif word.startswith("#"):
             check_name(word[1:], _position)
+            GLOBAL_STATES["used-functions"].append(f"fun_{word[1:]}")
             yield make_token(TokenType.FUN_CALL, f"fun_{word[1:]}")
         elif word == "rw":
             yield make_token(TokenType.MUTABILITY, Mutability.RW)
@@ -725,6 +773,8 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield _tmp_char_token
         elif word == "to":
             yield make_token(TokenType.TO, None)
+        elif word == "pop":
+            yield make_token(TokenType.POP, None)
         else:
             error(
                 f"Unexpected word {word!r} at position {_position} at file {file!r} while generating AST",
@@ -733,7 +783,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
         ip += 1
 
 
-assert len(TokenType) == 44, "Unhandled token types in x86_64 fasm assembly generation"
+assert len(TokenType) == 46, "Unhandled token types in x86_64 fasm assembly generation"
 assert (
     len(Mutability) == 2
 ), "Unhandled mutability contexts in x86_64 fasm assembly generation generation"
@@ -1235,11 +1285,8 @@ or it's a bug in pre-processor and/or type checker",
                 )
             )
         elif token.ttype == TokenType.PUSH_CHAR:
-            start_lb.extend(
-                (
-                    (f"mov ax, {token.tvalue}", token),
-                    ("push ax", token),
-                )
+            start_lb.append(
+                (f"push {token.tvalue}", token),
             )
         elif token.ttype == TokenType.TO:
             error(
@@ -1247,6 +1294,36 @@ or it's a bug in pre-processor and/or type checker",
 or it's a bug in pre-processor and/or type checker",
                 token,
             )
+        elif token.ttype == TokenType.POP:
+            start_lb.append(("pop rax", token))
+        elif token.ttype == TokenType.PUSH_USTR:
+            parsed_ustring_codes: Tuple[int, ...] = tuple(
+                parse_string(token.tvalue, token)
+            ) or (0,)
+
+            ip += 1
+            token = ast[ip]
+
+            ustr_data_lb: List[Tuple[str, Token]]
+
+            if token.tvalue == Mutability.RW:
+                ustr_data_lb = data_lb
+            elif token.tvalue == Mutability.RO:
+                ustr_data_lb = rodata_lb
+            else:
+                error(
+                    "Unknown mutability context for string, did you forget to add `ro` or `rw` after the string?",
+                    token,
+                )
+
+            ustr_data_lb.append(
+                (
+                    f"ustr_{tname}: db {','.join(map(str, parsed_ustring_codes))}",
+                    ast[old_ip],
+                )
+            )
+
+            start_lb.append((f"push ustr_{tname}", ast[old_ip]))
         else:
             error(f"Unexpected {token}", token)
 
@@ -1322,6 +1399,7 @@ def print_help() -> int:
         "   -rstack-size <size>               Set return stack size in bytes",
         "   -flags <flag,flag,flag>           The arguments to pass to the binary when -run is specified",
         "   -no-ansi                          Don't use colour",
+        "   -no-dce                           Disable dead code elimination",
         "",
     )
 
@@ -1440,6 +1518,8 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
             flagd["flags"].extend(flag.split(","))
         elif flag == "-no-ansi":
             GLOBAL_STATES["colour"] = False
+        elif flag == "-no-dce":
+            GLOBAL_STATES["do-dead-code-elimination"] = False
         else:
             error(f"Unknown flag {flag!r}")
 
@@ -1468,7 +1548,7 @@ def run_command_log(cmd: Tuple[str, ...]) -> None:
             sys.exit(EXIT_ER)
 
 
-assert len(TokenType) == 44, "Unhandled token types in processing"
+assert len(TokenType) == 46, "Unhandled token types in processing"
 assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
 assert len(Operator) == 13, "Unhandled operators in processing"
 assert len(Type) == 6, "Unhandled types in processing"
@@ -1663,7 +1743,7 @@ def type_check_ast(
     # Yes there used to be code here, but I removed it
 
 
-assert len(TokenType) == 44, "Unhandled token types in AST validation"
+assert len(TokenType) == 46, "Unhandled token types in AST validation"
 assert len(Mutability) == 2, "Unhandled mutability contexts in AST validation"
 assert len(Operator) == 13, "Unhandled operators in AST validation"
 assert len(Type) == 6, "Unhandled types in AST validation"
@@ -1772,6 +1852,69 @@ def finalise_ast(
             warning("Main macro is an old practice, avoid it!", NULL_TOKEN)
 
 
+assert len(TokenType) == 46, "Unhandled token types in dead code elimination"
+assert len(Mutability) == 2, "Unhandled mutability contexts in dead code elimination"
+assert len(Operator) == 13, "Unhandled operators in dead code elimination"
+assert len(Type) == 6, "Unhandled types in dead code elimination"
+assert len(Bool) == 2, "Unhandled booleans in dead code elimination"
+
+
+def dead_code_eliminate(
+    ast: Tuple[Token, ...], logging: bool = False
+) -> Generator[Token, None, None]:
+    if not GLOBAL_STATES["do-dead-code-elimination"]:
+        yield from ast
+        return
+
+    if logging:
+        log("Eliminating dead code")
+
+    GLOBAL_STATES["dce"] += 1
+
+    ip: int = 0
+
+    while ip < len(ast):
+        token: Token = ast[ip]
+
+        if (
+            token.ttype == TokenType.FUN
+            and token.tvalue[1] not in GLOBAL_STATES["used-functions"]
+        ):
+            fun_body: List[Token] = []
+            fun_token: Token = token
+
+            while True:
+                if (
+                    token.ttype == TokenType.FUN_END
+                    and token.tvalue == f"end_{fun_token.tvalue[1]}"
+                ):
+                    break
+
+                ip += 1
+                ei(
+                    "Function definition overflow, did you forget to `end` it/all nested scopes?",
+                    token,
+                    ast,
+                    ip,
+                )
+                token = ast[ip]
+
+                fun_body.append(token)
+
+            FUNCTIONS.remove(fun_token.tvalue[1][4:])
+            tuple(dead_code_eliminate(tuple(fun_body)))
+        elif (
+            token.ttype == TokenType.AS
+            and token.tvalue not in GLOBAL_STATES["used-names"]
+        ):
+            warning(f"Unused variable: {token.tvalue}", token)
+            yield Token(TokenType.POP, None, token.tpos)
+        else:
+            yield token
+
+        ip += 1
+
+
 def main() -> int:
     """Entry/main function"""
 
@@ -1794,19 +1937,26 @@ def main() -> int:
         anotate_assembly(
             FORMATS[flags["format"]](
                 tuple(
-                    type_check_ast(
+                    dead_code_eliminate(
                         tuple(
-                            finalise_ast(
+                            type_check_ast(
                                 tuple(
-                                    preprocess_ast(
-                                        tuple(file_to_ast(flags["input"], True)),
-                                        "fasm-x86_64-linux",
-                                        True,
+                                    finalise_ast(
+                                        tuple(
+                                            preprocess_ast(
+                                                tuple(
+                                                    file_to_ast(flags["input"], True)
+                                                ),
+                                                "fasm-x86_64-linux",
+                                                True,
+                                            )
+                                        ),
                                     )
                                 ),
+                                "fasm-x86_64-linux",
+                                True,
                             )
                         ),
-                        "fasm-x86_64-linux",
                         True,
                     )
                 )
@@ -1838,6 +1988,9 @@ def main() -> int:
     log(f"Preprocessing passes          {GLOBAL_STATES['pp_passes']}", " ")
     log(f"Finalising passes             {GLOBAL_STATES['fin_passes']}", " ")
     log(f"Illegal character checking    {GLOBAL_STATES['icc']}", " ")
+    log(f"Used functions                {len(GLOBAL_STATES['used-functions'])}", " ")
+    log(f"Used names                    {len(GLOBAL_STATES['used-names'])}", " ")
+    log(f"Dead code elimination         {GLOBAL_STATES['dce']}", " ")
 
     if flags["run"]:
         log("", "")

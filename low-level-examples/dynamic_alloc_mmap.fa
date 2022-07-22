@@ -18,7 +18,7 @@ macro main
     3           -- Prot
     4096        -- Length
     0           -- Addr
-    %SYS_mmap sys 7 1 drop
+    %SYS_mmap sys 7 pop
 
     %EXIT_SUCCESS %exit
 end

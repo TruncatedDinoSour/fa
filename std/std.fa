@@ -30,7 +30,7 @@ macro LDOUBLE_SZ 10 end
         INT: The size
 >--
 macro fputs
-    %SYS_write sys 4 1 drop
+    %SYS_write sys 4 pop
 end
 
 
@@ -95,7 +95,7 @@ end
         INT: The exit code
 >--
 macro exit
-    %SYS_exit sys 2 1 drop
+    %SYS_exit sys 2 pop
 end
 
 

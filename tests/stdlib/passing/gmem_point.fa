@@ -8,6 +8,6 @@ macro SIZE 32 end
 @buf deref 69 point
 1 @buf deref %puts
 
-%SIZE @buf deref #mfree 1 drop
+%SIZE @buf deref #mfree pop
 
 %EXIT_SUCCESS %exit

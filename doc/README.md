@@ -17,6 +17,7 @@
 - [Nop keyword in fa](/doc/md/NOP.md)
 - [Null in fa](/doc/md/NULL.md)
 - [Fa operators](/doc/md/OPERATORS.md)
+- [Pop keyword in fa](/doc/md/POP.md)
 - [Reset keyword in fa](/doc/md/RESET.md)
 - [Set keyword in fa](/doc/md/SET.md)
 - [Shift keyword in fa](/doc/md/SHIFT.md)

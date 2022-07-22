@@ -11,4 +11,4 @@ Example of the `swap` keyword:
 ```
 
 This will swap the places with the string (`"E"`) and the
-length (`1`) so it will be basically `69 1 drop`
+length (`1`) so it will be basically `69 pop`

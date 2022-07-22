@@ -16,7 +16,7 @@ fun main [ str str int ] eo
     %puts                       -- puts(string) => null
 
     %SIZE @string deref #mfree
-    1 drop                      -- free(string) => null
+    pop                      -- free(string) => null
 
     0 %exit
 end

@@ -1,7 +1,7 @@
 include 'std/std.fa'
 
 macro print
-    %STDOUT %SYS_write sys 4 1 drop
+    %STDOUT %SYS_write sys 4 pop
 end
 
 "hello world\n" ro  -- Read only string
@@ -9,4 +9,4 @@ end
 
 %EXIT_SUCCESS       -- Set exit code to success
 %SYS_exit sys 2     -- Call SYS_exit
-1 drop              -- Drop return value
+pop              -- Drop return value

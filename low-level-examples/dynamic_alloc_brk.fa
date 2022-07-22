@@ -15,7 +15,7 @@ macro main
 
     0 %SYS_brk sys 2                       --< Get the current .data (could
                                                use `copy` but I'm lazy >--
-    %SIZE swap sub %SYS_brk sys 2 1 drop   -- Set .data to its initial size
+    %SIZE swap sub %SYS_brk sys 2 pop   -- Set .data to its initial size
 
     %EXIT_SUCCESS %exit
 end

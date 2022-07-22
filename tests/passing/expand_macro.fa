@@ -1,5 +1,5 @@
 include 'std/std.fa'
 macro expand_me 0 end
-%expand_me 1 drop
+%expand_me pop
 
 %EXIT_SUCCESS %exit
