@@ -22,6 +22,8 @@ Please don't be an ass on them, don't do stuff that
 might break these compilers :)
 
 -   Online compiler by **@usernameeReal** (<https://github.com/usernameeReal>) <http://usernamee.duckdns.org:34353/>
+-   Online API by **@Elijahr2411** (<https://github.com/Elijahr2411>) <https://elijah-dev.tk/fa.php>
+    -   Basic UI: <https://elijah-dev.tk/fa.html>
 
 # Operating systems fa works on
 
