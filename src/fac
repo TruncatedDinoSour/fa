@@ -1954,9 +1954,9 @@ def main() -> int:
         anotate_assembly(
             FORMATS[flags["format"]](
                 tuple(
-                    dead_code_eliminate(
+                    type_check_ast(
                         tuple(
-                            type_check_ast(
+                            dead_code_eliminate(
                                 tuple(
                                     finalise_ast(
                                         tuple(
@@ -1970,10 +1970,10 @@ def main() -> int:
                                         ),
                                     )
                                 ),
-                                "fasm-x86_64-linux",
                                 True,
                             )
                         ),
+                        "fasm-x86_64-linux",
                         True,
                     )
                 )
