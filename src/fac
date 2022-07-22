@@ -165,8 +165,10 @@ GLOBAL_STATES: Dict[str, Any] = {
     "icc": 0,
     "rstack-size": 8096,
     "colour": True,
-    "used-functions": [],
-    "used-names": [],
+    "used-functions": set(),
+    "functions-count": 0,
+    "used-names": set(),
+    "names-count": 0,
     "dce": 0,
     "do-dead-code-elimination": True,
 }
@@ -239,6 +241,18 @@ def warning(msg: str, token: Token = NULL_TOKEN) -> None:
         "yellow",
         sys.stderr,
         show_position=(token is not NULL_TOKEN),
+    )
+
+
+def log_with_stats(msg: str, stats: Tuple[int, int], prefix: str = " ") -> None:
+    _msg: str = f"{msg}{'/'.join(map(str, stats))}"
+
+    if stats[1] != 0:
+        _msg += f" ({round(100 * stats[0] / stats[1])}%)"
+
+    log(
+        _msg,
+        prefix,
     )
 
 
@@ -500,11 +514,11 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.EXPAND_MACRO, word[1:])
         elif word.startswith("@"):
             check_name(word[1:], _position)
-            GLOBAL_STATES["used-names"].append(word[1:])
+            GLOBAL_STATES["used-names"].add(word[1:])
             yield make_token(TokenType.PUSH_NAME, word[1:])
         elif word.startswith("#"):
             check_name(word[1:], _position)
-            GLOBAL_STATES["used-functions"].append(f"fun_{word[1:]}")
+            GLOBAL_STATES["used-functions"].add(f"fun_{word[1:]}")
             yield make_token(TokenType.FUN_CALL, f"fun_{word[1:]}")
         elif word == "rw":
             yield make_token(TokenType.MUTABILITY, Mutability.RW)
@@ -645,6 +659,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             word = words[ip].strip()
             check_name(word, _position)
 
+            GLOBAL_STATES["names-count"] += 1
             yield make_token(TokenType.AS, word)
         elif word == "deref":
             yield make_token(TokenType.DEREF, None)
@@ -719,6 +734,8 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             _fun_name: str = f"fun{word}{_position}{ip}"
 
             SCOPES.append(_fun_name)
+            GLOBAL_STATES["functions-count"] += 1
+
             yield make_token(TokenType.FUN, (word, _fun_name))
         elif word == "ret":
             yield make_token(TokenType.RET, None)
@@ -1988,9 +2005,16 @@ def main() -> int:
     log(f"Preprocessing passes          {GLOBAL_STATES['pp_passes']}", " ")
     log(f"Finalising passes             {GLOBAL_STATES['fin_passes']}", " ")
     log(f"Illegal character checking    {GLOBAL_STATES['icc']}", " ")
-    log(f"Used functions                {len(GLOBAL_STATES['used-functions'])}", " ")
-    log(f"Used names                    {len(GLOBAL_STATES['used-names'])}", " ")
-    log(f"Dead code elimination         {GLOBAL_STATES['dce']}", " ")
+    log(f"Dead code elimination passes  {GLOBAL_STATES['dce']}", " ")
+
+    log_with_stats(
+        "    Functions                 ",
+        (len(GLOBAL_STATES["used-functions"]), int(GLOBAL_STATES["functions-count"])),
+    )
+    log_with_stats(
+        "    Names                     ",
+        (len(GLOBAL_STATES["used-names"]), int(GLOBAL_STATES["names-count"])),
+    )
 
     if flags["run"]:
         log("", "")
