@@ -1,11 +1,11 @@
 # Pop keyword in fa
 
 Pop keyword is just a keyword that basically does
-the same as `pop`, but with a shorter keyword and less
+the same as `drop`, but with a shorter keyword and less
 math, it just compiles to one line of assembly:
 
 ```asm
-pop rax
+add rsp, 8
 ```
 
 Where as drop compiles down to 3:

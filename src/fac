@@ -1295,7 +1295,7 @@ or it's a bug in pre-processor and/or type checker",
                 token,
             )
         elif token.ttype == TokenType.POP:
-            start_lb.append(("pop rax", token))
+            start_lb.append(("add rsp, 8", token))
         elif token.ttype == TokenType.PUSH_USTR:
             parsed_ustring_codes: Tuple[int, ...] = tuple(
                 parse_string(token.tvalue, token)
