@@ -177,6 +177,7 @@ GLOBAL_STATES: Dict[str, Any] = {
     "dce": 0,
     "do-dead-code-elimination": True,
     "while_loops": 0,
+    "type-checking": True,
 }
 INCLUDED_FILES: Set[str] = set()
 
@@ -1481,6 +1482,7 @@ def print_help() -> int:
         "   -no-ansi                          Don't use colour",
         "   -no-dce                           Disable dead code elimination",
         "   -no-stats                         Disable statistics table",
+        "   -no-tc                            Disable type checking",
         "",
     )
 
@@ -1604,6 +1606,8 @@ def parse_flags(flags: List[str]) -> Dict[str, Any]:
             GLOBAL_STATES["do-dead-code-elimination"] = False
         elif flag == "-no-stats":
             flagd["stats"] = False
+        elif flag == "-no-tc":
+            GLOBAL_STATES["type-checking"] = False
         else:
             error(f"Unknown flag {flag!r}")
 
@@ -1840,13 +1844,25 @@ def preprocess_ast(
         ip += 1
 
 
+assert len(TokenType) == 49, "Unhandled token types in type checking"
+assert len(Mutability) == 2, "Unhandled mutability contexts in type checking"
+assert len(Operator) == 15, "Unhandled operators in type checking"
+assert len(Type) == 6, "Unhandled types in type checking"
+assert len(Bool) == 2, "Unhandled booleans in type checking"
+
+
 def type_check_ast(
     ast: Tuple[Token, ...], assembly_flavour: str, logging: bool = False
 ) -> Generator[Token, None, None]:
+    GLOBAL_STATES["tc_passes"] += 1
+
+    if not GLOBAL_STATES["type-checking"]:
+        yield from ast
+        return
+
     if logging:
         warning("Type checking currently has been removed")
 
-    GLOBAL_STATES["tc_passes"] += 1
     yield from ast
 
     # Yes there used to be code here, but I removed it

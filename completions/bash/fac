@@ -16,7 +16,7 @@ _fac() {
 
                 *) COMPREPLY=($(compgen -W "-no-anotate -asm-flags -help \
                 -no-compile -stdout -no-logging -dbg -run -list-formats -format -input
-                -rstack-size -flags -no-ansi -no-dce -no-stats" -- "$cur")) ;;
+                -rstack-size -flags -no-ansi -no-dce -no-stats -no-tc" -- "$cur")) ;;
                 esac
             fi
         fi
