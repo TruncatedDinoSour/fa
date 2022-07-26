@@ -63,7 +63,7 @@ $ ./scripts/test.sh
 
 # Docker
 
-Dockerfile was made by @ for basic docker compilation,
+Dockerfile was made by **@Elijahr2411** (https://github.com/Elijahr2411) for basic docker compilation,
 usage:
 
 ```bash
