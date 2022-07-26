@@ -60,3 +60,14 @@ $ ./scripts/devsetup.sh
 ```bash
 $ ./scripts/test.sh
 ```
+
+# Docker
+
+Dockerfile was made by @ for basic docker compilation,
+usage:
+
+```bash
+docker run --platform amd64 -v {$filename}:/fa/a.fa fa-docker
+```
+
+Where `{$filename}` is your fa file.
