@@ -14,7 +14,6 @@
 - [Label keyword in fa](/doc/md/LABEL.md)
 - [Loops in fa](/doc/md/LOOPS.md)
 - [Fa macros](/doc/md/MACROS.md)
-- [Fa mutability](/doc/md/MUTABILITY.md)
 - [Nop keyword in fa](/doc/md/NOP.md)
 - [Null in fa](/doc/md/NULL.md)
 - [Fa operators](/doc/md/OPERATORS.md)

@@ -43,10 +43,6 @@ syntax region faCommentLine start="--<" end=">--" contains=faTodo
 syntax region faString start=/\vu?"/ skip=/\v\\./ end=/\v"/ contains=faEscape
 
 
-" Mutability
-syntax keyword faMutability ro rw
-
-
 " Macros/definitions
 syntax keyword faMacro undefine unname shift reset
 syntax match   faMacro "%\S*"
@@ -63,7 +59,7 @@ syntax keyword faOperator dvm while do gre lse
 
 
 " Deprecated keywords
-syntax keyword faDeprecated buffer
+syntax keyword faDeprecated buffer ro rw
 
 
 " Names
@@ -107,7 +103,6 @@ highlight default link faCommentLine Comment
 highlight default link faString      String
 highlight default link faEscape      Special
 highlight default link faNumber      Number
-highlight default link faMutability  Define
 highlight default link faMacro       Define
 highlight default link faInclude     Include
 highlight default link faOperator    Operator

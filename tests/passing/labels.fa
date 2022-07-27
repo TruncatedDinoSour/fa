@@ -11,7 +11,7 @@ macro main
     0  -- i = 0
 
     label hello_world
-        "Hello, world!" ro %puts
+        "Hello, world!" %puts
 
         copy 1 add 6 grt if  -- i < 6
             1 add            -- i++

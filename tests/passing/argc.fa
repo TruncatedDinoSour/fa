@@ -4,7 +4,7 @@ include 'std/logic.fa'
 
 fun main [ str str int ] int eo
     argc #not if
-        "There should always be passed at least 1 argument, that is the filename" ro #error
+        "There should always be passed at least 1 argument, that is the filename" #error
     end
 
     %EXIT_SUCCESS

@@ -3,7 +3,7 @@ include 'std/std.fa'
 
 fun main [ str str int ] eo
     null if
-        "Null is not truthy lmao" ro %error
+        "Null is not truthy lmao" %error
     end
 
     %EXIT_SUCCESS %exit

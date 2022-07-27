@@ -4,7 +4,7 @@ include 'std/logic.fa'
 
 fun main [ str str int ] eo
     3 86 #mod 2 eql #not if
-        "86 % 3 did not turn out to be 2 :(" ro %error
+        "86 % 3 did not turn out to be 2 :(" %error
     end
 
     %EXIT_SUCCESS %exit

@@ -1,6 +1,6 @@
 include 'std/std.fa'
 
-"hello world\n" ro  -- Read only string
+"hello world\n"  -- Read only string
 %STDOUT             -- Set file descriptor to stdout
 %SYS_write sys 4    -- Call SYS_write
 pop              -- Drop return value

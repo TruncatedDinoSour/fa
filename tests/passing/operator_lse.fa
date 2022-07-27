@@ -4,7 +4,7 @@ include 'std/logic.fa'
 
 fun main [ str str int ] int eo
     0 0 lse #not if
-        "0 <= 0 is supposed to be true" ro #error
+        "0 <= 0 is supposed to be true" #error
     end
 
     %EXIT_SUCCESS

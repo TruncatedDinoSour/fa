@@ -6,7 +6,7 @@ macro TIMESPEC_SZ %LONG_SZ 2 mul end
 fun main [ str str int ] eo
     %TIMESPEC_SZ #malloc as timespec    -- Allocate a structure called timespec
 
-    "I will sleep for 5 seconds and 0 nanoseconds" ro
+    "I will sleep for 5 seconds and 0 nanoseconds"
     %puts
 
     @timespec deref 5              set  -- long timespec.time_t  = 5

@@ -4,7 +4,7 @@ macro print
     %STDOUT %SYS_write sys 4 pop
 end
 
-"hello world\n" ro  -- Read only string
+"hello world\n"  -- Read only string
 %print
 
 %EXIT_SUCCESS       -- Set exit code to success

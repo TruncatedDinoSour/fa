@@ -10,13 +10,13 @@ fun main [ str str int ] eo
     macro pid @pid deref end
 
     0 %pid lst if  -- Failed to fork a child
-        "Failed to fork()" ro %error
+        "Failed to fork()" %error
     else %pid 0 eql if  -- We successfully forked a child
-        "Child process" ro %puts
+        "Child process" %puts
 
         -- Set the arguments (must be NULL terminated)
-        u"/bin/ls\0" ro as a1 shift
-        u"/\0"       ro as a2 shift
+        u"/bin/ls\0" as a1 shift
+        u"/\0"       as a2 shift
 
         -- Allocate the buffer (no need to change)
         1 shift sub %LONG_SZ mul as argv_buf_len    -- Buffer size is LONG_SZ * arg count
@@ -42,12 +42,12 @@ fun main [ str str int ] eo
         pop
 
         -- Checks if return value of execve is less than 0
-        0 swap lst if "execve() failed" ro %error end
+        0 swap lst if "execve() failed" %error end
     else  -- We're in the parent
-        "Parent process" ro %puts
+        "Parent process" %puts
 
         0 0 0 %pid %SYS_wait4 sys 5
-        0 swap lst if "wait4() failed" ro %error end
+        0 swap lst if "wait4() failed" %error end
 
         %EXIT_SUCCESS %exit
     end end

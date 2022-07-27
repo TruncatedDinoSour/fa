@@ -3,7 +3,7 @@ include 'std/std.fa'
 
 fun main [ str str int ] eo
     false if
-        "How is false truthy what" ro %error
+        "How is false truthy what" %error
     end
 
     %EXIT_SUCCESS %exit

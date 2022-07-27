@@ -1,5 +1,5 @@
 include 'std/lstd.fa'
 
-"ro fputs to stdout\n" ro %STDERR #fputs
+"ro fputs to stdout\n" %STDERR #fputs
 
 %EXIT_SUCCESS #exit

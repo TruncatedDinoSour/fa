@@ -7,7 +7,7 @@
 Example of the `swap` keyword:
 
 ```fa
-"E" ro swap drop
+"E" swap drop
 ```
 
 This will swap the places with the string (`"E"`) and the

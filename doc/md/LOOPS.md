@@ -21,7 +21,7 @@ Example:
 
 ```fa
 0 while copy 10 grt do
-    "Hi" ro #puts
+    "Hi" #puts
     1 add
 end 2 drop
 ```

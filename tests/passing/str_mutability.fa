@@ -1,4 +1,0 @@
-include 'std/std.fa'
-"Hello" ro 2 drop
-"Hello" rw 2 drop
-%EXIT_SUCCESS %exit

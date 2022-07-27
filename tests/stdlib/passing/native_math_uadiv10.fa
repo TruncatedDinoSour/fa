@@ -4,7 +4,7 @@ include 'std/native_math.fa'
 
 fun main [ str str int ] eo
     1234 #uadiv10 123 eql #not if
-        "1234 // 10 is supposed to return 123" ro %error
+        "1234 // 10 is supposed to return 123" %error
     end
 
     %EXIT_SUCCESS %exit

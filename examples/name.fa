@@ -6,17 +6,17 @@ macro NAME_LEN 256 end
 fun main [ str str int ] eo
     %NAME_LEN #malloc as name       -- Allocate NAME_LEN buffer
 
-    "Enter your name: " ro %STDOUT
+    "Enter your name: " %STDOUT
     %fputs                          -- fputs("...", stdout) => null
 
     %NAME_LEN @name deref %STDIN
     %SYS_read sys 4                 -- read(STDIN, *name, NAME_LEN) => <bytes_read>
 
     copy 2 grt if
-        "Empty names are not allowed" ro %error
+        "Empty names are not allowed" %error
     end
 
-    "Your name is " ro %STDOUT
+    "Your name is " %STDOUT
     %fputs                          -- fputs("...", stdout) => null
 
     1 swap sub @name deref

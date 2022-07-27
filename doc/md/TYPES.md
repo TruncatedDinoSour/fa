@@ -14,10 +14,10 @@ programming language:
     -   it compiles down to: `The push of pointer to the value`
     -   example: `0 as something @something`
 -   String
-    -   It's invoked by: `Writting any data in "" and then specify a mutability context`
+    -   It's invoked by: `Writting any data in ""`
     -   It pushes ... onto the stack: `The string and then length`
     -   It compiles down to: `The byte array gets created and sized in data/rodata and then both get pushed onto the stack`
-    -   Example: `"Hello world" ro`
+    -   Example: `"Hello world"`
 -   Boolean
     -   it's invoked by: `using the true/false keywords`
     -   it pushes ... onto the stack: `either 0 or 1`
@@ -34,10 +34,10 @@ programming language:
     -   It compiles down to: `The byte being moved to ax and ax being pushed`
     -   Example: `'\0'`
 -   Unsized string
-    -   It's invoked by: `Writting any data in "" and then specify a mutability context`
+    -   It's invoked by: `Writting any data in ""`
     -   It pushes ... onto the stack: `The string`
     -   It compiles down to: `The byte array gets created in data/rodata and then it gets pushed onto the stack`
-    -   Example: `u"Hello world" ro`
+    -   Example: `u"Hello world"`
 
 There are also type keywords used in type checking:
 

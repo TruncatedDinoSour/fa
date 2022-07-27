@@ -41,8 +41,8 @@ end
         STR: The string
 >--
 macro puts
-    %STDOUT         %fputs  -- The string
-    "\n" ro %STDOUT %fputs  -- Newline
+    %STDOUT      %fputs  -- The string
+    "\n" %STDOUT %fputs  -- Newline
 end
 
 
@@ -53,8 +53,8 @@ end
         STR: The string
 >--
 macro eputs
-    %STDERR         %fputs  -- The string
-    "\n" ro %STDOUT %fputs  -- Newline
+    %STDERR      %fputs  -- The string
+    "\n" %STDOUT %fputs  -- Newline
 end
 
 
@@ -106,9 +106,9 @@ end
         STR: The todo
 >--
 macro todo
-    "TODO: " ro %STDERR %fputs
-    %STDERR             %fputs
-    "\n"     ro %STDERR %fputs
+    "TODO: " %STDERR %fputs
+    %STDERR          %fputs
+    "\n"     %STDERR %fputs
 
     %EXIT_FAILURE %exit
 end
@@ -121,9 +121,9 @@ end
         STR: The error message
 >--
 macro error
-    "ERROR: " ro %STDERR %fputs
-    %STDERR              %fputs
-    "\n"      ro %STDERR %fputs
+    "ERROR: " %STDERR %fputs
+    %STDERR           %fputs
+    "\n"      %STDERR %fputs
 
     %EXIT_FAILURE %exit
 end

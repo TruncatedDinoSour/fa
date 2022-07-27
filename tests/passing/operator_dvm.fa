@@ -4,7 +4,7 @@ include 'std/logic.fa'
 
 fun main [ str str int ] int eo
     2 10 dvm sub -5 eql #not if
-        "0 - 5 = -5, but isn't" ro #error
+        "0 - 5 = -5, but isn't" #error
     end
 
     %EXIT_SUCCESS

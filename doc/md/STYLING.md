@@ -26,7 +26,7 @@ Okay, I know how bad the title sounds, but I mean this:
 include 'std/std.fa'
 
 fun main
-    "Hello world" ro %puts  -- This is a comment
+    "Hello world" %puts  -- This is a comment
     --                    ^^ Two spaces
 end
 
@@ -95,7 +95,7 @@ examples can be found inn stdlib:
         INT: The exit code
 >--
 macro error
-    "ERROR: " ro %STDERR %fputs
+    "ERROR: " %STDERR %fputs
     %STDERR              %fputs
     "\n"      ro %STDERR %fputs
 

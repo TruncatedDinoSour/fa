@@ -1,7 +1,7 @@
 include 'std/std.fa'
 
 fun recurse [ int ] int eo
-    "Hello" ro %puts
+    "Hello" %puts
 
     copy   -- (arg; arg)
     1 sub  -- (arg - 1; arg)
@@ -21,12 +21,12 @@ fun main [ str str int ] eo
     copy
 
     1 eql if
-        "Recursion passed, nice" ro %puts
+        "Recursion passed, nice" %puts
 
         pop
         %EXIT_SUCCESS %exit
     else
-        "Recursion is being weird..." ro %error
+        "Recursion is being weird..." %error
         %exit
     end
 end

@@ -12,12 +12,12 @@ fun print_num [ int int ] eo
     as __print_num_fd as __print_num_n
 
     @__print_num_n deref 0 eql if
-        "0" ro @__print_num_fd deref %fputs
+        "0" @__print_num_fd deref %fputs
     end
 
     0 @__print_num_n deref
     lst if
-        "-" ro @__print_num_fd deref %fputs
+        "-" @__print_num_fd deref %fputs
         @__print_num_n @__print_num_n deref 0 sub point
     end
 

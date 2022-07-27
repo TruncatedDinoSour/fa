@@ -4,7 +4,7 @@ include 'std/logic.fa'
 
 fun main [ str str int ] eo
     true #not if
-        "How is true not truthy what" ro %error
+        "How is true not truthy what" %error
     end
 
     %EXIT_SUCCESS %exit

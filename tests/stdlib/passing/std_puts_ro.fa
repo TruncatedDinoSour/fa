@@ -1,5 +1,5 @@
 include 'std/std.fa'
 
-"ro puts to stdout" ro %puts
+"ro puts to stdout" %puts
 
 %EXIT_SUCCESS %exit

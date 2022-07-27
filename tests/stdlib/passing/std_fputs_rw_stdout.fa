@@ -1,5 +1,5 @@
 include 'std/std.fa'
 
-"rw fputs to stdout\n" rw %STDOUT %fputs
+"rw fputs to stdout\n" %STDOUT %fputs
 
 %EXIT_SUCCESS %exit

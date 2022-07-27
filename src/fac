@@ -14,7 +14,6 @@ from warnings import filterwarnings as filter_warnings
 class TokenType(Enum):
     PUSH_INT = auto()
     PUSH_STR = auto()
-    MUTABILITY = auto()
     SYS = auto()
     DROP = auto()
     SWAP = auto()
@@ -61,11 +60,6 @@ class TokenType(Enum):
     WHILE = auto()
     DO = auto()
     END_WHILE = auto()
-
-
-class Mutability(Enum):
-    RW = auto()
-    RO = auto()
 
 
 class Operator(Enum):
@@ -378,8 +372,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
         ip += 1
 
 
-assert len(TokenType) == 49, "Unhandled token types in AST generation"
-assert len(Mutability) == 2, "Unhandled mutability contexts in AST generation"
+assert len(TokenType) == 48, "Unhandled token types in AST generation"
 assert len(Operator) == 15, "Unhandled operators in AST generation"
 assert len(Type) == 6, "Unhandled types in AST generation"
 assert len(Bool) == 2, "Unhandled booleans in AST generation"
@@ -527,10 +520,6 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             check_name(word[1:], _position)
             GLOBAL_STATES["used-functions"].add(f"fun_{word[1:]}")
             yield make_token(TokenType.FUN_CALL, f"fun_{word[1:]}")
-        elif word == "rw":
-            yield make_token(TokenType.MUTABILITY, Mutability.RW)
-        elif word == "ro":
-            yield make_token(TokenType.MUTABILITY, Mutability.RO)
         elif word == "sys":
             ip += 1
             ei(
@@ -823,10 +812,7 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
         ip += 1
 
 
-assert len(TokenType) == 49, "Unhandled token types in x86_64 fasm assembly generation"
-assert (
-    len(Mutability) == 2
-), "Unhandled mutability contexts in x86_64 fasm assembly generation generation"
+assert len(TokenType) == 48, "Unhandled token types in x86_64 fasm assembly generation"
 assert (
     len(Operator) == 15
 ), "Unhandled operators in x86_64 fasm assembly generation generation"
@@ -870,22 +856,7 @@ def generate_assembly_x86_64_fasm(
                 parse_string(token.tvalue, token)
             ) or (0,)
 
-            ip += 1
-            token = ast[ip]
-
-            str_data_lb: List[Tuple[str, Token]]
-
-            if token.tvalue == Mutability.RW:
-                str_data_lb = data_lb
-            elif token.tvalue == Mutability.RO:
-                str_data_lb = rodata_lb
-            else:
-                error(
-                    "Unknown mutability context for string, did you forget to add `ro` or `rw` after the string?",
-                    token,
-                )
-
-            str_data_lb.extend(
+            rodata_lb.extend(
                 (
                     (
                         f"str_{tname}: db {','.join(map(str, parsed_string_codes))}",
@@ -900,11 +871,6 @@ def generate_assembly_x86_64_fasm(
                     (f"push strlen_{tname}", ast[old_ip]),
                     (f"push str_{tname}", ast[old_ip]),
                 )
-            )
-        elif token.ttype == TokenType.MUTABILITY:
-            error(
-                "Mutability should not be parsed outside of word context, this is most likely a bug in the parser",
-                token,
             )
         elif token.ttype == TokenType.SYS:
             start_lb.extend(
@@ -1365,22 +1331,7 @@ or it's a bug in pre-processor and/or type checker",
                 parse_string(token.tvalue, token)
             ) or (0,)
 
-            ip += 1
-            token = ast[ip]
-
-            ustr_data_lb: List[Tuple[str, Token]]
-
-            if token.tvalue == Mutability.RW:
-                ustr_data_lb = data_lb
-            elif token.tvalue == Mutability.RO:
-                ustr_data_lb = rodata_lb
-            else:
-                error(
-                    "Unknown mutability context for string, did you forget to add `ro` or `rw` after the string?",
-                    token,
-                )
-
-            ustr_data_lb.append(
+            rodata_lb.append(
                 (
                     f"ustr_{tname}: db {','.join(map(str, parsed_ustring_codes))}",
                     ast[old_ip],
@@ -1636,8 +1587,7 @@ def run_command_log(cmd: Tuple[str, ...]) -> None:
             sys.exit(EXIT_ER)
 
 
-assert len(TokenType) == 49, "Unhandled token types in processing"
-assert len(Mutability) == 2, "Unhandled mutability contexts in processing"
+assert len(TokenType) == 48, "Unhandled token types in processing"
 assert len(Operator) == 15, "Unhandled operators in processing"
 assert len(Type) == 6, "Unhandled types in processing"
 assert len(Bool) == 2, "Unhandled booleans in processing"
@@ -1844,8 +1794,7 @@ def preprocess_ast(
         ip += 1
 
 
-assert len(TokenType) == 49, "Unhandled token types in type checking"
-assert len(Mutability) == 2, "Unhandled mutability contexts in type checking"
+assert len(TokenType) == 48, "Unhandled token types in type checking"
 assert len(Operator) == 15, "Unhandled operators in type checking"
 assert len(Type) == 6, "Unhandled types in type checking"
 assert len(Bool) == 2, "Unhandled booleans in type checking"
@@ -1868,8 +1817,7 @@ def type_check_ast(
     # Yes there used to be code here, but I removed it
 
 
-assert len(TokenType) == 49, "Unhandled token types in AST finalization"
-assert len(Mutability) == 2, "Unhandled mutability contexts in AST finalization"
+assert len(TokenType) == 48, "Unhandled token types in AST finalization"
 assert len(Operator) == 15, "Unhandled operators in AST finalization"
 assert len(Type) == 6, "Unhandled types in AST finalization"
 assert len(Bool) == 2, "Unhandled booleans in AST finalization"
@@ -1977,8 +1925,7 @@ def finalise_ast(
             warning("Main macro is an old practice, avoid it!", NULL_TOKEN)
 
 
-assert len(TokenType) == 49, "Unhandled token types in dead code elimination"
-assert len(Mutability) == 2, "Unhandled mutability contexts in dead code elimination"
+assert len(TokenType) == 48, "Unhandled token types in dead code elimination"
 assert len(Operator) == 15, "Unhandled operators in dead code elimination"
 assert len(Type) == 6, "Unhandled types in dead code elimination"
 assert len(Bool) == 2, "Unhandled booleans in dead code elimination"

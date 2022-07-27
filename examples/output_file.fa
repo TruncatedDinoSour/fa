@@ -9,13 +9,13 @@ macro MAX_FILE 8092 end
 
 fun main [ str str int ] int eo
     argc 2 eql #not if
-        "Usage: <file>" ro #error
+        "Usage: <file>" #error
     end
 
     0 1 #get_arg %SYS_open sys 3 as fd
 
     0 @fd deref lst if
-        "Invalid input file" ro #error
+        "Invalid input file" #error
     end
 
     %MAX_FILE #malloc as file_buffer

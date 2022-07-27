@@ -7,7 +7,7 @@ fun main [ str str int ] eo
     %SIZE #malloc  -- Allocate SIZE ammount of bytes
     as string      -- Store buffer as a pointer
 
-    "What do I repeat? " ro %STDOUT %fputs
+    "What do I repeat? " %STDOUT %fputs
 
     %SIZE @string deref %STDIN
     %SYS_read sys 4             -- read(STDIN, *string, SIZE) => <bytes_read>

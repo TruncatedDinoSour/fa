@@ -2,8 +2,8 @@
 
 Mutability in fa is deckared using these keywords:
 
-- `ro` -- Read only
-- `rw` -- Read/write
+-   `ro` -- Read only
+-   `rw` -- Read/write
 
 Some things like strings require that definition
 which will change how they are stored, they go
