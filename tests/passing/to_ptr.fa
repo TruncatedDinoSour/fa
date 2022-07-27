@@ -1,0 +1,8 @@
+include 'std/lstd.fa'
+
+
+fun main [ str str int ] int eo
+    %EXIT_SUCCESS to ptr deref
+end
+
+#main #exit

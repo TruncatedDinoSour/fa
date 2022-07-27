@@ -1319,11 +1319,51 @@ or it's a bug in pre-processor and/or type checker",
                 (f"push {token.tvalue}", token),
             )
         elif token.ttype == TokenType.TO:
-            error(
-                "To is only supposed to be used for type checking, you either placed one outside a valid context \
-or it's a bug in pre-processor and/or type checker",
-                token,
-            )
+            if token.tvalue == Type.INT:
+                pass
+            elif token.tvalue == Type.STR:
+                to_str_name: str = f"to_str_{tname}"
+
+                start_lb.extend(
+                    (
+                        ("pop rax", token),
+                        ("mov rdi, rax", token),
+                        (f"mov [{to_str_name}], rdi", token),
+                        (f"push {to_str_name}", token),
+                    )
+                )
+
+                data_lb.append((f"{to_str_name}: rq 1", token))
+            elif token.tvalue == Type.PTR:
+                data_lb.append((f"to_ptr_{tname}: rq 1", token))
+
+                start_lb.extend(
+                    (
+                        ("pop rax", token),
+                        ("mov rdi, rax", token),
+                        (f"mov [to_ptr_{tname}], rdi", token),
+                        (f"push to_ptr_{tname}", token),
+                    )
+                )
+            elif token.tvalue == Type.BUL:
+                start_lb.extend(
+                    (
+                        ("pop rax", token),
+                        ("cmp rax, 0", token),
+                        ("setne al", token),
+                        ("movzx rbx, al", token),
+                        ("push rbx", token),
+                    )
+                )
+            elif token.tvalue == Type.NUL:
+                start_lb.extend(
+                    (
+                        ("add rsp, 8", token),
+                        ("push 0", token),
+                    )
+                )
+            elif token.tvalue == Type.CHR:
+                pass
         elif token.ttype == TokenType.POP:
             start_lb.append(("add rsp, 8", token))
         elif token.ttype == TokenType.PUSH_USTR:
@@ -1911,7 +1951,7 @@ def finalise_ast(
                 error(f"No valid type token specified, got {to_type.ttype}", token)
 
             token.tvalue = to_type.tvalue
-            # yield token
+            yield token
         else:
             yield token
 
