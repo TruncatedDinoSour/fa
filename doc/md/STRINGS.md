@@ -36,13 +36,13 @@ There are also ANSI escape sequences, those can be used to get colour or
 cursor control in the terminal, for example:
 
 ```fa
-"\[1;31m]Hello world\[0m]"
+"\[1;31mHello world\[0m"
 ```
 
 Why don't I add the `m` by default?
 Okay, so the clear sequence is `\033[H\033[J` (see `examples/clear.fa`) and
 you cannot add an `m` in there, it'll just stay on the screen
-so I just don't add it, also the `\[...]` syntax
+so I just don't add it, also the `\[...` syntax
 is just to make it seperate from the string as I always
 find it so annoying when escapes mix into strings
 

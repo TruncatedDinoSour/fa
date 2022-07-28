@@ -2,7 +2,7 @@ include 'std/lstd.fa'
 
 
 fun main [ str str int ] int eo
-    "\[H]\[J]" %STDOUT #fputs
+    "\[H\[J" %STDOUT #fputs
     %EXIT_SUCCESS
 end
 

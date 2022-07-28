@@ -340,31 +340,6 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
                 yield int(_code)
             elif char == "[":
                 yield from (27, 91)
-
-                _escape: str = ""
-
-                while char != "]":
-                    ip += 1
-                    ei("Unterminated ANSI escape sequence", token, string, ip)
-                    char = string[ip]
-
-                    if char == "]":
-                        break
-
-                    if char == ";" and not _escape:
-                        error("; cannot be a stand-alone escape character", token)
-
-                    _escape += char
-
-                    if False and not char.isnumeric() and char != ";":
-                        error(
-                            f"Invalid character {char!r} in ANSI escape sequence", token
-                        )
-
-                if not _escape:
-                    error("No escape code provided", token)
-
-                yield from map(ord, _escape)
             else:
                 yield ord(char)
         else:

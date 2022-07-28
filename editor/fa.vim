@@ -25,7 +25,6 @@ syntax keyword faKeyword argv argc turn hop to pop
 " Escapes
 syntax match  faEscape +\\.+                                    contained
 syntax region faEscape start=/\v\\\{/ skip=/\v\\./ end=/\v\}/   contained
-syntax region faEscape start=/\v\\\[/ skip=/\v\\./ end=/\v\]/   contained
 
 
 " Numbers
