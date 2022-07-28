@@ -53,6 +53,7 @@ ptr
 bul
 nul
 chr
+any
 true
 false
 null

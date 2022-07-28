@@ -84,7 +84,7 @@ syntax keyword faBoolean true false
 
 
 " Types
-syntax keyword faType int str ptr bul nul chr
+syntax keyword faType int str ptr bul nul chr any
 
 
 " Type signatures

@@ -87,6 +87,7 @@ class Type(Enum):
     BUL = auto()
     NUL = auto()
     CHR = auto()
+    ANY = auto()
 
 
 class Bool(Enum):
@@ -374,7 +375,7 @@ def parse_string(string: str, token: Token) -> Generator[int, None, None]:
 
 assert len(TokenType) == 48, "Unhandled token types in AST generation"
 assert len(Operator) == 15, "Unhandled operators in AST generation"
-assert len(Type) == 6, "Unhandled types in AST generation"
+assert len(Type) == 7, "Unhandled types in AST generation"
 assert len(Bool) == 2, "Unhandled booleans in AST generation"
 
 
@@ -753,6 +754,9 @@ def fa_to_ast(fa: str, line: int, file: str = "") -> Generator[Token, None, None
             yield make_token(TokenType.TYPE, Type.NUL)
         elif word == "chr":
             yield make_token(TokenType.TYPE, Type.CHR)
+        elif word == "any":
+            warning(f"Use of 'any' type is highly discouraged (position: {_position})")
+            yield make_token(TokenType.TYPE, Type.ANY)
         elif word == "true":
             yield make_token(TokenType.BOOL, Bool.TRUE)
         elif word == "false":
@@ -816,7 +820,7 @@ assert len(TokenType) == 48, "Unhandled token types in x86_64 fasm assembly gene
 assert (
     len(Operator) == 15
 ), "Unhandled operators in x86_64 fasm assembly generation generation"
-assert len(Type) == 6, "Unhandled types in x86_64 fasm assembly generation"
+assert len(Type) == 7, "Unhandled types in x86_64 fasm assembly generation"
 assert len(Bool) == 2, "Unhandled booleans in x86_64 fasm assembly generation"
 
 
@@ -1364,6 +1368,8 @@ or it's a bug in pre-processor and/or type checker",
                 )
             elif token.tvalue == Type.CHR:
                 pass
+            elif token.tvalue == Type.ANY:
+                pass
         elif token.ttype == TokenType.POP:
             start_lb.append(("add rsp, 8", token))
         elif token.ttype == TokenType.PUSH_USTR:
@@ -1629,7 +1635,7 @@ def run_command_log(cmd: Tuple[str, ...]) -> None:
 
 assert len(TokenType) == 48, "Unhandled token types in processing"
 assert len(Operator) == 15, "Unhandled operators in processing"
-assert len(Type) == 6, "Unhandled types in processing"
+assert len(Type) == 7, "Unhandled types in processing"
 assert len(Bool) == 2, "Unhandled booleans in processing"
 
 
@@ -1836,7 +1842,7 @@ def preprocess_ast(
 
 assert len(TokenType) == 48, "Unhandled token types in type checking"
 assert len(Operator) == 15, "Unhandled operators in type checking"
-assert len(Type) == 6, "Unhandled types in type checking"
+assert len(Type) == 7, "Unhandled types in type checking"
 assert len(Bool) == 2, "Unhandled booleans in type checking"
 
 
@@ -1845,12 +1851,69 @@ def type_check_ast(
 ) -> Generator[Token, None, None]:
     GLOBAL_STATES["tc_passes"] += 1
 
-    if not GLOBAL_STATES["type-checking"]:
+    if logging:
+        warning(
+            "Type checking is currently work in progress, pass the -no-tc flag if you want type checking"
+        )
+
+    if GLOBAL_STATES["type-checking"]:
         yield from ast
         return
 
-    if logging:
-        warning("Type checking currently has been removed")
+    type_stack: List[Tuple[Type, Token]] = []
+    ip: int = 0
+
+    while ip < len(ast):
+        token: Token = ast[ip]
+
+        if token.ttype == TokenType.PUSH_INT:
+            type_stack.append((Type.INT, token))
+        elif token.ttype == TokenType.PUSH_STR:
+            type_stack.append((Type.STR, token))
+        elif token.ttype == TokenType.SYS:
+            if token.tvalue > (
+                sys_max := len(ASM_SNIPPETS[assembly_flavour]["registers"])
+            ):
+                error(
+                    f"Cannot use more than {sys_max} registers, you're trying to use {token.tvalue}",
+                    token,
+                )
+
+            if token.tvalue > (stack_len := len(type_stack)):
+                error(
+                    f"Not enough elements ({stack_len}) on the stack, but trying to use {token.tvalue}",
+                    token,
+                )
+
+            for _ in range(token.tvalue):
+                type_stack.pop()
+
+            type_stack.append((Type.ANY, token))
+        elif token.ttype == TokenType.DROP:
+            if not type_stack:
+                error("Not enough arguments for drop", token)
+
+            _, drop_ammount = type_stack.pop()
+
+            if drop_ammount.ttype == TokenType.PUSH_INT:
+                if drop_ammount.tvalue > (type_stack_len := len(type_stack)):
+                    error(
+                        f"Trying to drop more items ({drop_ammount.tvalue}) than there is on the stack ({type_stack_len})",
+                        token,
+                    )
+
+                for _ in range(drop_ammount.tvalue):
+                    type_stack.pop()
+            else:
+                warning(
+                    "Found drop without a static value, aborting type checking", token
+                )
+                GLOBAL_STATES["type-checking"] = False
+                break
+        else:
+            error(f"Unknown {token} while type checkng")
+
+        ip += 1
 
     yield from ast
 
@@ -1859,7 +1922,7 @@ def type_check_ast(
 
 assert len(TokenType) == 48, "Unhandled token types in AST finalization"
 assert len(Operator) == 15, "Unhandled operators in AST finalization"
-assert len(Type) == 6, "Unhandled types in AST finalization"
+assert len(Type) == 7, "Unhandled types in AST finalization"
 assert len(Bool) == 2, "Unhandled booleans in AST finalization"
 
 
@@ -1967,7 +2030,7 @@ def finalise_ast(
 
 assert len(TokenType) == 48, "Unhandled token types in dead code elimination"
 assert len(Operator) == 15, "Unhandled operators in dead code elimination"
-assert len(Type) == 6, "Unhandled types in dead code elimination"
+assert len(Type) == 7, "Unhandled types in dead code elimination"
 assert len(Bool) == 2, "Unhandled booleans in dead code elimination"
 
 

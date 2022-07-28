@@ -47,3 +47,4 @@ There are also type keywords used in type checking:
 -   `bul` -- Boolean type
 -   `nul` -- Null type
 -   `chr` -- Character type
+-   `any` -- Generic type
